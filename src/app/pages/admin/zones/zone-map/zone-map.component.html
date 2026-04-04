@@ -1,0 +1,181 @@
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Plan d'usine — Zones de validation</h1>
+    <p>Vue graphique des zones par ligne de production</p>
+  </div>
+  <div class="header-actions">
+    <button pButton
+      label="Vue liste"
+      icon="pi pi-list"
+      class="p-button-outlined p-button-sm"
+      routerLink="/admin/zones">
+    </button>
+  </div>
+</div>
+
+<!-- Line Tabs -->
+<div class="line-tabs" *ngIf="!loading">
+  <button
+    *ngFor="let tab of lineTabs"
+    class="line-tab"
+    [class.active]="selectedTab?.line?.id === tab.line.id"
+    [style.--tab-color]="tab.color"
+    (click)="selectTab(tab)">
+    <span class="tab-code" [style.color]="tab.color">{{ tab.line.code }}</span>
+    <span class="tab-name">{{ tab.line.name }}</span>
+    <span class="tab-count">{{ tab.zones.length }} zones</span>
+  </button>
+</div>
+
+<!-- Floor Plan -->
+<div class="floor-plan" *ngIf="selectedTab && !loading">
+  <div class="floor-grid"></div>
+
+  <!-- Flow strip -->
+  <div class="flow-strip">
+    <ng-container *ngFor="let zone of selectedTab.zones; let last = last">
+      <span class="flow-step"
+        [class.flow-active]="selectedZone?.zone?.id === zone.zone.id">
+        {{ zone.zone.name.split(' ')[0] }}
+      </span>
+      <span class="flow-arrow" *ngIf="!last">→</span>
+    </ng-container>
+  </div>
+
+  <!-- Zones Grid -->
+  <div class="zones-grid">
+    <div
+      *ngFor="let zone of selectedTab.zones"
+      class="zone-room"
+      [class.zone-selected]="selectedZone?.zone?.id === zone.zone.id"
+      (click)="selectZone(zone)">
+
+      <!-- Header: icon + risk badge -->
+      <div class="zone-room-header">
+        <div class="zone-icon"
+          [style.background]="selectedTab.color + '15'"
+          [style.color]="selectedTab.color">
+          {{ zone.icon }}
+        </div>
+        <span class="risk-badge"
+          [style.background]="getRiskColor(zone.riskLevel) + '18'"
+          [style.color]="getRiskColor(zone.riskLevel)">
+          {{ zone.riskLevel }}
+        </span>
+      </div>
+
+      <!-- Name + desc -->
+      <div class="zone-name">{{ zone.zone.name }}</div>
+      <div class="zone-desc">{{ zone.zone.description || '—' }}</div>
+
+      <!-- Stats -->
+      <div class="zone-stats">
+        <div class="zone-stat">
+          <div class="zone-stat-val">{{ zone.totalValidations }}</div>
+          <div class="zone-stat-label">Validations</div>
+        </div>
+        <div class="zone-stat">
+          <div class="zone-stat-val"
+            [style.color]="getConformRateColor(zone.conformRate)">
+            {{ zone.conformRate }}%
+          </div>
+          <div class="zone-stat-label">Conformité</div>
+        </div>
+        <div class="zone-stat">
+          <div class="zone-stat-val">{{ zone.activeCount }}</div>
+          <div class="zone-stat-label">En cours</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="zones-empty" *ngIf="selectedTab.zones.length === 0">
+      <i class="pi pi-th-large"></i>
+      <p>Aucune zone pour cette ligne</p>
+      <button pButton
+        label="Créer une zone"
+        icon="pi pi-plus"
+        class="p-button-text p-button-sm"
+        routerLink="/admin/zones">
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Zone Detail Panel -->
+<div class="zone-detail" *ngIf="selectedZone">
+  <div class="zd-header">
+    <h3>
+      <span [style.color]="selectedTab?.color">{{ selectedZone.icon }}</span>
+      {{ selectedZone.zone.name }}
+    </h3>
+    <button pButton
+      icon="pi pi-times"
+      class="p-button-text p-button-sm"
+      (click)="closeZoneDetail()">
+    </button>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="zd-stats">
+    <div class="zd-stat">
+      <div class="zd-val">{{ selectedZone.totalValidations }}</div>
+      <div class="zd-label">Total validations</div>
+    </div>
+    <div class="zd-stat">
+      <div class="zd-val" style="color: #22c55e">{{ selectedZone.conformCount }}</div>
+      <div class="zd-label">Conformes</div>
+    </div>
+    <div class="zd-stat">
+      <div class="zd-val" style="color: #ef4444">{{ selectedZone.nonConformCount }}</div>
+      <div class="zd-label">Non conformes</div>
+    </div>
+    <div class="zd-stat">
+      <div class="zd-val">{{ selectedZone.activeCount }}</div>
+      <div class="zd-label">En cours</div>
+    </div>
+  </div>
+
+  <!-- Risk bar -->
+  <div class="zd-risk"
+    [style.background]="getRiskColor(selectedZone.riskLevel) + '10'"
+    [style.border-color]="getRiskColor(selectedZone.riskLevel) + '30'">
+    <span class="zd-risk-label"
+      [style.color]="getRiskColor(selectedZone.riskLevel)">
+      Risque IA : {{ selectedZone.riskLevel }}
+    </span>
+    <div class="risk-bar">
+      <div class="risk-fill"
+        [style.width.%]="selectedZone.riskScore"
+        [style.background]="getRiskColor(selectedZone.riskLevel)">
+      </div>
+    </div>
+    <span class="zd-risk-score"
+      [style.color]="getRiskColor(selectedZone.riskLevel)">
+      {{ selectedZone.riskScore }}%
+    </span>
+  </div>
+
+  <!-- Actions -->
+  <div class="zd-actions">
+    <button pButton
+      label="Lancer une validation"
+      icon="pi pi-play"
+      class="p-button-outlined p-button-sm"
+      (click)="navigateToCreateValidation(selectedZone.zone.name)">
+    </button>
+    <button pButton
+      label="Historique"
+      icon="pi pi-history"
+      class="p-button-outlined p-button-sm p-button-secondary"
+      (click)="navigateToValidationsByZone(selectedZone.zone.id)">
+    </button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-zones">
+  <p-skeleton height="44px" styleClass="mb-3" borderRadius="8px"></p-skeleton>
+  <p-skeleton height="340px" borderRadius="12px"></p-skeleton>
+</div>

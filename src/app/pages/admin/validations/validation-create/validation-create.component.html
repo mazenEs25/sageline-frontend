@@ -1,0 +1,132 @@
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a routerLink="/validations" class="breadcrumb-link">
+    <i class="pi pi-arrow-left"></i> Retour aux validations
+  </a>
+</div>
+
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Lancer une validation</h1>
+    <p>Sélectionnez la zone à valider. L'IA analysera automatiquement le risque.</p>
+  </div>
+</div>
+
+<!-- Form Card -->
+<div class="create-card">
+  <!-- Step 1: Select Line -->
+  <div class="form-section">
+    <div class="section-header">
+      <div class="step-badge">1</div>
+      <div>
+        <h3>Ligne de production</h3>
+        <p>Choisissez la ligne concernée</p>
+      </div>
+    </div>
+    <div class="section-content">
+      <p-dropdown
+        [(ngModel)]="selectedLineId"
+        [options]="lineOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner une ligne..."
+        [style]="{ width: '100%' }"
+        [filter]="true"
+        filterPlaceholder="Rechercher..."
+        (onChange)="onLineChange()">
+      </p-dropdown>
+    </div>
+  </div>
+
+  <!-- Step 2: Select Zone -->
+  <div class="form-section" [class.section-disabled]="!selectedLineId">
+    <div class="section-header">
+      <div class="step-badge" [class.step-active]="selectedLineId">2</div>
+      <div>
+        <h3>Zone de validation</h3>
+        <p>Choisissez la zone dans la ligne sélectionnée</p>
+      </div>
+    </div>
+    <div class="section-content" *ngIf="selectedLineId">
+      <p-dropdown
+        [(ngModel)]="selectedZoneId"
+        [options]="zoneOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner une zone..."
+        [style]="{ width: '100%' }">
+      </p-dropdown>
+      <small class="zone-hint" *ngIf="zoneOptions.length === 0">
+        <i class="pi pi-info-circle"></i>
+        Aucune zone trouvée pour cette ligne.
+      </small>
+    </div>
+  </div>
+
+  <!-- Step 3: Comments -->
+  <div class="form-section" [class.section-disabled]="!selectedZoneId">
+    <div class="section-header">
+      <div class="step-badge" [class.step-active]="selectedZoneId">3</div>
+      <div>
+        <h3>Commentaires</h3>
+        <p>Ajoutez des notes (optionnel)</p>
+      </div>
+    </div>
+    <div class="section-content" *ngIf="selectedZoneId">
+      <textarea pInputTextarea
+        [(ngModel)]="comments"
+        placeholder="ex: Validation de routine, vérification post-maintenance..."
+        [rows]="3"
+        [autoResize]="true"
+        class="w-full">
+      </textarea>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-card" *ngIf="selectedZoneId">
+    <div class="summary-header">
+      <i class="pi pi-info-circle"></i>
+      <span>Résumé de la validation</span>
+    </div>
+    <div class="summary-body">
+      <div class="summary-row">
+        <span class="summary-label">Ligne</span>
+        <span class="summary-value">{{ selectedLineName }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Zone</span>
+        <span class="summary-value">{{ selectedZoneName }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Statut initial</span>
+        <p-tag value="EN COURS" severity="warning" [rounded]="true"></p-tag>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Prédiction IA</span>
+        <span class="summary-value ai-hint">
+          <i class="pi pi-bolt"></i> Sera calculée automatiquement
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="form-actions">
+    <button pButton
+      label="Annuler"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cancel()">
+    </button>
+    <button pButton
+      label="Lancer la validation"
+      icon="pi pi-play"
+      class="p-button-primary"
+      [loading]="submitting"
+      [disabled]="!isFormValid || submitting"
+      (click)="submit()">
+    </button>
+  </div>
+</div>

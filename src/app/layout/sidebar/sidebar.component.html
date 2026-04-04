@@ -1,0 +1,36 @@
+<div class="sidebar">
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <i class="pi pi-sitemap"></i>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">SageLine</span>
+      <span class="logo-sub">Administration</span>
+    </div>
+  </div>
+
+  <!-- Menu -->
+  <div class="sidebar-menu">
+    <div *ngFor="let group of menuItems" class="menu-group">
+      <div class="menu-label">{{ group.label }}</div>
+      <a *ngFor="let item of group.items"
+         [routerLink]="item.route"
+         class="menu-item"
+         [class.active]="isActive(item.route)">
+        <div class="active-indicator" *ngIf="isActive(item.route)"></div>
+        <i [class]="item.icon"></i>
+        <span>{{ item.label }}</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <div class="port-info">
+      <span>Spring Boot <em>:8089</em></span>
+      <span>Flask IA <em>:5000</em></span>
+      <span>Angular <em>:4200</em></span>
+    </div>
+  </div>
+</div>

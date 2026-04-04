@@ -1,0 +1,5 @@
+export enum ToolStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  MAINTENANCE = 'MAINTENANCE'
+}

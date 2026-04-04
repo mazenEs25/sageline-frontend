@@ -1,0 +1,186 @@
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Plan d'usine — Lignes de production</h1>
+    <p>Vue graphique de l'atelier avec statut en temps réel</p>
+  </div>
+  <div class="header-actions">
+    <!-- View toggle -->
+    <div class="view-toggle">
+      <button pButton
+        icon="pi pi-map"
+        [class]="viewMode === 'map' ? 'p-button-primary p-button-sm' : 'p-button-outlined p-button-sm'"
+        pTooltip="Vue plan"
+        (click)="viewMode = 'map'">
+      </button>
+      <button pButton
+        icon="pi pi-list"
+        [class]="viewMode === 'table' ? 'p-button-primary p-button-sm' : 'p-button-outlined p-button-sm'"
+        pTooltip="Vue liste"
+        (click)="navigateToLineList()">
+      </button>
+    </div>
+    <button pButton
+      label="Nouvelle ligne"
+      icon="pi pi-plus"
+      class="p-button-primary"
+      routerLink="/admin/lines">
+    </button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <app-stat-card icon="pi pi-box" label="Total lignes" [value]="totalLines" color="#3b82f6"></app-stat-card>
+  <app-stat-card icon="pi pi-check-circle" label="Actives" [value]="activeLines" color="#10b981"></app-stat-card>
+  <app-stat-card icon="pi pi-th-large" label="Total zones" [value]="totalZones" color="#8b5cf6"></app-stat-card>
+  <app-stat-card icon="pi pi-spinner" label="Validations en cours" [value]="totalActiveValidations" color="#f59e0b"></app-stat-card>
+</div>
+
+<!-- Factory Floor -->
+<div class="factory-floor" *ngIf="!loading">
+  <div class="floor-grid"></div>
+
+  <div class="lines-container">
+    <div
+      *ngFor="let data of lineMapData"
+      class="prod-line"
+      [class.inactive]="!data.line.active"
+      [class.selected]="selectedLine?.line?.id === data.line.id"
+      (click)="selectLine(data)">
+
+      <!-- Line code header -->
+      <div class="line-header" [style.background]="data.color + '12'">
+        <span class="line-code" [style.color]="data.color">{{ data.line.code }}</span>
+        <div class="status-dot"
+          [style.background]="data.line.active ? '#22c55e' : '#ef4444'">
+        </div>
+      </div>
+
+      <!-- Line body -->
+      <div class="line-body">
+        <span class="line-name">{{ data.line.name }}</span>
+
+        <!-- Zone chips -->
+        <div class="zone-chips">
+          <span class="zone-chip" *ngFor="let zone of data.zones">
+            {{ zone.name }}
+          </span>
+        </div>
+
+        <!-- Meta info -->
+        <div class="line-meta">
+          <div class="meta-item">
+            <i class="pi pi-th-large"></i>
+            {{ data.zones.length }} zones
+          </div>
+          <div class="meta-item">
+            <i class="pi pi-users"></i>
+            {{ data.users.length }} users
+          </div>
+          <div class="meta-item" *ngIf="data.activeValidations > 0">
+            <i class="pi pi-spinner pi-spin"></i>
+            {{ data.activeValidations }} en cours
+          </div>
+        </div>
+
+        <!-- Flow arrows -->
+        <div class="arrow-flow">
+          <span class="arrow-chevron"></span>
+          <span class="arrow-chevron"></span>
+          <span class="arrow-chevron"></span>
+        </div>
+
+        <!-- Animated conveyor belt -->
+        <div class="conveyor" *ngIf="data.line.active">
+          <div class="conveyor-track"
+            [style.background]="'repeating-linear-gradient(90deg, transparent, transparent 8px, ' + data.color + '30 8px, ' + data.color + '30 16px)'">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="floor-legend">
+  <div class="legend-item">
+    <div class="legend-dot" style="background: #22c55e"></div>
+    <span>Active</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background: #ef4444"></div>
+    <span>Inactive</span>
+  </div>
+  <div class="legend-item">
+    <span class="legend-arrows">▸▸▸</span>
+    <span>Sens du flux de production</span>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" *ngIf="selectedLine" [@slideDown]>
+  <div class="detail-header">
+    <h3>
+      <span [style.color]="selectedLine.color">{{ selectedLine.line.code }}</span>
+      — {{ selectedLine.line.name }}
+    </h3>
+    <div class="detail-header-actions">
+      <button pButton
+        [icon]="selectedLine.line.active ? 'pi pi-pause' : 'pi pi-play'"
+        [class]="selectedLine.line.active ? 'p-button-outlined p-button-warning p-button-sm' : 'p-button-outlined p-button-success p-button-sm'"
+        [label]="selectedLine.line.active ? 'Désactiver' : 'Activer'"
+        (click)="toggleLineActive(selectedLine, $event)">
+      </button>
+      <button pButton
+        icon="pi pi-times"
+        class="p-button-text p-button-sm"
+        (click)="closeDetail()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="detail-stats">
+    <div class="detail-stat">
+      <div class="detail-stat-value">{{ selectedLine.zones.length }}</div>
+      <div class="detail-stat-label">Zones</div>
+    </div>
+    <div class="detail-stat">
+      <div class="detail-stat-value">{{ selectedLine.users.length }}</div>
+      <div class="detail-stat-label">Utilisateurs</div>
+    </div>
+    <div class="detail-stat">
+      <div class="detail-stat-value">{{ selectedLine.validations.length }}</div>
+      <div class="detail-stat-label">Validations</div>
+    </div>
+    <div class="detail-stat">
+      <div class="detail-stat-value" [ngClass]="getConformRateClass(selectedLine.conformRate)">
+        {{ selectedLine.conformRate }}%
+      </div>
+      <div class="detail-stat-label">Conformité</div>
+    </div>
+  </div>
+
+  <!-- Zones list -->
+  <div class="detail-zones-title">Zones de cette ligne</div>
+  <div class="detail-zones">
+    <div class="detail-zone-card"
+      *ngFor="let zone of selectedLine.zones"
+      (click)="navigateToZoneMap(selectedLine.line.id)">
+      <span class="dz-name">{{ zone.name }}</span>
+      <span class="dz-desc">{{ zone.description || '—' }}</span>
+      <i class="pi pi-arrow-right dz-arrow"></i>
+    </div>
+    <div class="detail-zone-empty" *ngIf="selectedLine.zones.length === 0">
+      <p>Aucune zone configurée pour cette ligne</p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-floor" *ngIf="loading">
+  <p-skeleton height="90px" styleClass="mb-3" borderRadius="12px"></p-skeleton>
+  <p-skeleton height="90px" styleClass="mb-3" borderRadius="12px"></p-skeleton>
+  <p-skeleton height="90px" borderRadius="12px"></p-skeleton>
+</div>

@@ -1,0 +1,239 @@
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Lignes de Production</h1>
+    <p>Gérer les lignes de production et leur statut</p>
+  </div>
+  <button pButton
+    label="Nouvelle ligne"
+    icon="pi pi-plus"
+    class="p-button-primary"
+    (click)="openNew()">
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <app-stat-card
+    icon="pi pi-box"
+    label="Total lignes"
+    [value]="lines.length"
+    color="#3b82f6">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-check-circle"
+    label="Actives"
+    [value]="activeCount"
+    color="#10b981">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-times-circle"
+    label="Inactives"
+    [value]="inactiveCount"
+    color="#ef4444">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-th-large"
+    label="Total zones"
+    [value]="totalZones"
+    color="#8b5cf6">
+  </app-stat-card>
+</div>
+
+<!-- Data Table -->
+<p-table
+  [value]="lines"
+  [paginator]="true"
+  [rows]="10"
+  [loading]="loading"
+  [globalFilterFields]="['code', 'name']"
+  [rowHover]="true"
+  dataKey="id"
+  #dt>
+
+  <!-- Search -->
+  <ng-template pTemplate="caption">
+    <div class="table-header">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input pInputText
+          type="text"
+          placeholder="Rechercher par code ou nom..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+      </span>
+    </div>
+  </ng-template>
+
+  <!-- Columns -->
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="code" style="width: 120px">
+        Code <p-sortIcon field="code"></p-sortIcon>
+      </th>
+      <th pSortableColumn="name">
+        Nom <p-sortIcon field="name"></p-sortIcon>
+      </th>
+      <th pSortableColumn="active" style="width: 130px">
+        Statut <p-sortIcon field="active"></p-sortIcon>
+      </th>
+      <th style="width: 100px">Zones</th>
+      <th style="width: 120px">Utilisateurs</th>
+      <th pSortableColumn="createdAt" style="width: 120px">
+        Créé le <p-sortIcon field="createdAt"></p-sortIcon>
+      </th>
+      <th style="width: 150px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <!-- Rows -->
+  <ng-template pTemplate="body" let-line>
+    <tr [class.row-inactive]="!line.active">
+      <!-- Code -->
+      <td>
+        <span class="code-badge">{{ line.code }}</span>
+      </td>
+
+      <!-- Name -->
+      <td>
+        <span class="line-name">{{ line.name }}</span>
+      </td>
+
+      <!-- Status -->
+      <td>
+        <p-tag
+          [value]="line.active ? 'Active' : 'Inactive'"
+          [severity]="line.active ? 'success' : 'danger'"
+          [icon]="line.active ? 'pi pi-circle-fill' : 'pi pi-circle-fill'"
+          [rounded]="true">
+        </p-tag>
+      </td>
+
+      <!-- Zone count -->
+      <td>
+        <div class="count-cell">
+          <i class="pi pi-th-large count-icon purple"></i>
+          <span>{{ getZoneCount(line.id) }}</span>
+        </div>
+      </td>
+
+      <!-- User count -->
+      <td>
+        <div class="count-cell">
+          <i class="pi pi-users count-icon blue"></i>
+          <span>{{ getUserCount(line.id) }}</span>
+        </div>
+      </td>
+
+      <!-- Date -->
+      <td class="date-cell">
+        {{ line.createdAt | date:'dd/MM/yyyy' }}
+      </td>
+
+      <!-- Actions -->
+      <td>
+        <div class="action-buttons">
+          <button pButton
+            [icon]="line.active ? 'pi pi-pause' : 'pi pi-play'"
+            [class]="line.active ? 'p-button-text p-button-sm p-button-warning' : 'p-button-text p-button-sm p-button-success'"
+            (click)="toggleActive(line)"
+            [pTooltip]="line.active ? 'Désactiver' : 'Activer'"
+            tooltipPosition="top">
+          </button>
+          <button pButton
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm"
+            (click)="editLine(line)"
+            pTooltip="Modifier"
+            tooltipPosition="top">
+          </button>
+          <button pButton
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            (click)="deleteLine(line)"
+            pTooltip="Supprimer"
+            tooltipPosition="top">
+          </button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <!-- Empty -->
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="empty-state">
+        <i class="pi pi-inbox"></i>
+        <p>Aucune ligne de production trouvée</p>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- ═══ Line Dialog ═══ -->
+<p-dialog
+  [(visible)]="lineDialog"
+  [header]="isEdit ? 'Modifier la ligne' : 'Nouvelle ligne'"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="form-grid">
+    <!-- Code -->
+    <div class="field">
+      <label for="code">Code *</label>
+      <input pInputText id="code"
+        [(ngModel)]="form.code"
+        placeholder="ex: L4"
+        maxlength="10"
+        class="w-full"
+        style="text-transform: uppercase" />
+      <small class="field-hint">Identifiant court unique (ex: L1, L2...)</small>
+    </div>
+
+    <!-- Name -->
+    <div class="field">
+      <label for="name">Nom *</label>
+      <input pInputText id="name"
+        [(ngModel)]="form.name"
+        placeholder="ex: Ligne de test thermique"
+        class="w-full" />
+    </div>
+
+    <!-- Active Status -->
+    <div class="field">
+      <label>Statut</label>
+      <div class="status-toggle">
+        <button
+          class="toggle-btn"
+          [class.active-btn]="form.active"
+          (click)="form.active = true">
+          <i class="pi pi-check-circle"></i>
+          Active
+        </button>
+        <button
+          class="toggle-btn"
+          [class.inactive-btn]="!form.active"
+          (click)="form.active = false">
+          <i class="pi pi-times-circle"></i>
+          Inactive
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="lineDialog = false">
+    </button>
+    <button pButton
+      [label]="isEdit ? 'Sauvegarder' : 'Créer'"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="saveLine()"
+      [disabled]="!form.code || !form.name">
+    </button>
+  </ng-template>
+</p-dialog>

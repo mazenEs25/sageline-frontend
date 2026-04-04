@@ -1,0 +1,131 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  background: linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%);
+  border-right: 1px solid var(--sage-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  padding: 24px 22px;
+  border-bottom: 1px solid var(--sage-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.2rem;
+  }
+
+  .logo-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.02em;
+    display: block;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: #475569;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+  }
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.menu-group {
+  margin-bottom: 8px;
+}
+
+.menu-label {
+  padding: 16px 22px 8px;
+  font-size: 10px;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 22px;
+  margin: 2px 10px;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: all 0.2s;
+  position: relative;
+
+  &:hover {
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &.active {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+
+    .active-indicator {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      border-radius: 2px;
+      background: #3b82f6;
+    }
+  }
+
+  i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+  }
+}
+
+.sidebar-footer {
+  padding: 16px 22px;
+  border-top: 1px solid var(--sage-border);
+
+  .port-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    span {
+      font-size: 11px;
+      color: #475569;
+
+      em {
+        color: #64748b;
+        font-style: normal;
+      }
+    }
+  }
+}

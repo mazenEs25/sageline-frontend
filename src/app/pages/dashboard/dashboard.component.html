@@ -1,0 +1,298 @@
+<div class="dashboard" *ngIf="!loading">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Tableau de bord</h1>
+      <p>
+        Vue d'ensemble en temps réel
+        <span class="refresh-time">
+          · Dernière mise à jour : {{ lastRefresh | date:'HH:mm:ss' }}
+        </span>
+      </p>
+    </div>
+    <div class="header-actions">
+      <button pButton
+        icon="pi pi-refresh"
+        class="p-button-outlined p-button-sm"
+        pTooltip="Actualiser"
+        (click)="refresh()">
+      </button>
+      <button pButton
+        label="Nouvelle validation"
+        icon="pi pi-plus"
+        class="p-button-primary"
+        routerLink="/validations/create">
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ KPI Cards Row ═══ -->
+  <div class="kpi-row">
+    <!-- Conformity Rate (hero card) -->
+    <div class="kpi-card kpi-hero">
+      <div class="kpi-icon-wrap" style="background: rgba(59,130,246,0.12); color: #3b82f6">
+        <i class="pi pi-percentage"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value" [ngClass]="conformityRateClass">
+          {{ conformityRate.toFixed(1) }}<span class="kpi-unit">%</span>
+        </div>
+        <div class="kpi-label">Taux de conformité global</div>
+      </div>
+    </div>
+
+    <!-- Total Validations -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(139,92,246,0.12); color: #8b5cf6">
+        <i class="pi pi-check-square"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ dashboard?.totalValidations || 0 }}</div>
+        <div class="kpi-label">Total validations</div>
+      </div>
+    </div>
+
+    <!-- Active -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(245,158,11,0.12); color: #f59e0b">
+        <i class="pi pi-spinner"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ dashboard?.activeValidations || 0 }}</div>
+        <div class="kpi-label">En cours</div>
+      </div>
+    </div>
+
+    <!-- Non-conform -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(239,68,68,0.12); color: #ef4444">
+        <i class="pi pi-times-circle"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ dashboard?.nonConformeCount || 0 }}</div>
+        <div class="kpi-label">Non conformités</div>
+      </div>
+    </div>
+
+    <!-- AI Alerts -->
+    <div class="kpi-card" [class.kpi-alert]="aiAlerts.length > 0">
+      <div class="kpi-icon-wrap" style="background: rgba(249,115,22,0.12); color: #f97316">
+        <i class="pi pi-bolt"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ aiAlerts.length }}</div>
+        <div class="kpi-label">Alertes IA actives</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Charts Row 1: Conformity Donut + Risk Distribution ═══ -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Répartition des validations</h3>
+          <p>Par statut final</p>
+        </div>
+      </div>
+      <div class="chart-body chart-donut">
+        <p-chart type="doughnut"
+          [data]="conformityChartData"
+          [options]="conformityChartOptions"
+          [style]="{ width: '100%', height: '280px' }">
+        </p-chart>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Distribution des risques IA</h3>
+          <p>Niveaux de risque prédits</p>
+        </div>
+      </div>
+      <div class="chart-body">
+        <p-chart type="bar"
+          [data]="riskDistributionData"
+          [options]="riskDistributionOptions"
+          [style]="{ width: '100%', height: '280px' }">
+        </p-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Charts Row 2: Timeline + Line Comparison ═══ -->
+  <div class="chart-row">
+    <div class="chart-card chart-wide">
+      <div class="chart-header">
+        <div>
+          <h3>Activité des 14 derniers jours</h3>
+          <p>Conformes vs Non conformes par jour</p>
+        </div>
+      </div>
+      <div class="chart-body">
+        <p-chart type="line"
+          [data]="timelineData"
+          [options]="timelineOptions"
+          [style]="{ width: '100%', height: '280px' }">
+        </p-chart>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Comparaison par ligne</h3>
+          <p>Conformité et volume par ligne de production</p>
+        </div>
+      </div>
+      <div class="chart-body">
+        <p-chart type="bar"
+          [data]="lineComparisonData"
+          [options]="lineComparisonOptions"
+          [style]="{ width: '100%', height: '280px' }">
+        </p-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Bottom Row: Recent Validations + AI Alerts ═══ -->
+  <div class="bottom-row">
+
+    <!-- Recent Validations Table -->
+    <div class="bottom-card recent-card">
+      <div class="card-header-row">
+        <div>
+          <h3>Validations récentes</h3>
+          <p>Les 8 dernières validations</p>
+        </div>
+        <button pButton
+          label="Voir tout"
+          class="p-button-text p-button-sm"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          (click)="navigateToValidations()">
+        </button>
+      </div>
+
+      <p-table [value]="recentValidations" [rowHover]="true" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width:60px">ID</th>
+            <th>Zone</th>
+            <th style="width:70px">Ligne</th>
+            <th style="width:120px">Statut</th>
+            <th style="width:100px">Risque</th>
+            <th style="width:130px">Date</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-v>
+          <tr class="clickable-row" (click)="viewValidation(v.id)">
+            <td><span class="id-badge">#{{ v.id }}</span></td>
+            <td><span class="zone-text">{{ getZoneName(v.validationZoneId) }}</span></td>
+            <td>
+              <p-tag [value]="getLineCode(v.validationZoneId)" severity="info" [rounded]="true"></p-tag>
+            </td>
+            <td>
+              <p-tag
+                [value]="getStatusLabel(v.status)"
+                [severity]="$any(getStatusSeverity(v.status))"
+                [rounded]="true">
+              </p-tag>
+            </td>
+            <td>
+              <span class="risk-inline" *ngIf="v.riskLevel"
+                [style.color]="getRiskColor(v.riskLevel)">
+                <i [class]="getRiskIcon(v.riskLevel)"></i>
+                {{ v.riskLevel }}
+              </span>
+              <span *ngIf="!v.riskLevel" class="no-data">—</span>
+            </td>
+            <td class="date-cell">{{ v.startDate | date:'dd/MM HH:mm' }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-mini">Aucune validation</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- AI Alerts Panel -->
+    <div class="bottom-card alerts-card">
+      <div class="card-header-row">
+        <div>
+          <h3>
+            <i class="pi pi-bolt" style="color: #f97316; margin-right: 8px"></i>
+            Alertes IA
+          </h3>
+          <p>Validations en cours à risque élevé</p>
+        </div>
+      </div>
+
+      <div class="alerts-list" *ngIf="aiAlerts.length > 0">
+        <div class="alert-item" *ngFor="let alert of aiAlerts"
+          (click)="viewValidation(alert.id)">
+
+          <div class="alert-left">
+            <div class="alert-icon"
+              [style.background]="getRiskColor(alert.riskLevel) + '18'"
+              [style.color]="getRiskColor(alert.riskLevel)">
+              <i [class]="getRiskIcon(alert.riskLevel)"></i>
+            </div>
+            <div class="alert-info">
+              <div class="alert-title">
+                Validation #{{ alert.id }}
+                <span class="alert-level"
+                  [style.color]="getRiskColor(alert.riskLevel)">
+                  {{ alert.riskLevel }}
+                </span>
+              </div>
+              <div class="alert-sub">
+                {{ getZoneName(alert.validationZoneId) }} · {{ getLineCode(alert.validationZoneId) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-right">
+            <div class="alert-score"
+              [style.color]="getRiskColor(alert.riskLevel)">
+              {{ ((alert.riskScore || 0) * 100).toFixed(0) }}%
+            </div>
+            <div class="alert-confidence">
+              Conf. {{ ((alert.confidence || 0) * 100).toFixed(0) }}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alerts-empty" *ngIf="aiAlerts.length === 0">
+        <i class="pi pi-check-circle" style="color: #10b981"></i>
+        <p>Aucune alerte active</p>
+        <small>Toutes les validations en cours sont à risque faible</small>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="loading-dash">
+  <div class="kpi-row">
+    <div class="kpi-card" *ngFor="let i of [1,2,3,4,5]">
+      <p-skeleton width="44px" height="44px" borderRadius="10px"></p-skeleton>
+      <div style="flex:1">
+        <p-skeleton width="60px" height="28px" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="100px" height="14px"></p-skeleton>
+      </div>
+    </div>
+  </div>
+  <div class="chart-row" style="margin-top: 20px">
+    <div class="chart-card"><p-skeleton height="340px"></p-skeleton></div>
+    <div class="chart-card"><p-skeleton height="340px"></p-skeleton></div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+  }
+
+  p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 4px 0 0;
+  }
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .username {
+    font-weight: 600;
+    font-size: 13px;
+    color: #f1f5f9;
+  }
+}
+
+.email-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.date-cell {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px !important;
+  color: #475569;
+
+  i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  label {
+    display: block;
+    margin-bottom: 6px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.w-full {
+  width: 100%;
+}

@@ -1,0 +1,380 @@
+// ─── Header ───
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h1 { font-size: 20px; font-weight: 700; color: #f1f5f9; margin: 0; }
+  p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+// ─── Factory Floor ───
+
+.factory-floor {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a 0%, #0a0f1e 100%);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.floor-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(30, 41, 59, 0.3) 0.5px, transparent 0.5px),
+    linear-gradient(90deg, rgba(30, 41, 59, 0.3) 0.5px, transparent 0.5px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.lines-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── Production Line ───
+
+.prod-line {
+  display: flex;
+  align-items: stretch;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #334155;
+    transform: translateY(-1px);
+  }
+
+  &.inactive {
+    opacity: 0.35;
+    filter: grayscale(0.5);
+
+    &:hover { opacity: 0.5; }
+  }
+
+  &.selected {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+  }
+}
+
+.line-header {
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 8px;
+  flex-shrink: 0;
+  border-right: 1px solid #1e293b;
+}
+
+.line-code {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.line-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  background: #0f172a;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.line-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  min-width: 200px;
+}
+
+// ─── Zone Chips ───
+
+.zone-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: 8px;
+}
+
+.zone-chip {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  white-space: nowrap;
+}
+
+// ─── Meta ───
+
+.line-meta {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+
+  i { font-size: 12px; }
+}
+
+// ─── Flow Arrows ───
+
+.arrow-flow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 3px;
+  opacity: 0.2;
+}
+
+.arrow-chevron {
+  display: block;
+  width: 6px;
+  height: 10px;
+  border-right: 1.5px solid #94a3b8;
+  border-bottom: 1.5px solid #94a3b8;
+  transform: rotate(-45deg);
+}
+
+// ─── Conveyor Belt ───
+
+.conveyor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  overflow: hidden;
+}
+
+.conveyor-track {
+  width: 200%;
+  height: 100%;
+  animation: convey 2s linear infinite;
+}
+
+@keyframes convey {
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conveyor-track { animation: none; }
+}
+
+// ─── Legend ───
+
+.floor-legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-arrows {
+  color: #475569;
+  font-size: 11px;
+  letter-spacing: -1px;
+}
+
+// ─── Detail Panel ───
+
+.detail-panel {
+  margin-top: 20px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin: 0;
+  }
+}
+
+.detail-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.detail-stat {
+  text-align: center;
+  padding: 14px 8px;
+  background: #1e293b;
+  border-radius: 8px;
+}
+
+.detail-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.detail-stat-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.rate-excellent { color: #10b981 !important; }
+.rate-good { color: #3b82f6 !important; }
+.rate-warning { color: #f59e0b !important; }
+.rate-danger { color: #ef4444 !important; }
+
+.detail-zones-title {
+  padding: 0 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.detail-zones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 20px 18px;
+}
+
+.detail-zone-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.05);
+  }
+}
+
+.dz-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.dz-desc {
+  font-size: 11px;
+  color: #64748b;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dz-arrow {
+  font-size: 11px;
+  color: #475569;
+  margin-left: auto;
+}
+
+.detail-zone-empty {
+  width: 100%;
+  text-align: center;
+  padding: 16px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.loading-floor {
+  margin-top: 24px;
+}

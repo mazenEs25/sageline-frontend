@@ -1,0 +1,414 @@
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a (click)="goBack()" class="breadcrumb-link">
+    <i class="pi pi-arrow-left"></i> Retour aux validations
+  </a>
+</div>
+
+<div *ngIf="validation && !loading">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <div class="title-row">
+        <h1>Validation #{{ validation.id }}</h1>
+        <p-tag
+          [value]="getStatusLabel(validation.status)"
+          [severity]="getStatusSeverity(validation.status)"
+          [rounded]="true">
+        </p-tag>
+      </div>
+      <p>
+        {{ zone?.name || '—' }} · {{ line?.code || '—' }} — {{ line?.name || '' }}
+        · Démarrée le {{ validation.startDate | date:'dd/MM/yyyy à HH:mm' }}
+      </p>
+    </div>
+    <div class="header-actions" *ngIf="isActive">
+      <button pButton
+        label="Ajouter un résultat"
+        icon="pi pi-plus"
+        class="p-button-outlined"
+        (click)="openAddResult()">
+      </button>
+      <button pButton
+        label="Clôturer"
+        icon="pi pi-lock"
+        class="p-button-primary"
+        (click)="openCloseDialog()"
+        [disabled]="results.length === 0">
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ Top Grid: AI + Stats ═══ -->
+  <div class="detail-grid">
+
+    <!-- AI Prediction Card -->
+    <div class="card ai-card">
+      <div class="card-header">
+        <i class="pi pi-bolt"></i>
+        <span>Prédiction IA</span>
+      </div>
+      <div class="card-body" *ngIf="validation.riskLevel">
+        <div class="ai-score">
+          <div class="score-ring"
+            [style.border-color]="getRiskColor(validation.riskLevel)">
+            <span class="score-value">{{ (validation.riskScore! * 100).toFixed(0) }}</span>
+            <span class="score-unit">%</span>
+          </div>
+          <div class="score-info">
+            <div class="risk-level"
+              [style.color]="getRiskColor(validation.riskLevel)">
+              {{ validation.riskLevel }}
+            </div>
+            <div class="confidence">
+              Confiance: {{ (validation.confidence! * 100).toFixed(0) }}%
+            </div>
+          </div>
+        </div>
+        <div class="ai-features" *ngIf="results.length > 0">
+          <div class="feature-row">
+            <span>Écart moyen</span>
+            <span class="feature-value">{{ avgDeviation.toFixed(1) }}%</span>
+          </div>
+          <div class="feature-row">
+            <span>Écart max</span>
+            <span class="feature-value">{{ maxDeviation.toFixed(1) }}%</span>
+          </div>
+          <div class="feature-row">
+            <span>Nb résultats</span>
+            <span class="feature-value">{{ results.length }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body empty-ai" *ngIf="!validation.riskLevel">
+        <i class="pi pi-bolt"></i>
+        <p>Prédiction non disponible</p>
+      </div>
+    </div>
+
+    <!-- Results Summary Card -->
+    <div class="card stats-card">
+      <div class="card-header">
+        <i class="pi pi-chart-bar"></i>
+        <span>Résumé des résultats</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-number">{{ results.length }}</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number success-text">{{ conformCount }}</div>
+            <div class="stat-label">Conformes</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number danger-text">{{ nonConformCount }}</div>
+            <div class="stat-label">Non conformes</div>
+          </div>
+        </div>
+
+        <!-- Conform rate bar -->
+        <div class="rate-bar-container" *ngIf="results.length > 0">
+          <div class="rate-label">
+            <span>Taux de conformité</span>
+            <span class="rate-value"
+              [class.success-text]="conformRate >= 80"
+              [class.warning-text]="conformRate >= 50 && conformRate < 80"
+              [class.danger-text]="conformRate < 50">
+              {{ conformRate.toFixed(1) }}%
+            </span>
+          </div>
+          <div class="rate-bar">
+            <div class="rate-fill"
+              [style.width.%]="conformRate"
+              [class.bar-success]="conformRate >= 80"
+              [class.bar-warning]="conformRate >= 50 && conformRate < 80"
+              [class.bar-danger]="conformRate < 50">
+            </div>
+          </div>
+        </div>
+
+        <div class="no-results" *ngIf="results.length === 0">
+          <p>Aucun résultat de mesure</p>
+          <button pButton
+            *ngIf="isActive"
+            label="Ajouter un résultat"
+            icon="pi pi-plus"
+            class="p-button-text p-button-sm"
+            (click)="openAddResult()">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card info-card">
+      <div class="card-header">
+        <i class="pi pi-info-circle"></i>
+        <span>Informations</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Zone</span>
+          <span class="info-value">{{ zone?.name || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Ligne</span>
+          <span class="info-value">{{ line?.code }} — {{ line?.name }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Début</span>
+          <span class="info-value">{{ validation.startDate | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-row" *ngIf="validation.endDate">
+          <span class="info-label">Fin</span>
+          <span class="info-value">{{ validation.endDate | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-row" *ngIf="validation.comments">
+          <span class="info-label">Commentaires</span>
+          <span class="info-value comment-text">{{ validation.comments }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Results Table ═══ -->
+  <div class="results-section">
+    <div class="section-title">
+      <h2>Résultats de mesure</h2>
+      <span class="results-badge">{{ results.length }} mesure{{ results.length > 1 ? 's' : '' }}</span>
+    </div>
+
+    <p-table
+      [value]="results"
+      [rowHover]="true"
+      dataKey="id"
+      *ngIf="results.length > 0">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Paramètre</th>
+          <th style="width: 130px">Valeur mesurée</th>
+          <th style="width: 130px">Valeur attendue</th>
+          <th style="width: 120px">Écart</th>
+          <th style="width: 110px">Conformité</th>
+          <th style="width: 80px" *ngIf="isActive">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-result>
+        <tr>
+          <td>
+            <span class="param-name">{{ result.parameter }}</span>
+          </td>
+          <td>
+            <span class="value-mono">{{ result.measuredValue }}</span>
+          </td>
+          <td>
+            <span class="value-mono expected">{{ result.expectedValue }}</span>
+          </td>
+          <td>
+            <span class="deviation-badge" [ngClass]="getDeviationClass(result)">
+              {{ getDeviation(result).toFixed(1) }}%
+            </span>
+          </td>
+          <td>
+            <p-tag
+              [value]="result.conform ? 'Conforme' : 'Non conforme'"
+              [severity]="result.conform ? 'success' : 'danger'"
+              [icon]="result.conform ? 'pi pi-check' : 'pi pi-times'"
+              [rounded]="true">
+            </p-tag>
+          </td>
+          <td *ngIf="isActive">
+            <button pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              (click)="deleteResult(result)"
+              pTooltip="Supprimer">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="empty-results" *ngIf="results.length === 0">
+      <i class="pi pi-list"></i>
+      <p>Aucune mesure enregistrée</p>
+      <small>Ajoutez des résultats de mesure pour mettre à jour la prédiction IA</small>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-container">
+  <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #3b82f6"></i>
+  <p>Chargement de la validation...</p>
+</div>
+
+<!-- ═══ ADD RESULT DIALOG ═══ -->
+<p-dialog
+  [(visible)]="resultDialog"
+  header="Ajouter un résultat de mesure"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Paramètre *</label>
+      <p-dropdown
+        [(ngModel)]="resultForm.parameter"
+        [options]="commonParameters"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner ou taper..."
+        [editable]="true"
+        [style]="{ width: '100%' }">
+      </p-dropdown>
+      <small class="field-hint">Vous pouvez taper un paramètre personnalisé</small>
+    </div>
+
+    <div class="field-row">
+      <div class="field half">
+        <label>Valeur mesurée *</label>
+        <input pInputText
+          type="number"
+          [(ngModel)]="resultForm.measuredValue"
+          placeholder="ex: 28.0"
+          class="w-full" />
+      </div>
+      <div class="field half">
+        <label>Valeur attendue *</label>
+        <input pInputText
+          type="number"
+          [(ngModel)]="resultForm.expectedValue"
+          placeholder="ex: 22.0"
+          class="w-full" />
+      </div>
+    </div>
+
+    <!-- Live preview -->
+    <div class="preview-box" *ngIf="resultForm.parameter && resultForm.expectedValue">
+      <div class="preview-row">
+        <span>Écart</span>
+        <span class="preview-value"
+          [ngClass]="{
+            'deviation-critical': getPreviewDeviation() > 20,
+            'deviation-warning': getPreviewDeviation() > 10 && getPreviewDeviation() <= 20,
+            'deviation-medium': getPreviewDeviation() > 5 && getPreviewDeviation() <= 10,
+            'deviation-ok': getPreviewDeviation() <= 5
+          }">
+          {{ getPreviewDeviation().toFixed(1) }}%
+        </span>
+      </div>
+      <div class="preview-row">
+        <span>Conformité</span>
+        <p-tag
+          [value]="getPreviewDeviation() < 5 ? 'Conforme' : 'Non conforme'"
+          [severity]="getPreviewDeviation() < 5 ? 'success' : 'danger'"
+          [rounded]="true">
+        </p-tag>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="resultDialog = false">
+    </button>
+    <button pButton
+      label="Ajouter"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="saveResult()"
+      [disabled]="!resultForm.parameter || !resultForm.expectedValue">
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══ CLOSE VALIDATION DIALOG ═══ -->
+<p-dialog
+  [(visible)]="closeDialog"
+  header="Clôturer la validation"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="form-grid">
+    <!-- Current state summary -->
+    <div class="close-summary">
+      <div class="close-stat">
+        <span class="close-stat-value success-text">{{ conformCount }}</span>
+        <span class="close-stat-label">conformes</span>
+      </div>
+      <div class="close-stat">
+        <span class="close-stat-value danger-text">{{ nonConformCount }}</span>
+        <span class="close-stat-label">non conformes</span>
+      </div>
+      <div class="close-stat">
+        <span class="close-stat-value"
+          [class.success-text]="conformRate >= 80"
+          [class.danger-text]="conformRate < 80">
+          {{ conformRate.toFixed(0) }}%
+        </span>
+        <span class="close-stat-label">conformité</span>
+      </div>
+    </div>
+
+    <!-- AI recommendation -->
+    <div class="ai-recommendation" *ngIf="validation?.riskLevel">
+      <i class="pi pi-bolt"></i>
+      <div>
+        <strong>Recommandation IA :</strong>
+        <span [style.color]="getRiskColor(validation?.riskLevel)">
+          Risque {{ validation?.riskLevel }} ({{ ((validation?.riskScore || 0) * 100).toFixed(0) }}%)
+        </span>
+        — Statut suggéré :
+        <strong>{{ suggestedCloseStatus === 'CONFORME' ? 'Conforme' : 'Non conforme' }}</strong>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Statut final *</label>
+      <p-dropdown
+        [(ngModel)]="closeStatus"
+        [options]="closeStatusOptions"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }">
+      </p-dropdown>
+    </div>
+
+    <div class="field">
+      <label>Commentaires de clôture</label>
+      <textarea pInputTextarea
+        [(ngModel)]="closeComments"
+        placeholder="ex: Température et pression hors normes..."
+        [rows]="3"
+        [autoResize]="true"
+        class="w-full">
+      </textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="closeDialog = false">
+    </button>
+    <button pButton
+      label="Clôturer la validation"
+      icon="pi pi-lock"
+      [class]="closeStatus === 'CONFORME' ? 'p-button-success' : 'p-button-danger'"
+      (click)="closeValidation()">
+    </button>
+  </ng-template>
+</p-dialog>

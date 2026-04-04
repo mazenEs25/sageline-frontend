@@ -1,0 +1,239 @@
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Zones de Validation</h1>
+    <p>Gérer les zones de validation par ligne de production</p>
+  </div>
+  <button pButton
+    label="Nouvelle zone"
+    icon="pi pi-plus"
+    class="p-button-primary"
+    (click)="openNew()">
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <app-stat-card
+    icon="pi pi-th-large"
+    label="Total zones"
+    [value]="zones.length"
+    color="#8b5cf6">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-box"
+    label="Lignes couvertes"
+    [value]="uniqueLineCount"
+    color="#3b82f6">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-chart-bar"
+    label="Moy. zones/ligne"
+    [value]="uniqueLineCount ? (zones.length / uniqueLineCount).toFixed(1) : '0'"
+    color="#10b981">
+  </app-stat-card>
+</div>
+
+<!-- Data Table -->
+<p-table
+  [value]="filteredZones"
+  [paginator]="true"
+  [rows]="10"
+  [loading]="loading"
+  [globalFilterFields]="['name', 'description']"
+  [rowHover]="true"
+  dataKey="id"
+  #dt>
+
+  <!-- Table Header: Search + Filter -->
+  <ng-template pTemplate="caption">
+    <div class="table-header">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input pInputText
+          type="text"
+          placeholder="Rechercher par nom ou description..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+      </span>
+
+      <!-- Line filter dropdown -->
+      <p-dropdown
+        [(ngModel)]="selectedLineFilter"
+        [options]="lineFilterOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filtrer par ligne"
+        [style]="{ minWidth: '220px' }"
+        [showClear]="true">
+      </p-dropdown>
+    </div>
+  </ng-template>
+
+  <!-- Columns -->
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="name">
+        Zone <p-sortIcon field="name"></p-sortIcon>
+      </th>
+      <th>Description</th>
+      <th pSortableColumn="productionLineId" style="width: 240px">
+        Ligne de production <p-sortIcon field="productionLineId"></p-sortIcon>
+      </th>
+      <th pSortableColumn="createdAt" style="width: 120px">
+        Créé le <p-sortIcon field="createdAt"></p-sortIcon>
+      </th>
+      <th style="width: 120px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <!-- Rows -->
+  <ng-template pTemplate="body" let-zone>
+    <tr>
+      <!-- Zone name with avatar -->
+      <td>
+        <div class="zone-cell">
+          <div class="zone-avatar">
+            {{ zone.name.charAt(0) }}
+          </div>
+          <span class="zone-name">{{ zone.name }}</span>
+        </div>
+      </td>
+
+      <!-- Description -->
+      <td>
+        <span class="zone-desc" [pTooltip]="zone.description" tooltipPosition="top">
+          {{ zone.description || '—' }}
+        </span>
+      </td>
+
+      <!-- Production Line -->
+      <td>
+        <div class="line-cell">
+          <p-tag
+            [value]="getLineCode(zone.productionLineId)"
+            severity="info"
+            [rounded]="true">
+          </p-tag>
+          <span class="line-label">{{ getLineName(zone.productionLineId) }}</span>
+          <i class="pi pi-circle-fill line-status"
+            [class.status-active]="isLineActive(zone.productionLineId)"
+            [class.status-inactive]="!isLineActive(zone.productionLineId)"
+            [pTooltip]="isLineActive(zone.productionLineId) ? 'Ligne active' : 'Ligne inactive'"
+            tooltipPosition="top">
+          </i>
+        </div>
+      </td>
+
+      <!-- Date -->
+      <td class="date-cell">
+        {{ zone.createdAt | date:'dd/MM/yyyy' }}
+      </td>
+
+      <!-- Actions -->
+      <td>
+        <div class="action-buttons">
+          <button pButton
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm"
+            (click)="editZone(zone)"
+            pTooltip="Modifier"
+            tooltipPosition="top">
+          </button>
+          <button pButton
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            (click)="deleteZone(zone)"
+            pTooltip="Supprimer"
+            tooltipPosition="top">
+          </button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <!-- Empty -->
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="5" class="empty-state">
+        <i class="pi pi-inbox"></i>
+        <p *ngIf="!selectedLineFilter">Aucune zone de validation trouvée</p>
+        <p *ngIf="selectedLineFilter">Aucune zone pour cette ligne</p>
+        <button pButton
+          *ngIf="selectedLineFilter"
+          label="Voir toutes les zones"
+          class="p-button-text p-button-sm"
+          icon="pi pi-filter-slash"
+          (click)="selectedLineFilter = null"
+          style="margin-top: 8px">
+        </button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- ═══ Zone Dialog ═══ -->
+<p-dialog
+  [(visible)]="zoneDialog"
+  [header]="isEdit ? 'Modifier la zone' : 'Nouvelle zone'"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="form-grid">
+    <!-- Name -->
+    <div class="field">
+      <label for="zoneName">Nom de la zone *</label>
+      <input pInputText id="zoneName"
+        [(ngModel)]="form.name"
+        placeholder="ex: Zone de test vibration"
+        class="w-full" />
+    </div>
+
+    <!-- Description -->
+    <div class="field">
+      <label for="zoneDesc">Description</label>
+      <textarea pInputTextarea id="zoneDesc"
+        [(ngModel)]="form.description"
+        placeholder="Description détaillée de la zone de validation..."
+        [rows]="3"
+        [autoResize]="true"
+        class="w-full">
+      </textarea>
+    </div>
+
+    <!-- Production Line -->
+    <div class="field">
+      <label for="zoneLine">Ligne de production *</label>
+      <p-dropdown id="zoneLine"
+        [(ngModel)]="form.productionLineId"
+        [options]="lineOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner une ligne..."
+        [style]="{ width: '100%' }"
+        [filter]="true"
+        filterPlaceholder="Rechercher une ligne...">
+      </p-dropdown>
+      <small class="field-hint" *ngIf="lineOptions.length === 0">
+        <i class="pi pi-info-circle"></i>
+        Aucune ligne active. Créez ou activez une ligne d'abord.
+      </small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="zoneDialog = false">
+    </button>
+    <button pButton
+      [label]="isEdit ? 'Sauvegarder' : 'Créer'"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="saveZone()"
+      [disabled]="!form.name || !form.productionLineId">
+    </button>
+  </ng-template>
+</p-dialog>

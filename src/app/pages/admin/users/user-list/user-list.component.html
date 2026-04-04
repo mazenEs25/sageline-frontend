@@ -1,0 +1,181 @@
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Utilisateurs</h1>
+    <p>Gérer les comptes utilisateurs du système</p>
+  </div>
+  <button pButton
+    label="Nouveau"
+    icon="pi pi-plus"
+    class="p-button-primary"
+    (click)="openNew()">
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <app-stat-card
+    icon="pi pi-users"
+    label="Total utilisateurs"
+    [value]="users.length"
+    color="#3b82f6">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-shield"
+    label="Admins"
+    [value]="(users | roleFilter:'ADMIN_IT').length"
+    color="#ef4444">
+  </app-stat-card>
+  <app-stat-card
+    icon="pi pi-wrench"
+    label="Techniciens"
+    [value]="(users | roleFilter:'TECH_VALIDATION').length + (users | roleFilter:'TECH_PREPARATION').length"
+    color="#10b981">
+  </app-stat-card>
+</div>
+
+<!-- Data Table -->
+<p-table
+  [value]="users"
+  [paginator]="true"
+  [rows]="10"
+  [loading]="loading"
+  [globalFilterFields]="['username', 'email', 'role']"
+  [rowHover]="true"
+  dataKey="id"
+  #dt>
+
+  <!-- Table Header with Search -->
+  <ng-template pTemplate="caption">
+    <div class="table-header">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input pInputText
+          type="text"
+          placeholder="Rechercher..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+      </span>
+    </div>
+  </ng-template>
+
+  <!-- Columns -->
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="username">Utilisateur <p-sortIcon field="username"></p-sortIcon></th>
+      <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+      <th pSortableColumn="role">Rôle <p-sortIcon field="role"></p-sortIcon></th>
+      <th>Ligne</th>
+      <th pSortableColumn="createdAt">Créé le <p-sortIcon field="createdAt"></p-sortIcon></th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+
+  <!-- Rows -->
+  <ng-template pTemplate="body" let-user>
+    <tr>
+      <td>
+        <div class="user-cell">
+          <p-avatar
+            [label]="user.username.slice(0,2).toUpperCase()"
+            shape="circle"
+            [style]="{'background-color': 'rgba(59,130,246,0.15)', 'color': '#60a5fa'}">
+          </p-avatar>
+          <span class="username">{{ user.username }}</span>
+        </div>
+      </td>
+      <td><span class="email-mono">{{ user.email }}</span></td>
+      <td>
+        <p-tag [value]="getRoleLabel(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
+      </td>
+      <td>{{ getLineName(user.productionLineId) }}</td>
+      <td class="date-cell">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+      <td>
+        <button pButton icon="pi pi-pencil"
+          class="p-button-text p-button-sm"
+          (click)="editUser(user)"
+          pTooltip="Modifier">
+        </button>
+        <button pButton icon="pi pi-trash"
+          class="p-button-text p-button-danger p-button-sm"
+          (click)="deleteUser(user)"
+          pTooltip="Supprimer">
+        </button>
+      </td>
+    </tr>
+  </ng-template>
+
+  <!-- Empty State -->
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="6" class="empty-state">
+        <i class="pi pi-inbox"></i>
+        <p>Aucun utilisateur trouvé</p>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- ═══ User Dialog (Create / Edit) ═══ -->
+<p-dialog
+  [(visible)]="userDialog"
+  [header]="isEdit ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="form-grid">
+    <div class="field">
+      <label for="username">Nom d'utilisateur *</label>
+      <input pInputText id="username"
+        [(ngModel)]="form.username"
+        placeholder="ex: tech03"
+        class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="email">Email *</label>
+      <input pInputText id="email"
+        [(ngModel)]="form.email"
+        placeholder="ex: tech03@sageline.com"
+        class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="role">Rôle *</label>
+      <p-dropdown id="role"
+        [(ngModel)]="form.role"
+        [options]="roles"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }">
+      </p-dropdown>
+    </div>
+
+    <div class="field">
+      <label for="line">Ligne de production</label>
+      <p-dropdown id="line"
+        [(ngModel)]="form.productionLineId"
+        [options]="lineOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner..."
+        [style]="{ width: '100%' }">
+      </p-dropdown>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="userDialog = false">
+    </button>
+    <button pButton
+      [label]="isEdit ? 'Sauvegarder' : 'Créer'"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="saveUser()">
+    </button>
+  </ng-template>
+</p-dialog>
