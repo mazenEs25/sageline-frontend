@@ -5,6 +5,7 @@
     <p>Gérer les zones de validation par ligne de production</p>
   </div>
   <button pButton
+    *ngIf="canCreate"
     label="Nouvelle zone"
     icon="pi pi-plus"
     class="p-button-primary"
@@ -140,6 +141,7 @@
             tooltipPosition="top">
           </button>
           <button pButton
+            *ngIf="canDelete"
             icon="pi pi-trash"
             class="p-button-text p-button-danger p-button-sm"
             (click)="deleteZone(zone)"

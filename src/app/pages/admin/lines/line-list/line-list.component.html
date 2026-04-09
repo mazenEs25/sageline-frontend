@@ -5,6 +5,7 @@
     <p>Gérer les lignes de production et leur statut</p>
   </div>
   <button pButton
+    *ngIf="canCreate"
     label="Nouvelle ligne"
     icon="pi pi-plus"
     class="p-button-primary"
@@ -147,6 +148,7 @@
             tooltipPosition="top">
           </button>
           <button pButton
+            *ngIf="canDelete"
             icon="pi pi-trash"
             class="p-button-text p-button-danger p-button-sm"
             (click)="deleteLine(line)"

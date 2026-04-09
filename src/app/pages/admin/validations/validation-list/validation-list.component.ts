@@ -7,7 +7,7 @@ import { Validation } from '../../../../models/validation.model';
 import { ProductionLineService } from '../../../../services/production-line.service';
 import { ValidationZoneService } from '../../../../services/validation-zone.service';
 import { ValidationService } from '../../../../services/validation.service';
-
+import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-validation-list',
@@ -33,6 +33,8 @@ export class ValidationListComponent implements OnInit {
   ];
 
   lineFilterOptions: any[] = [];
+  canCreate = false;
+  canDelete = false;
 
   constructor(
     private validationService: ValidationService,
@@ -40,13 +42,17 @@ export class ValidationListComponent implements OnInit {
     private zoneService: ValidationZoneService,
     private messageService: MessageService,
     private confirmService: ConfirmationService,
+    private keycloak: KeycloakService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadValidations();
     this.loadLines();
     this.loadZones();
+    const roles = this.keycloak.getUserRoles();
+    this.canCreate = ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VALIDATION'].some(r => roles.includes(r));
+    this.canDelete = ['ADMIN_IT', 'CHEF_SECTEUR'].some(r => roles.includes(r));
   }
 
   loadValidations(): void {

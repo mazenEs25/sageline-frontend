@@ -4,6 +4,7 @@ import { ValidationZoneService } from '../../../../services/validation-zone.serv
 import { ProductionLineService } from '../../../../services/production-line.service';
 import { ValidationZone, ValidationZoneRequest } from '../../../../models/validation-zone.model';
 import { ProductionLine } from '../../../../models/production-line.model';
+import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-zone-list',
@@ -35,16 +36,23 @@ export class ZoneListComponent implements OnInit {
   selectedLineFilter: number | null = null;
   lineFilterOptions: any[] = [];
 
+  canCreate = false;
+  canDelete = false;
+
   constructor(
     private zoneService: ValidationZoneService,
     private lineService: ProductionLineService,
     private messageService: MessageService,
-    private confirmService: ConfirmationService
+    private confirmService: ConfirmationService,
+    private keycloak: KeycloakService
   ) {}
 
   ngOnInit(): void {
     this.loadLines();
     this.loadZones();
+    const roles = this.keycloak.getUserRoles();
+    this.canCreate = ['ADMIN_IT', 'CHEF_SECTEUR'].some(r => roles.includes(r));
+    this.canDelete = roles.includes('ADMIN_IT');
   }
 
   loadZones(): void {

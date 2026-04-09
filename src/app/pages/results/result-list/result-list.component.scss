@@ -1,0 +1,45 @@
+.page-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+  h1 { font-size: 20px; font-weight: 700; color: #f1f5f9; margin: 0; }
+  p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
+}
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 28px; }
+
+.kpi-line-card {
+  background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 20px;
+  transition: border-color 0.2s;
+  &:hover { border-color: #334155; }
+}
+
+.klc-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.klc-code { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.klc-name { font-size: 13px; color: #94a3b8; flex: 1; }
+
+.klc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.klc-stat { text-align: center; padding: 8px 4px; background: #1e293b; border-radius: 6px; }
+.klc-val { font-size: 18px; font-weight: 700; color: #f1f5f9; }
+.klc-label { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+.klc-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+.klc-fill { height: 100%; border-radius: 3px; transition: width 0.6s; }
+
+.chart-section {
+  background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 24px;
+  h2 { font-size: 16px; font-weight: 600; color: #f1f5f9; margin: 0 0 16px; }
+}
+.chart-container { height: 300px; }
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  // Force stat-card components to fill the row
+  ::ng-deep app-stat-card {
+    flex: 1;
+    min-width: 180px;
+  }
+}

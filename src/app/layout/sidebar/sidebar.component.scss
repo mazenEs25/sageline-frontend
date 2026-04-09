@@ -108,24 +108,3 @@
     text-align: center;
   }
 }
-
-.sidebar-footer {
-  padding: 16px 22px;
-  border-top: 1px solid var(--sage-border);
-
-  .port-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    span {
-      font-size: 11px;
-      color: #475569;
-
-      em {
-        color: #64748b;
-        font-style: normal;
-      }
-    }
-  }
-}

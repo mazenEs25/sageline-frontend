@@ -1,9 +1,120 @@
 <div class="topbar">
-  <div class="topbar-left">
-    <h1>{{ title }}</h1>
-    <p>{{ subtitle }}</p>
+  <!-- Breadcrumb -->
+  <div class="tb-breadcrumb">
+    <span *ngFor="let crumb of breadcrumb; let last = last">
+      <span [class.current]="last">{{ crumb }}</span>
+      <span class="sep" *ngIf="!last">/</span>
+    </span>
   </div>
-  <div class="topbar-right">
-    <ng-content></ng-content>
+
+  <div class="tb-spacer"></div>
+
+  <!-- Search -->
+  <div class="tb-search" [class.active]="searchOpen" (click)="openSearch()">
+    <i class="pi pi-search"></i>
+    <input *ngIf="searchOpen"
+      #searchInput
+      type="text"
+      [(ngModel)]="searchQuery"
+      placeholder="Rechercher..."
+      (keydown.enter)="executeSearch()"
+      (keydown.escape)="closeSearch()"
+      class="search-input" />
+    <span *ngIf="!searchOpen">Rechercher...</span>
+    <span class="shortcut" *ngIf="!searchOpen">Ctrl+K</span>
+    <i class="pi pi-times search-close" *ngIf="searchOpen"
+      (click)="closeSearch(); $event.stopPropagation()"></i>
+  </div>
+
+  <!-- Search Results -->
+  <div class="search-dropdown" *ngIf="searchOpen && searchResults.length > 0">
+    <div class="search-result" *ngFor="let r of searchResults" (click)="goToResult(r)">
+      <i [class]="r.icon"></i>
+      <div class="sr-content">
+        <div class="sr-title">{{ r.title }}</div>
+        <div class="sr-sub">{{ r.subtitle }}</div>
+      </div>
+      <span class="sr-type">{{ r.type }}</span>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="tb-icon-wrapper">
+    <div class="tb-icon-btn" (click)="toggleNotifications()" title="Notifications">
+      <i class="pi pi-bell"></i>
+      <span class="tb-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </div>
+
+    <!-- Notifications Dropdown -->
+    <div class="notif-dropdown" *ngIf="showNotifications">
+      <div class="notif-header">
+        <span>Notifications</span>
+        <button class="notif-mark" (click)="markAllRead()" *ngIf="unreadCount > 0">Tout lire</button>
+      </div>
+      <div class="notif-list">
+        <div class="notif-item" *ngFor="let n of notifications"
+          [class.unread]="!n.read" (click)="viewNotification(n)">
+          <div class="notif-dot" [style.background]="n.severity === 'CRITIQUE' ? '#ef4444' : '#f97316'"></div>
+          <div class="notif-content">
+            <div class="notif-title">{{ n.title }}</div>
+            <div class="notif-message">{{ n.message }}</div>
+          </div>
+        </div>
+        <div class="notif-empty" *ngIf="notifications.length === 0">
+          <i class="pi pi-check-circle"></i>
+          <span>Aucune alerte</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="tb-icon-btn" title="Paramètres">
+    <i class="pi pi-cog"></i>
+  </div>
+
+  <div class="tb-divider"></div>
+
+  <!-- User Profile Wrapper -->
+  <div class="tb-user-wrapper">
+    <div class="tb-user" (click)="toggleDropdown()">
+      <div class="tb-avatar">{{ userInitials }}</div>
+      <div class="tb-user-info">
+        <span class="tb-username">{{ username }}</span>
+        <span class="tb-role">{{ userRole }}</span>
+      </div>
+      <i class="pi pi-chevron-down tb-chevron"></i>
+    </div>
+
+    <!-- User Dropdown — INSIDE the wrapper -->
+    <div class="user-dropdown" *ngIf="showDropdown">
+      <div class="dd-header">
+        <div class="dd-user-card">
+          <div class="dd-avatar">{{ userInitials }}</div>
+          <div class="dd-user-details">
+            <div class="dd-fullname">{{ username }}</div>
+            <div class="dd-email">{{ userRole }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" (click)="navigateTo('/kpis')">
+        <i class="pi pi-chart-line"></i>
+        <span>Mes KPIs</span>
+      </div>
+      <div class="dd-item" (click)="openSwagger()">
+        <i class="pi pi-book"></i>
+        <span>Documentation API</span>
+      </div>
+      <div class="dd-item">
+        <i class="pi pi-question-circle"></i>
+        <span>Aide</span>
+      </div>
+      <div class="dd-sep"></div>
+      <div class="dd-item danger" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span>Se déconnecter</span>
+      </div>
+    </div>
   </div>
 </div>

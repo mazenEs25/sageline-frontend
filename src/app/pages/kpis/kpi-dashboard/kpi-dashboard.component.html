@@ -1,0 +1,71 @@
+<div class="page-header">
+  <div>
+    <h1>KPIs — Indicateurs de performance</h1>
+    <p>Suivi des taux de conformité par ligne de production</p>
+  </div>
+</div>
+
+<!-- Line KPI Cards -->
+<div class="kpi-grid" *ngIf="!loading">
+  <div class="kpi-line-card" *ngFor="let kpi of lineKpis">
+    <div class="klc-header">
+      <div class="klc-left">
+        <span class="klc-code" [style.color]="getRateColor(kpi.conformRate)">{{ kpi.line.code }}</span>
+        <span class="klc-name">{{ kpi.line.name }}</span>
+      </div>
+      <button pButton icon="pi pi-refresh" class="p-button-text p-button-sm"
+        pTooltip="Recalculer" (click)="recalculateKpis(kpi.line.id)"></button>
+    </div>
+
+    <!-- Conformity rate hero -->
+    <div class="klc-rate">
+      <span class="klc-rate-value" [style.color]="getRateColor(kpi.conformRate)">
+        {{ kpi.conformRate.toFixed(1) }}<span class="klc-rate-unit">%</span>
+      </span>
+      <span class="klc-rate-label">Conformité</span>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="klc-bar">
+      <div class="klc-fill"
+        [style.width.%]="kpi.conformRate"
+        [style.background]="getRateColor(kpi.conformRate)">
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="klc-stats">
+      <div class="klc-stat">
+        <div class="klc-stat-val">{{ kpi.total }}</div>
+        <div class="klc-stat-label">Validations</div>
+      </div>
+      <div class="klc-stat">
+        <div class="klc-stat-val">{{ kpi.active }}</div>
+        <div class="klc-stat-label">En cours</div>
+      </div>
+      <div class="klc-stat">
+        <div class="klc-stat-val" style="color: #ef4444">{{ kpi.nonConform }}</div>
+        <div class="klc-stat-label">Non conformes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="chart-section" *ngIf="conformityChartData">
+  <div class="chart-header">
+    <h2>Comparaison des lignes</h2>
+    <p>Taux de conformité par ligne de production</p>
+  </div>
+  <div class="chart-container">
+    <p-chart type="bar" [data]="conformityChartData" [options]="conformityChartOptions"
+      [style]="{ width: '100%', height: '300px' }"></p-chart>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-section">
+  <p-skeleton height="160px" styleClass="mb-3" borderRadius="12px"></p-skeleton>
+  <p-skeleton height="160px" styleClass="mb-3" borderRadius="12px"></p-skeleton>
+  <p-skeleton height="160px" borderRadius="12px"></p-skeleton>
+</div>

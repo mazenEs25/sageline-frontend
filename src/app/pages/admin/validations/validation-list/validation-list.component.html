@@ -4,53 +4,26 @@
     <h1>Validations</h1>
     <p>Suivi des validations industrielles en temps réel</p>
   </div>
-  <button pButton
-    label="Nouvelle validation"
-    icon="pi pi-plus"
-    class="p-button-primary"
+  <button pButton *ngIf="canCreate" label="Nouvelle validation" icon="pi pi-plus" class="p-button-primary"
     (click)="navigateToCreate()">
   </button>
 </div>
 
 <!-- Stats -->
 <div class="stats-row">
-  <app-stat-card
-    icon="pi pi-spinner"
-    label="En cours"
-    [value]="activeCount"
-    color="#f59e0b">
+  <app-stat-card icon="pi pi-spinner" label="En cours" [value]="activeCount" color="#f59e0b">
   </app-stat-card>
-  <app-stat-card
-    icon="pi pi-check-circle"
-    label="Conformes"
-    [value]="conformCount"
-    color="#10b981">
+  <app-stat-card icon="pi pi-check-circle" label="Conformes" [value]="conformCount" color="#10b981">
   </app-stat-card>
-  <app-stat-card
-    icon="pi pi-times-circle"
-    label="Non conformes"
-    [value]="nonConformCount"
-    color="#ef4444">
+  <app-stat-card icon="pi pi-times-circle" label="Non conformes" [value]="nonConformCount" color="#ef4444">
   </app-stat-card>
-  <app-stat-card
-    icon="pi pi-bolt"
-    label="Alertes IA"
-    [value]="criticalCount"
-    color="#f97316">
+  <app-stat-card icon="pi pi-bolt" label="Alertes IA" [value]="criticalCount" color="#f97316">
   </app-stat-card>
 </div>
 
 <!-- Data Table -->
-<p-table
-  [value]="filteredValidations"
-  [paginator]="true"
-  [rows]="10"
-  [rowsPerPageOptions]="[10, 25, 50]"
-  [loading]="loading"
-  [globalFilterFields]="['id', 'comments', 'status']"
-  [rowHover]="true"
-  dataKey="id"
-  #dt>
+<p-table [value]="filteredValidations" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+  [loading]="loading" [globalFilterFields]="['id', 'comments', 'status']" [rowHover]="true" dataKey="id" #dt>
 
   <!-- Header: Search + Filters -->
   <ng-template pTemplate="caption">
@@ -58,38 +31,22 @@
       <div class="header-left">
         <span class="p-input-icon-left">
           <i class="pi pi-search"></i>
-          <input pInputText
-            type="text"
-            placeholder="Rechercher..."
+          <input pInputText type="text" placeholder="Rechercher..."
             (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
         </span>
       </div>
 
       <div class="header-filters">
-        <p-dropdown
-          [(ngModel)]="selectedStatus"
-          [options]="statusOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Statut"
-          [style]="{ minWidth: '180px' }">
+        <p-dropdown [(ngModel)]="selectedStatus" [options]="statusOptions" optionLabel="label" optionValue="value"
+          placeholder="Statut" [style]="{ minWidth: '180px' }">
         </p-dropdown>
 
-        <p-dropdown
-          [(ngModel)]="selectedLineId"
-          [options]="lineFilterOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Ligne"
-          [style]="{ minWidth: '200px' }">
+        <p-dropdown [(ngModel)]="selectedLineId" [options]="lineFilterOptions" optionLabel="label" optionValue="value"
+          placeholder="Ligne" [style]="{ minWidth: '200px' }">
         </p-dropdown>
 
-        <button pButton
-          *ngIf="hasActiveFilters"
-          icon="pi pi-filter-slash"
-          class="p-button-text p-button-sm"
-          pTooltip="Réinitialiser filtres"
-          (click)="clearFilters()">
+        <button pButton *ngIf="hasActiveFilters" icon="pi pi-filter-slash" class="p-button-text p-button-sm"
+          pTooltip="Réinitialiser filtres" (click)="clearFilters()">
         </button>
       </div>
     </div>
@@ -137,25 +94,19 @@
 
       <!-- Status -->
       <td>
-        <p-tag
-          [value]="getStatusLabel(v.status)"
-          [severity]="getStatusSeverity(v.status)"
-          [rounded]="true">
+        <p-tag [value]="getStatusLabel(v.status)" [severity]="getStatusSeverity(v.status)" [rounded]="true">
         </p-tag>
       </td>
 
       <!-- AI Risk -->
       <td>
         <div class="risk-cell" *ngIf="v.riskLevel">
-          <i [class]="getRiskIcon(v.riskLevel)"
-             [style.color]="v.riskLevel === 'CRITIQUE' ? '#ef4444' :
+          <i [class]="getRiskIcon(v.riskLevel)" [style.color]="v.riskLevel === 'CRITIQUE' ? '#ef4444' :
                             v.riskLevel === 'RISQUE' ? '#f97316' :
                             v.riskLevel === 'MOYEN' ? '#f59e0b' : '#10b981'">
           </i>
-          <span class="risk-label"
-            [class.risk-critical]="v.riskLevel === 'CRITIQUE'"
-            [class.risk-warning]="v.riskLevel === 'RISQUE'"
-            [class.risk-medium]="v.riskLevel === 'MOYEN'"
+          <span class="risk-label" [class.risk-critical]="v.riskLevel === 'CRITIQUE'"
+            [class.risk-warning]="v.riskLevel === 'RISQUE'" [class.risk-medium]="v.riskLevel === 'MOYEN'"
             [class.risk-low]="v.riskLevel === 'BAS'">
             {{ v.riskLevel }}
           </span>
@@ -180,20 +131,11 @@
       <!-- Actions -->
       <td (click)="$event.stopPropagation()">
         <div class="action-buttons">
-          <button pButton
-            icon="pi pi-eye"
-            class="p-button-text p-button-sm p-button-info"
-            (click)="viewDetail(v)"
-            pTooltip="Voir détails"
-            tooltipPosition="top">
+          <button pButton icon="pi pi-eye" class="p-button-text p-button-sm p-button-info" (click)="viewDetail(v)"
+            pTooltip="Voir détails" tooltipPosition="top">
           </button>
-          <button pButton
-            icon="pi pi-trash"
-            class="p-button-text p-button-danger p-button-sm"
-            (click)="deleteValidation(v)"
-            pTooltip="Supprimer"
-            tooltipPosition="top"
-            *ngIf="v.status === 'EN_COURS'">
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+            (click)="deleteValidation(v)" pTooltip="Supprimer" tooltipPosition="top" *ngIf="canDelete && v.status === 'EN_COURS'">
           </button>
         </div>
       </td>
@@ -206,13 +148,8 @@
       <td colspan="8" class="empty-state">
         <i class="pi pi-inbox"></i>
         <p>Aucune validation trouvée</p>
-        <button pButton
-          *ngIf="hasActiveFilters"
-          label="Réinitialiser les filtres"
-          class="p-button-text p-button-sm"
-          icon="pi pi-filter-slash"
-          (click)="clearFilters()"
-          style="margin-top: 8px">
+        <button pButton *ngIf="hasActiveFilters" label="Réinitialiser les filtres" class="p-button-text p-button-sm"
+          icon="pi pi-filter-slash" (click)="clearFilters()" style="margin-top: 8px">
         </button>
       </td>
     </tr>

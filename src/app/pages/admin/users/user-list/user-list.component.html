@@ -125,22 +125,52 @@
   [resizable]="false">
 
   <div class="form-grid">
+    <!-- Username -->
     <div class="field">
       <label for="username">Nom d'utilisateur *</label>
       <input pInputText id="username"
         [(ngModel)]="form.username"
         placeholder="ex: tech03"
-        class="w-full" />
+        class="w-full"
+        [disabled]="isEdit" />
+      <small class="field-hint" *ngIf="!isEdit">
+        Ce nom sera utilisé pour la connexion Keycloak
+      </small>
     </div>
 
+    <!-- Email -->
     <div class="field">
       <label for="email">Email *</label>
       <input pInputText id="email"
+        type="email"
         [(ngModel)]="form.email"
         placeholder="ex: tech03@sageline.com"
         class="w-full" />
     </div>
 
+    <!-- Password -->
+    <div class="field">
+      <label for="password">
+        {{ isEdit ? 'Nouveau mot de passe' : 'Mot de passe *' }}
+      </label>
+      <div class="password-wrapper">
+        <input pInputText id="password"
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="form.password"
+          [placeholder]="isEdit ? 'Laisser vide pour ne pas changer' : 'Minimum 4 caractères'"
+          class="w-full" />
+        <button type="button"
+          class="password-toggle"
+          (click)="showPassword = !showPassword">
+          <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+        </button>
+      </div>
+      <small class="field-hint" *ngIf="isEdit">
+        Laissez vide pour conserver le mot de passe actuel
+      </small>
+    </div>
+
+    <!-- Role -->
     <div class="field">
       <label for="role">Rôle *</label>
       <p-dropdown id="role"
@@ -150,8 +180,12 @@
         optionValue="value"
         [style]="{ width: '100%' }">
       </p-dropdown>
+      <small class="field-hint">
+        Le rôle sera synchronisé avec Keycloak
+      </small>
     </div>
 
+    <!-- Production Line -->
     <div class="field">
       <label for="line">Ligne de production</label>
       <p-dropdown id="line"
@@ -163,6 +197,16 @@
         [style]="{ width: '100%' }">
       </p-dropdown>
     </div>
+
+    <!-- Keycloak sync info -->
+    <div class="sync-info">
+      <i class="pi pi-shield"></i>
+      <span>
+        {{ isEdit
+          ? 'Les modifications seront synchronisées avec Keycloak'
+          : 'L\'utilisateur sera créé dans Keycloak et dans la base de données' }}
+      </span>
+    </div>
   </div>
 
   <ng-template pTemplate="footer">
@@ -172,10 +216,11 @@
       (click)="userDialog = false">
     </button>
     <button pButton
-      [label]="isEdit ? 'Sauvegarder' : 'Créer'"
+      [label]="isEdit ? 'Sauvegarder' : 'Créer l\'utilisateur'"
       icon="pi pi-check"
       class="p-button-primary"
-      (click)="saveUser()">
+      (click)="saveUser()"
+      [disabled]="!form.username || !form.email || (!isEdit && (!form.password || form.password!.length < 4))">
     </button>
   </ng-template>
 </p-dialog>

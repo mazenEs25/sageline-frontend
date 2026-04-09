@@ -22,12 +22,15 @@ export class UserListComponent implements OnInit {
   isEdit = false;
   selectedUser: User | null = null;
 
+  showPassword = false;
+
   // Form
   form: UserRequest = {
     username: '',
     email: '',
-    role: Role.TECH_VALIDATION,
-    productionLineId: undefined
+    role: Role.TECH_VAL,
+    productionLineId: undefined,
+    password: ''
   };
 
   // Dropdown options
@@ -86,11 +89,13 @@ export class UserListComponent implements OnInit {
     this.form = {
       username: '',
       email: '',
-      role: Role.TECH_VALIDATION,
-      productionLineId: undefined
+      role: Role.TECH_VAL,
+      productionLineId: undefined,
+      password: ''
     };
     this.isEdit = false;
     this.selectedUser = null;
+    this.showPassword = false;
     this.userDialog = true;
   }
 
@@ -99,10 +104,12 @@ export class UserListComponent implements OnInit {
       username: user.username,
       email: user.email,
       role: user.role,
-      productionLineId: user.productionLineId
+      productionLineId: user.productionLineId,
+      password: ''
     };
     this.isEdit = true;
     this.selectedUser = user;
+    this.showPassword = false;
     this.userDialog = true;
   }
 

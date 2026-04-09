@@ -1,0 +1,245 @@
+<div class="page-header">
+  <div>
+    <h1>Intelligence Artificielle</h1>
+    <p>3 modèles IA pour la validation industrielle</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <app-stat-card icon="pi pi-bolt" label="Modèle 1 — Prédiction NC" [value]="'Random Forest'" color="#3b82f6"></app-stat-card>
+  <app-stat-card icon="pi pi-wrench" label="Modèle 2 — Outillage" [value]="toolRecommendations.length + ' outils'" color="#8b5cf6"></app-stat-card>
+  <app-stat-card icon="pi pi-shield" label="Modèle 3 — Anomalies" [value]="anomalies.length + ' détectées'" color="#f97316"></app-stat-card>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-nav">
+  <button class="tab-btn" [class.active]="activeTab === 0" (click)="activeTab = 0">
+    <i class="pi pi-bolt"></i> Prédictions NC
+  </button>
+  <button class="tab-btn" [class.active]="activeTab === 1" (click)="activeTab = 1">
+    <i class="pi pi-wrench"></i> Recommandation outillage
+  </button>
+  <button class="tab-btn" [class.active]="activeTab === 2" (click)="activeTab = 2">
+    <i class="pi pi-shield"></i> Détection anomalies
+  </button>
+</div>
+
+<!-- ═══ TAB 0: Non-Conformity Predictions (existing Model 1) ═══ -->
+<div class="tab-content" *ngIf="activeTab === 0">
+  <div class="section-card">
+    <div class="section-header">
+      <h2>Prédictions de non-conformité</h2>
+      <p>Modèle Random Forest (Flask — port 5000)</p>
+    </div>
+    <div class="predictions-grid">
+      <div class="prediction-card" *ngFor="let v of validations | slice:0:6">
+        <div class="pred-header">
+          <span class="pred-id">#{{ v.id }}</span>
+          <p-tag [value]="v.status === 'EN_COURS' ? 'En cours' : v.status === 'CONFORME' ? 'Conforme' : 'Non conforme'"
+                 [severity]="v.status === 'EN_COURS' ? 'warning' : v.status === 'CONFORME' ? 'success' : 'danger'"
+                 [rounded]="true">
+          </p-tag>
+        </div>
+        <div class="pred-zone">{{ getZoneName(v.validationZoneId) }}</div>
+        <div class="pred-risk" *ngIf="v.riskLevel">
+          <div class="risk-bar-mini">
+            <div class="risk-fill-mini"
+                 [style.width.%]="(v.riskScore || 0) * 100"
+                 [style.background]="v.riskLevel === 'CRITIQUE' ? '#ef4444' : v.riskLevel === 'RISQUE' ? '#f97316' : v.riskLevel === 'MOYEN' ? '#f59e0b' : '#10b981'">
+            </div>
+          </div>
+          <div class="risk-info">
+            <span class="risk-level-text"
+                  [style.color]="v.riskLevel === 'CRITIQUE' ? '#ef4444' : v.riskLevel === 'RISQUE' ? '#f97316' : v.riskLevel === 'MOYEN' ? '#f59e0b' : '#10b981'">
+              {{ v.riskLevel }}
+            </span>
+            <span class="risk-score-text">{{ ((v.riskScore || 0) * 100).toFixed(0) }}%</span>
+          </div>
+        </div>
+        <div class="pred-no-risk" *ngIf="!v.riskLevel">Pas de prédiction</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 1: Tool Recommendations (Model 2) ═══ -->
+<div class="tab-content" *ngIf="activeTab === 1">
+  <div class="section-card">
+    <div class="section-header">
+      <div>
+        <h2>Recommandation d'outillage</h2>
+        <p>Scoring multi-critères : taux de succès, disponibilité, maintenance, expérience, compatibilité</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-row">
+      <p-dropdown
+        [(ngModel)]="selectedZoneForTools"
+        [options]="zoneOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filtrer par zone"
+        [style]="{ minWidth: '200px' }"
+        (onChange)="onToolFilterChange()">
+      </p-dropdown>
+      <p-dropdown
+        [(ngModel)]="selectedLineForTools"
+        [options]="lineOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filtrer par ligne"
+        [style]="{ minWidth: '200px' }"
+        (onChange)="onToolFilterChange()">
+      </p-dropdown>
+    </div>
+
+    <!-- Tool Cards -->
+    <div class="tools-grid" *ngIf="!toolsLoading">
+      <div class="tool-card" *ngFor="let tool of toolRecommendations; let i = index">
+        <!-- Rank badge -->
+        <div class="tool-rank" [style.background]="i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#b45309' : '#334155'">
+          #{{ i + 1 }}
+        </div>
+
+        <div class="tool-info">
+          <div class="tool-name">{{ tool.name }}</div>
+          <div class="tool-desc">{{ tool.description || '—' }}</div>
+          <div class="tool-meta">
+            <span class="tool-status"
+                  [style.color]="tool.toolStatus === 'DISPONIBLE' ? '#10b981' : tool.toolStatus === 'EN_UTILISATION' ? '#f59e0b' : '#ef4444'">
+              {{ tool.toolStatus }}
+            </span>
+            <span *ngIf="tool.successRate">Succès: {{ tool.successRate }}%</span>
+            <span *ngIf="tool.usageCount">{{ tool.usageCount }} utilisations</span>
+          </div>
+        </div>
+
+        <!-- Score -->
+        <div class="tool-score">
+          <div class="score-circle" [style.border-color]="getScoreColor(tool.score)">
+            <span class="score-number" [style.color]="getScoreColor(tool.score)">
+              {{ getScorePercent(tool.score) }}
+            </span>
+            <span class="score-unit">%</span>
+          </div>
+        </div>
+
+        <!-- Score Breakdown -->
+        <div class="score-breakdown">
+          <div class="breakdown-item" *ngFor="let entry of tool.scoreBreakdown | keyvalue">
+            <span class="breakdown-label">{{ entry.key }}</span>
+            <div class="breakdown-bar">
+              <div class="breakdown-fill" [style.width.%]="entry.value * 100"></div>
+            </div>
+            <span class="breakdown-value">{{ (entry.value * 100).toFixed(0) }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-tools" *ngIf="toolRecommendations.length === 0">
+        <i class="pi pi-wrench"></i>
+        <p>Aucun outil disponible</p>
+      </div>
+    </div>
+
+    <div class="loading-section" *ngIf="toolsLoading">
+      <p-skeleton height="120px" styleClass="mb-3" borderRadius="10px"></p-skeleton>
+      <p-skeleton height="120px" styleClass="mb-3" borderRadius="10px"></p-skeleton>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: Anomaly Detection (Model 3) ═══ -->
+<div class="tab-content" *ngIf="activeTab === 2">
+  <div class="section-card">
+    <div class="section-header">
+      <div>
+        <h2>Détection d'anomalies</h2>
+        <p>Z-score, patterns temporels et fréquence d'échec</p>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="filter-row">
+      <p-dropdown
+        [(ngModel)]="selectedValidationForAnomaly"
+        [options]="validationOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sélectionner une validation..."
+        [style]="{ minWidth: '300px' }">
+      </p-dropdown>
+      <button pButton
+        label="Analyser"
+        icon="pi pi-search"
+        class="p-button-primary"
+        [disabled]="!selectedValidationForAnomaly"
+        (click)="detectForValidation()">
+      </button>
+      <button pButton
+        label="Scanner tout"
+        icon="pi pi-shield"
+        class="p-button-outlined"
+        (click)="scanAnomalies()">
+      </button>
+    </div>
+
+    <!-- Summary -->
+    <div class="anomaly-summary" *ngIf="anomalies.length > 0">
+      <div class="summary-stat critical">
+        <div class="summary-val">{{ criticalCount }}</div>
+        <div class="summary-label">Critiques</div>
+      </div>
+      <div class="summary-stat warning">
+        <div class="summary-val">{{ warningCount }}</div>
+        <div class="summary-label">Alertes</div>
+      </div>
+      <div class="summary-stat total">
+        <div class="summary-val">{{ anomalies.length }}</div>
+        <div class="summary-label">Total</div>
+      </div>
+    </div>
+
+    <!-- Anomaly List -->
+    <div class="anomaly-list" *ngIf="!anomaliesLoading">
+      <div class="anomaly-item" *ngFor="let anomaly of anomalies"
+           [style.border-left-color]="getSeverityColor(anomaly.severity)">
+        <div class="anomaly-icon"
+             [style.background]="getSeverityColor(anomaly.severity) + '15'"
+             [style.color]="getSeverityColor(anomaly.severity)">
+          <i [class]="getAnomalyIcon(anomaly.type)"></i>
+        </div>
+        <div class="anomaly-content">
+          <div class="anomaly-header">
+            <span class="anomaly-type">{{ getAnomalyTypeLabel(anomaly.type) }}</span>
+            <p-tag [value]="anomaly.severity"
+                   [severity]="getSeverityTag(anomaly.severity)"
+                   [rounded]="true">
+            </p-tag>
+          </div>
+          <div class="anomaly-desc">{{ anomaly.description }}</div>
+          <div class="anomaly-score-bar">
+            <div class="anomaly-score-fill"
+                 [style.width.%]="anomaly.score * 100"
+                 [style.background]="getSeverityColor(anomaly.severity)">
+            </div>
+          </div>
+          <span class="anomaly-score-text">Score: {{ (anomaly.score * 100).toFixed(0) }}%</span>
+        </div>
+      </div>
+
+      <div class="empty-anomalies" *ngIf="anomalies.length === 0">
+        <i class="pi pi-check-circle" style="color: #10b981"></i>
+        <p>Aucune anomalie détectée</p>
+        <small>Toutes les validations actives sont normales</small>
+      </div>
+    </div>
+
+    <div class="loading-section" *ngIf="anomaliesLoading">
+      <p-skeleton height="80px" styleClass="mb-3" borderRadius="10px"></p-skeleton>
+      <p-skeleton height="80px" styleClass="mb-3" borderRadius="10px"></p-skeleton>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,108 @@
+<div class="page-header">
+  <div>
+    <h1>Résultats de mesure</h1>
+    <p>Historique complet des mesures avec export PDF</p>
+  </div>
+  <button pButton
+    label="Exporter PDF"
+    icon="pi pi-file-pdf"
+    class="p-button-danger"
+    (click)="exportPDF()"
+    [disabled]="filteredResults.length === 0">
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <app-stat-card icon="pi pi-list" label="Total mesures" [value]="filteredResults.length" color="#3b82f6"></app-stat-card>
+  <app-stat-card icon="pi pi-check-circle" label="Conformes" [value]="conformCount" color="#10b981"></app-stat-card>
+  <app-stat-card icon="pi pi-times-circle" label="Non conformes" [value]="nonConformCount" color="#ef4444"></app-stat-card>
+  <app-stat-card icon="pi pi-percentage" label="Taux conformité" [value]="conformRate + '%'" color="#8b5cf6"></app-stat-card>
+</div>
+
+<!-- Filter -->
+<div class="filter-row">
+  <p-dropdown
+    [(ngModel)]="selectedValidationId"
+    [options]="validationOptions"
+    optionLabel="label"
+    optionValue="value"
+    placeholder="Filtrer par validation"
+    [style]="{ minWidth: '350px' }"
+    [filter]="true"
+    filterPlaceholder="Rechercher...">
+  </p-dropdown>
+</div>
+
+<!-- Table -->
+<p-table
+  [value]="filteredResults"
+  [paginator]="true"
+  [rows]="15"
+  [rowsPerPageOptions]="[10, 15, 25, 50]"
+  [loading]="loading"
+  [globalFilterFields]="['parameter', 'validationId']"
+  [rowHover]="true"
+  dataKey="id"
+  #dt>
+
+  <ng-template pTemplate="caption">
+    <div class="table-header">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input pInputText type="text" placeholder="Rechercher un paramètre..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+      </span>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="validationId" style="width:90px">Validation <p-sortIcon field="validationId"></p-sortIcon></th>
+      <th pSortableColumn="parameter">Paramètre <p-sortIcon field="parameter"></p-sortIcon></th>
+      <th pSortableColumn="measuredValue" style="width:120px">Mesuré <p-sortIcon field="measuredValue"></p-sortIcon></th>
+      <th pSortableColumn="expectedValue" style="width:120px">Attendu <p-sortIcon field="expectedValue"></p-sortIcon></th>
+      <th style="width:100px">Écart</th>
+      <th pSortableColumn="conform" style="width:130px">Conformité <p-sortIcon field="conform"></p-sortIcon></th>
+      <th style="width:100px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-r>
+    <tr>
+      <td><span class="id-badge">#{{ r.validationId }}</span></td>
+      <td><span class="param-name">{{ r.parameter }}</span></td>
+      <td><span class="value-mono">{{ r.measuredValue }}</span></td>
+      <td><span class="value-mono expected">{{ r.expectedValue }}</span></td>
+      <td>
+        <span class="deviation-badge" [ngClass]="getDeviationClass(r)">
+          {{ getDeviation(r) }}%
+        </span>
+      </td>
+      <td>
+        <p-tag
+          [value]="r.conform ? 'Conforme' : 'Non conforme'"
+          [severity]="r.conform ? 'success' : 'danger'"
+          [rounded]="true">
+        </p-tag>
+      </td>
+      <td>
+        <button pButton
+          icon="pi pi-file-pdf"
+          class="p-button-text p-button-sm p-button-danger"
+          pTooltip="Exporter cette validation"
+          (click)="exportValidationPDF(r.validationId)">
+        </button>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="empty-state">
+        <i class="pi pi-inbox"></i>
+        <p>Aucun résultat trouvé</p>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

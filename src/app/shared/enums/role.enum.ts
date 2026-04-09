@@ -2,22 +2,25 @@ export enum Role {
   ADMIN_IT = 'ADMIN_IT',
   CHEF_SECTEUR = 'CHEF_SECTEUR',
   EXPERT = 'EXPERT',
-  TECH_VALIDATION = 'TECH_VALIDATION',
-  TECH_PREPARATION = 'TECH_PREPARATION'
+  TECH_VAL = 'TECH_VAL',
+  TECH_PREP = 'TECH_PREP',
+  RESPONSABLE = 'RESPONSABLE'
 }
 
-export const ROLE_LABELS: Record<Role, string> = {
-  [Role.ADMIN_IT]: 'Admin IT',
-  [Role.CHEF_SECTEUR]: 'Chef Secteur',
-  [Role.EXPERT]: 'Expert',
-  [Role.TECH_VALIDATION]: 'Tech Validation',
-  [Role.TECH_PREPARATION]: 'Tech Préparation'
+export const ROLE_LABELS: Record<string, string> = {
+  'ADMIN_IT': 'Admin IT',
+  'CHEF_SECTEUR': 'Chef Secteur',
+  'EXPERT': 'Expert',
+  'TECH_VAL': 'Tech Validation',
+  'TECH_PREP': 'Tech Préparation',
+  'RESPONSABLE': 'Responsable'
 };
 
-export const ROLE_COLORS: Record<Role, string> = {
-  [Role.ADMIN_IT]: 'danger',
-  [Role.CHEF_SECTEUR]: 'info',
-  [Role.EXPERT]: 'help',
-  [Role.TECH_VALIDATION]: 'success',
-  [Role.TECH_PREPARATION]: 'warning'
+export const ROLE_COLORS: Record<string, string> = {
+  'ADMIN_IT': 'danger',
+  'CHEF_SECTEUR': 'info',
+  'EXPERT': 'help',
+  'TECH_VAL': 'success',
+  'TECH_PREP': 'warning',
+  'RESPONSABLE': 'info'
 };

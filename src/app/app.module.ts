@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule,APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -27,6 +27,14 @@ import { ValidationCreateComponent } from './pages/admin/validations/validation-
 import { ValidationDetailComponent } from './pages/admin/validations/validation-detail/validation-detail.component';
 import { LineMapComponent } from './pages/admin/lines/line-map/line-map.component';
 import { ZoneMapComponent } from './pages/admin/zones/zone-map/zone-map.component';
+// Keycloak
+import { KeycloakAngularModule, KeycloakService } from 'keycloak-angular';
+import { initializeKeycloak } from './auth/keycloak-init';
+import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
+import { LoginComponent } from './pages/login/login.component';
+import { AiDashboardComponent } from './pages/intelligence/ai-dashboard/ai-dashboard.component';
+import { ResultListComponent } from './pages/results/result-list/result-list.component';
+import { KpiDashboardComponent } from './pages/kpis/kpi-dashboard/kpi-dashboard.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +57,12 @@ import { ZoneMapComponent } from './pages/admin/zones/zone-map/zone-map.componen
     ValidationCreateComponent,
     ValidationDetailComponent,
     LineMapComponent,
-    ZoneMapComponent
+    ZoneMapComponent,
+    AccessDeniedComponent,
+    LoginComponent,
+    AiDashboardComponent,
+    ResultListComponent,
+    KpiDashboardComponent
   ],
   imports: [
     BrowserModule,
@@ -58,11 +71,18 @@ import { ZoneMapComponent } from './pages/admin/zones/zone-map/zone-map.componen
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
+    KeycloakAngularModule, 
     PrimeNGModule,
   ],
   providers: [
     MessageService,        // <── For p-toast
     ConfirmationService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeKeycloak,
+      multi: true,
+      deps: [KeycloakService],
+    },
   ],
   bootstrap: [AppComponent]
 })

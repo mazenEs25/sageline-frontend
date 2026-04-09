@@ -1,0 +1,192 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  h1 { font-size: 20px; font-weight: 700; color: #f1f5f9; margin: 0; }
+  p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
+}
+
+.stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+
+// ─── Tabs ───
+.tab-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+
+  &:hover { color: #94a3b8; }
+
+  &.active {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+  }
+
+  i { font-size: 14px; }
+}
+
+.tab-content { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+// ─── Section Card ───
+.section-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+  h2 { font-size: 16px; font-weight: 600; color: #f1f5f9; margin: 0 0 4px; }
+  p { font-size: 12px; color: #64748b; margin: 0; }
+}
+
+.filter-row {
+  display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+}
+
+// ─── Model 1: Predictions Grid ───
+.predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.prediction-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: #475569; }
+}
+
+.pred-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.pred-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #60a5fa; }
+.pred-zone { font-size: 13px; color: #94a3b8; margin-bottom: 12px; }
+
+.risk-bar-mini { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 6px; border: 1px solid #334155; }
+.risk-fill-mini { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.risk-info { display: flex; justify-content: space-between; font-size: 11px; }
+.risk-level-text { font-weight: 700; }
+.risk-score-text { color: #64748b; font-family: 'JetBrains Mono', monospace; }
+.pred-no-risk { font-size: 12px; color: #475569; font-style: italic; }
+
+// ─── Model 2: Tool Cards ───
+.tools-grid { display: flex; flex-direction: column; gap: 14px; }
+
+.tool-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: #475569; }
+}
+
+.tool-rank {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+
+.tool-info { flex: 1; }
+.tool-name { font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 2px; }
+.tool-desc { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+.tool-meta { display: flex; gap: 14px; font-size: 11px; color: #475569; }
+.tool-status { font-weight: 600; }
+
+.tool-score { flex-shrink: 0; }
+.score-circle {
+  width: 56px; height: 56px; border-radius: 50%; border: 3px solid;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.score-number { font-size: 18px; font-weight: 700; line-height: 1; }
+.score-unit { font-size: 10px; color: #64748b; }
+
+.score-breakdown {
+  display: flex; flex-direction: column; gap: 4px; min-width: 180px; flex-shrink: 0;
+}
+.breakdown-item { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.breakdown-label { width: 75px; color: #64748b; text-transform: capitalize; }
+.breakdown-bar { flex: 1; height: 4px; background: #0f172a; border-radius: 2px; overflow: hidden; }
+.breakdown-fill { height: 100%; background: #3b82f6; border-radius: 2px; }
+.breakdown-value { width: 30px; text-align: right; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+
+.empty-tools {
+  text-align: center; padding: 40px; color: #475569;
+  i { font-size: 2rem; display: block; margin-bottom: 12px; }
+}
+
+// ─── Model 3: Anomalies ───
+.anomaly-summary {
+  display: flex; gap: 14px; margin-bottom: 20px;
+}
+.summary-stat {
+  padding: 14px 24px; border-radius: 8px; text-align: center; min-width: 100px;
+  &.critical { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); }
+  &.warning { background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); }
+  &.total { background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); }
+}
+.summary-val { font-size: 24px; font-weight: 700; color: #f1f5f9; }
+.summary-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+.anomaly-list { display: flex; flex-direction: column; gap: 12px; }
+
+.anomaly-item {
+  display: flex; gap: 14px; padding: 16px 18px;
+  background: #1e293b; border: 1px solid #334155;
+  border-left: 3px solid; border-radius: 10px;
+  transition: border-color 0.2s;
+}
+
+.anomaly-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 16px;
+}
+
+.anomaly-content { flex: 1; }
+.anomaly-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.anomaly-type { font-size: 13px; font-weight: 600; color: #f1f5f9; }
+.anomaly-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 10px; }
+
+.anomaly-score-bar { height: 4px; background: #0f172a; border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.anomaly-score-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.anomaly-score-text { font-size: 11px; color: #64748b; font-family: 'JetBrains Mono', monospace; }
+
+.empty-anomalies {
+  text-align: center; padding: 40px; color: #475569;
+  i { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+  p { margin: 0 0 4px; font-size: 14px; color: #94a3b8; }
+  small { font-size: 12px; }
+}
+
+.loading-section { margin-top: 12px; }

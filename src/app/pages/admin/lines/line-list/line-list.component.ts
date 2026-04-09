@@ -4,7 +4,7 @@ import { ProductionLineService } from '../../../../services/production-line.serv
 import { UserService } from '../../../../services/user.service';
 import { ValidationZoneService } from '../../../../services/validation-zone.service';
 import { ProductionLine, ProductionLineRequest } from '../../../../models/production-line.model';
-
+import { KeycloakService } from 'keycloak-angular';
 @Component({
   selector: 'app-line-list',
   templateUrl: './line-list.component.html',
@@ -30,17 +30,23 @@ export class LineListComponent implements OnInit {
   // Stats
   zoneCountMap: Record<number, number> = {};
   userCountMap: Record<number, number> = {};
+  canCreate = false;
+  canDelete = false;
 
   constructor(
     private lineService: ProductionLineService,
     private zoneService: ValidationZoneService,
     private userService: UserService,
     private messageService: MessageService,
+    private keycloak: KeycloakService,
     private confirmService: ConfirmationService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadLines();
+    const roles = this.keycloak.getUserRoles();
+    this.canCreate = ['ADMIN_IT', 'CHEF_SECTEUR'].some(r => roles.includes(r));
+    this.canDelete = roles.includes('ADMIN_IT');
   }
 
   loadLines(): void {
