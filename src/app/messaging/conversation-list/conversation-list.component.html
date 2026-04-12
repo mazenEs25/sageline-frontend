@@ -1,0 +1,61 @@
+<div class="conversation-list">
+  <div class="list-header">
+    <h3><i class="pi pi-inbox"></i> Messages</h3>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <p-progressSpinner
+      [style]="{ width: '40px', height: '40px' }"
+      strokeWidth="4">
+    </p-progressSpinner>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && conversations.length === 0" class="empty-state">
+    <i class="pi pi-comments" style="font-size: 2rem; opacity: 0.5;"></i>
+    <p>Aucune conversation</p>
+  </div>
+
+  <!-- Conversation Items -->
+  <div
+    *ngFor="let conv of conversations"
+    class="conversation-item"
+    [class.selected]="selectedConversation?.id === conv.id"
+    [class.unread]="conv.unreadCount > 0"
+    (click)="selectConversation(conv)">
+
+    <!-- Avatar -->
+    <div class="conv-avatar">
+      <i [class]="getConversationIcon(conv)"></i>
+    </div>
+
+    <!-- Info -->
+    <div class="conv-info">
+      <div class="conv-header-row">
+        <span class="conv-name">{{ getOtherParticipant(conv).username }}</span>
+        <span class="conv-time" *ngIf="conv.lastMessageAt">
+          {{ conv.lastMessageAt | date:'HH:mm' }}
+        </span>
+      </div>
+      <div class="conv-meta">
+        <p-tag
+          [value]="getConversationLabel(conv)"
+          [severity]="getTagSeverity(conv)"
+          [rounded]="true">
+        </p-tag>
+        <span class="conv-role">{{ getOtherParticipant(conv).role }}</span>
+      </div>
+      <div class="conv-preview" *ngIf="conv.lastMessageContent">
+        {{ conv.lastMessageContent }}
+      </div>
+    </div>
+
+    <!-- Badge non lus -->
+    <p-badge
+      *ngIf="conv.unreadCount > 0"
+      [value]="conv.unreadCount.toString()"
+      severity="danger">
+    </p-badge>
+  </div>
+</div>

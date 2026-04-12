@@ -1,0 +1,80 @@
+<div class="chat-window" *ngIf="conversation; else noConversation">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">
+        <i class="pi pi-user"></i>
+      </div>
+      <div>
+        <h4>{{ getOtherParticipantName() }}</h4>
+        <span class="chat-status" *ngIf="isTyping">
+          <i class="pi pi-ellipsis-h typing-animation"></i> en train d'écrire...
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages-container" #messagesContainer>
+    <div *ngIf="loading" class="messages-loading">
+      <p-progressSpinner [style]="{width: '30px', height: '30px'}"></p-progressSpinner>
+    </div>
+
+    <div *ngFor="let msg of messages"
+         class="message-wrapper"
+         [class.own]="isOwnMessage(msg)"
+         [class.system]="msg.systemMessage">
+
+      <!-- Message système -->
+      <div *ngIf="msg.systemMessage" class="system-message">
+        <div class="system-content" [innerHTML]="msg.content | nl2br"></div>
+        <span class="system-time">{{ msg.sentAt | date:'dd/MM à HH:mm' }}</span>
+      </div>
+
+      <!-- Message normal -->
+      <div *ngIf="!msg.systemMessage" class="message-bubble">
+        <span class="message-sender" *ngIf="!isOwnMessage(msg)">
+          {{ msg.senderUsername }}
+        </span>
+        <div class="message-content">{{ msg.content }}</div>
+        <div class="message-meta">
+          <span class="message-time">{{ msg.sentAt | date:'HH:mm' }}</span>
+          <i *ngIf="isOwnMessage(msg) && msg.readAt"
+             class="pi pi-check-circle read-icon"
+             pTooltip="Lu"></i>
+          <i *ngIf="isOwnMessage(msg) && !msg.readAt"
+             class="pi pi-check"
+             pTooltip="Envoyé"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="chat-input">
+    <textarea
+      pInputTextarea
+      [(ngModel)]="newMessage"
+      placeholder="Écrire un message..."
+      [autoResize]="true"
+      [rows]="1"
+      (keydown)="onKeyDown($event)"
+      (input)="onTyping()">
+    </textarea>
+    <button pButton
+            icon="pi pi-send"
+            class="p-button-rounded p-button-primary"
+            [disabled]="!newMessage.trim()"
+            (click)="sendMessage()">
+    </button>
+  </div>
+</div>
+
+<!-- Aucune conversation sélectionnée -->
+<ng-template #noConversation>
+  <div class="no-conversation">
+    <i class="pi pi-comments" style="font-size: 4rem; opacity: 0.3;"></i>
+    <p>Sélectionnez une conversation pour commencer</p>
+  </div>
+</ng-template>

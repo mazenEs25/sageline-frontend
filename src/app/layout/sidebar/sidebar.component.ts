@@ -36,7 +36,15 @@ allMenuItems = [
       { label: 'Modèles IA', icon: 'pi pi-bolt', route: '/intelligence', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] },
       { label: 'KPIs', icon: 'pi pi-chart-line', route: '/kpis', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] },
     ]
-  }
+  },
+  {
+    label: 'COMMUNICATION',
+    items: [
+      { label: 'Messagerie', icon: 'pi pi-comments', route: '/messaging', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] },
+    ]
+  },
+  
+  
 ];
 
   filteredMenuItems: any[] = [];

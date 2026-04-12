@@ -1,0 +1,106 @@
+<!-- Bouton cloche dans la topbar -->
+<div class="notification-trigger">
+  <button
+    pButton
+    pRipple
+    class="p-button-rounded p-button-text notification-bell"
+    (click)="togglePanel($event)">
+    <i class="pi pi-bell"></i>
+    <span class="notif-badge" *ngIf="unreadCount > 0">
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+  </button>
+</div>
+
+<!-- Panel Overlay -->
+<p-overlayPanel
+  #notifPanel
+  [style]="{ width: '380px' }"
+  [showCloseIcon]="false"
+  appendTo="body">
+
+  <!-- Header -->
+  <div class="notif-header">
+    <h4>Notifications</h4>
+    <button
+      *ngIf="unreadCount > 0"
+      pButton
+      label="Tout marquer lu"
+      class="p-button-text p-button-sm"
+      icon="pi pi-check-circle"
+      (click)="markAllAsRead()">
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="notif-tabs">
+    <button
+      class="notif-tab"
+      [class.active]="activeTab === 'unread'"
+      (click)="switchTab('unread')">
+      Non lues
+      <span class="tab-count" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </button>
+    <button
+      class="notif-tab"
+      [class.active]="activeTab === 'all'"
+      (click)="switchTab('all')">
+      Toutes
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="notif-loading">
+    <p-progressSpinner
+      [style]="{ width: '30px', height: '30px' }"
+      strokeWidth="4">
+    </p-progressSpinner>
+  </div>
+
+  <!-- Liste des notifications -->
+  <div class="notif-list" *ngIf="!loading">
+
+    <!-- Empty State -->
+    <div *ngIf="notifications.length === 0" class="notif-empty">
+      <i class="pi pi-check-circle"></i>
+      <p *ngIf="activeTab === 'unread'">Aucune notification non lue</p>
+      <p *ngIf="activeTab === 'all'">Aucune notification</p>
+    </div>
+
+    <!-- Notification Items -->
+    <div
+      *ngFor="let notif of notifications"
+      class="notif-item"
+      [class.unread]="!notif.read"
+      (click)="onNotificationClick(notif)">
+
+      <!-- Icône -->
+      <div class="notif-icon"
+           [style.background]="getNotifColor(notif) + '20'"
+           [style.color]="getNotifColor(notif)">
+        <i [class]="getNotifIcon(notif)"></i>
+      </div>
+
+      <!-- Contenu -->
+      <div class="notif-content">
+        <div class="notif-title">{{ notif.title }}</div>
+        <div class="notif-body">{{ notif.content }}</div>
+        <div class="notif-time">{{ getTimeAgo(notif.createdAt) }}</div>
+      </div>
+
+      <!-- Indicateur non lu -->
+      <div class="notif-unread-dot" *ngIf="!notif.read"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="notif-footer">
+    <button
+      pButton
+      label="Voir la messagerie"
+      icon="pi pi-comments"
+      class="p-button-text p-button-sm"
+      (click)="notifPanel.hide(); router.navigate(['/messaging'])">
+    </button>
+  </div>
+</p-overlayPanel>

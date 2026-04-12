@@ -17,6 +17,7 @@ import { ResultListComponent } from './pages/results/result-list/result-list.com
 import { KpiDashboardComponent } from './pages/kpis/kpi-dashboard/kpi-dashboard.component';
 import { AiDashboardComponent } from './pages/intelligence/ai-dashboard/ai-dashboard.component';
 import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
+import { MessagingPageComponent } from './messaging/messaging-page/messaging-page.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -49,6 +50,8 @@ const routes: Routes = [
 
       // Intelligence IA
       { path: 'intelligence', component: AiDashboardComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] } },
+      // Messaging
+      {path: 'messaging',component:MessagingPageComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE'],breadcrumb: 'Messagerie' }},
 
       { path: 'access-denied', component: AccessDeniedComponent },
     ],

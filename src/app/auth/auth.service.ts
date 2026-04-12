@@ -137,4 +137,26 @@ export class AuthService {
       return {};
     }
   }
+  /**
+ * Récupérer l'ID de l'utilisateur courant depuis le token Keycloak.
+ * Le 'sub' du token JWT est l'ID Keycloak.
+ * On utilise le username pour chercher l'ID dans la base PostgreSQL.
+ */
+getCurrentUserId(): number {
+  // Option 1 : Si votre backend renvoie l'ID user dans le token custom claim
+  const tokenParsed = this.keycloak.getKeycloakInstance().tokenParsed;
+  if (tokenParsed && tokenParsed['user_id']) {
+    return tokenParsed['user_id'];
+  }
+
+  // Option 2 : Utiliser un ID stocké après le premier login
+  // (voir section 3.1 ci-dessous pour l'implémentation recommandée)
+  const storedId = localStorage.getItem('sageline_user_id');
+  if (storedId) {
+    return parseInt(storedId, 10);
+  }
+
+  console.error('User ID non disponible — fallback à 0');
+  return 0;
+}
 }

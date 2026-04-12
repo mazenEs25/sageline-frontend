@@ -1,0 +1,15 @@
+<div class="messaging-page">
+  <!-- Sidebar : Liste des conversations -->
+  <div class="messaging-sidebar">
+    <app-conversation-list
+      (conversationSelected)="onConversationSelected($event)">
+    </app-conversation-list>
+  </div>
+
+  <!-- Zone principale : Fenêtre de chat -->
+  <div class="messaging-main">
+    <app-chat-window
+      [conversation]="selectedConversation">
+    </app-chat-window>
+  </div>
+</div>

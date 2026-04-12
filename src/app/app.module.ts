@@ -35,6 +35,11 @@ import { LoginComponent } from './pages/login/login.component';
 import { AiDashboardComponent } from './pages/intelligence/ai-dashboard/ai-dashboard.component';
 import { ResultListComponent } from './pages/results/result-list/result-list.component';
 import { KpiDashboardComponent } from './pages/kpis/kpi-dashboard/kpi-dashboard.component';
+import { ConversationListComponent } from './messaging/conversation-list/conversation-list.component';
+import { ChatWindowComponent } from './messaging/chat-window/chat-window.component';
+import { NotificationPanelComponent } from './messaging/notification-panel/notification-panel.component';
+import { Nl2brPipe } from './shared/pipes/nl2br.pipe';
+import { MessagingPageComponent } from './messaging/messaging-page/messaging-page.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +67,12 @@ import { KpiDashboardComponent } from './pages/kpis/kpi-dashboard/kpi-dashboard.
     LoginComponent,
     AiDashboardComponent,
     ResultListComponent,
-    KpiDashboardComponent
+    KpiDashboardComponent,
+    ConversationListComponent,
+    ChatWindowComponent,
+    NotificationPanelComponent,
+    Nl2brPipe,
+    MessagingPageComponent
   ],
   imports: [
     BrowserModule,

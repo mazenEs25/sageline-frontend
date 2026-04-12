@@ -1,0 +1,187 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface-ground);
+
+    .chat-header {
+        padding: 0.875rem 1.25rem;
+        background: var(--surface-card);
+        border-bottom: 1px solid var(--surface-border);
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            h4 {
+                margin: 0;
+                color: var(--text-color);
+                font-size: 1rem;
+            }
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            i {
+                color: white;
+            }
+        }
+
+        .chat-status {
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            font-style: italic;
+        }
+    }
+
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .message-wrapper {
+        display: flex;
+        justify-content: flex-start;
+        max-width: 75%;
+
+        &.own {
+            align-self: flex-end;
+            justify-content: flex-end;
+
+            .message-bubble {
+                background: var(--primary-color);
+                color: white;
+                border-radius: 1rem 1rem 0.25rem 1rem;
+
+                .message-time,
+                .read-icon {
+                    color: rgba(255, 255, 255, 0.7);
+                }
+            }
+        }
+
+        &.system {
+            align-self: center;
+            max-width: 85%;
+        }
+    }
+
+    .message-bubble {
+        background: var(--surface-card);
+        padding: 0.625rem 0.875rem;
+        border-radius: 1rem 1rem 1rem 0.25rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+        .message-sender {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.2rem;
+            display: block;
+        }
+
+        .message-content {
+            font-size: 0.875rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            justify-content: flex-end;
+            margin-top: 0.25rem;
+
+            .message-time {
+                font-size: 0.65rem;
+            }
+
+            .read-icon {
+                font-size: 0.7rem;
+            }
+        }
+    }
+
+    .system-message {
+        background: rgba(var(--primary-color-rgb, 59, 130, 246), 0.08);
+        border: 1px solid rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        text-align: center;
+
+        .system-content {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .system-time {
+            font-size: 0.65rem;
+            color: var(--text-color-secondary);
+            margin-top: 0.25rem;
+            display: block;
+        }
+    }
+
+    .chat-input {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--surface-card);
+        border-top: 1px solid var(--surface-border);
+
+        textarea {
+            flex: 1;
+            max-height: 120px;
+            resize: none;
+        }
+    }
+
+}
+
+.no-conversation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-color-secondary);
+    gap: 1rem;
+}
+
+.typing-animation {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}

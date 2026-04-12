@@ -19,8 +19,11 @@ import { BadgeModule } from 'primeng/badge';
 import { ChartModule } from 'primeng/chart';
 import { MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
-import { DividerModule } from 'primeng/divider';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { DividerModule } from 'primeng/divider';
+import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { SortIcon } from 'primeng/table';
 
 const MODULES = [
@@ -29,6 +32,7 @@ const MODULES = [
   ToolbarModule, InputTextareaModule, ToggleButtonModule, CardModule,
   TooltipModule, RippleModule, InputSwitchModule, BadgeModule,
   ChartModule, MenuModule, AvatarModule, DividerModule, SkeletonModule,
+  ProgressSpinnerModule,OverlayPanelModule, ScrollPanelModule,
 ];
 
 @NgModule({

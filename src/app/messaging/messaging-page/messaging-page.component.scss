@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  height: calc(100vh - 70px);
+}
+
+.messaging-page {
+  display: flex;
+  height: 100%;
+  background: var(--surface-ground);
+
+  .messaging-sidebar {
+    width: 360px;
+    flex-shrink: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .messaging-main {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+}

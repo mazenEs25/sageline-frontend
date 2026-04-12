@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { environment } from '../../../environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +21,8 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {
     // If already authenticated, redirect to dashboard
     this.authService.isAuthenticated().then(isAuth => {
@@ -44,6 +48,18 @@ export class LoginComponent {
         try {
           // Initialize Keycloak with the received tokens
           await this.authService.initWithTokens(tokens);
+
+          // Resolve user ID before navigating so components can access it
+          try {
+            const user = await firstValueFrom(
+              this.http.get<any>(`${environment.apiUrl}/users/me`)
+            );
+            localStorage.setItem('sageline_user_id', user.id.toString());
+            localStorage.setItem('sageline_username', user.username);
+            localStorage.setItem('sageline_user_role', user.role);
+          } catch {
+            console.warn('Could not resolve user ID at login');
+          }
 
           // Navigate to dashboard
           this.router.navigate(['/dashboard']);
