@@ -9,6 +9,7 @@ import { TicketService } from '../../../services/ticket.service';
 @Component({
   selector: 'app-ticket-detail',
   templateUrl: './ticket-detail.component.html',
+  styleUrls: ['./ticket-detail.component.scss'],
   providers: [MessageService, ConfirmationService]
 })
 export class TicketDetailComponent implements OnInit {

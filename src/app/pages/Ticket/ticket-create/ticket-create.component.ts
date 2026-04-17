@@ -20,6 +20,7 @@ import { Priority } from '../../../shared/enums/ticket.enum';
 @Component({
   selector: 'app-ticket-create',
   templateUrl: './ticket-create.component.html',
+  styleUrls: ['./ticket-create.component.scss'],
   providers: [MessageService]
 })
 export class TicketCreateComponent implements OnInit {
@@ -54,6 +55,8 @@ export class TicketCreateComponent implements OnInit {
 
   currentStep = 0;
   submitting = false;
+
+  stepsMeta: string[] = ['Localisation', 'Planification', 'Affectation', 'Confirmation'];
 
   constructor(
     private secteurService: SecteurService,

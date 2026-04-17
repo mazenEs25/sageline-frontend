@@ -2,18 +2,29 @@
 <p-toast></p-toast>
 <p-confirmDialog></p-confirmDialog>
 
-<div *ngIf="loading" class="text-center p-5"><p-progressSpinner></p-progressSpinner></div>
+<div *ngIf="loading" class="sage-loading">
+  <p-progressSpinner></p-progressSpinner>
+</div>
 
-<div *ngIf="ticket && !loading" class="card">
-  <!-- Header -->
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div>
-      <button pButton icon="pi pi-arrow-left" class="p-button-text mr-2" routerLink="/validations"></button>
-      <span class="text-2xl font-bold text-primary">{{ ticket.ticketCode }}</span>
-      <app-ticket-status-badge [status]="ticket.status" class="ml-3"></app-ticket-status-badge>
-      <app-priority-badge [priority]="ticket.priority" class="ml-2"></app-priority-badge>
+<div *ngIf="ticket && !loading" class="sage-detail">
+  <!-- ===== Hero Header ===== -->
+  <div class="sage-hero">
+    <div class="sage-hero-left">
+      <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-rounded sage-back" routerLink="/validations"></button>
+      <div class="sage-hero-title">
+        <div class="sage-hero-row">
+          <span class="sage-code">{{ ticket.ticketCode }}</span>
+          <app-ticket-status-badge [status]="ticket.status"></app-ticket-status-badge>
+          <app-priority-badge [priority]="ticket.priority"></app-priority-badge>
+        </div>
+        <div class="sage-hero-sub">
+          <i class="pi pi-map-marker"></i>
+          <span>{{ ticket.secteurCode }} · {{ ticket.lineCode }} · {{ ticket.zoneName }}</span>
+        </div>
+      </div>
     </div>
-    <div class="flex gap-2">
+
+    <div class="sage-hero-actions">
       <button *ngIf="canStartPrep()" pButton label="Démarrer Prép." icon="pi pi-wrench" class="p-button-warning" (click)="startPrep()"></button>
       <button *ngIf="canValidatePrep()" pButton label="Valider Outillage" icon="pi pi-check" class="p-button-info" (click)="showPrepDialog = true"></button>
       <button *ngIf="canStartValidation()" pButton label="Lancer Validation" icon="pi pi-play" class="p-button-success" (click)="startValidation()"></button>
@@ -23,108 +34,190 @@
     </div>
   </div>
 
-  <!-- Timeline -->
-  <app-ticket-timeline [ticket]="ticket" class="mb-4"></app-ticket-timeline>
+  <!-- ===== Progress Timeline ===== -->
+  <app-ticket-timeline [ticket]="ticket" class="sage-timeline-block"></app-ticket-timeline>
 
-  <!-- Info Grid -->
-  <div class="grid">
-    <!-- Left: Details -->
-    <div class="col-8">
-      <div class="ticket-info-card">
-        <h4><i class="pi pi-map-marker mr-2"></i>Localisation</h4>
-        <div class="ticket-info-grid">
-          <div class="ticket-info-item">
-            <span class="label">Secteur</span>
-            <span class="value">
+  <!-- ===== Main Grid ===== -->
+  <div class="sage-grid">
+    <!-- LEFT COLUMN -->
+    <div class="sage-col-main">
+      <!-- Localisation card -->
+      <div class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-map-marker"></i>
+            <span>Localisation</span>
+          </div>
+        </div>
+        <div class="sage-card-body">
+          <div class="sage-info-grid">
+            <div class="sage-info-item">
+              <span class="sage-info-label">Secteur</span>
               <p-tag [value]="ticket.secteurCode" severity="info"></p-tag>
-            </span>
-          </div>
-          <div class="ticket-info-item">
-            <span class="label">Phase</span>
-            <span class="value">{{ ticket.phaseName }}</span>
-          </div>
-          <div class="ticket-info-item">
-            <span class="label">Ligne</span>
-            <span class="value">{{ ticket.lineCode }}</span>
-          </div>
-          <div class="ticket-info-item">
-            <span class="label">Zone / Poste</span>
-            <span class="value" style="color: var(--primary-color);">{{ ticket.zoneName }}</span>
+            </div>
+            <div class="sage-info-item">
+              <span class="sage-info-label">Phase</span>
+              <span class="sage-info-value">{{ ticket.phaseName }}</span>
+            </div>
+            <div class="sage-info-item">
+              <span class="sage-info-label">Ligne</span>
+              <span class="sage-info-value">{{ ticket.lineCode }}</span>
+            </div>
+            <div class="sage-info-item">
+              <span class="sage-info-label">Zone / Poste</span>
+              <span class="sage-info-value sage-highlight">{{ ticket.zoneName }}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4 class="mb-3"><i class="pi pi-calendar mr-2"></i>Planification</h4>
-        <div class="grid">
-          <div class="col-4"><span class="text-500">Date planifiée</span><div>{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</div></div>
-          <div class="col-4"><span class="text-500">Début effectif</span><div>{{ ticket.startDate ? (ticket.startDate | date:'dd/MM HH:mm') : '—' }}</div></div>
-          <div class="col-4"><span class="text-500">Fin</span><div>{{ ticket.endDate ? (ticket.endDate | date:'dd/MM HH:mm') : '—' }}</div></div>
+      <!-- Planification card -->
+      <div class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-calendar"></i>
+            <span>Planification</span>
+          </div>
+        </div>
+        <div class="sage-card-body">
+          <div class="sage-info-grid sage-cols-3">
+            <div class="sage-info-item">
+              <span class="sage-info-label">Date planifiée</span>
+              <span class="sage-info-value">{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="sage-info-item">
+              <span class="sage-info-label">Début effectif</span>
+              <span class="sage-info-value">{{ ticket.startDate ? (ticket.startDate | date:'dd/MM HH:mm') : '—' }}</span>
+            </div>
+            <div class="sage-info-item">
+              <span class="sage-info-label">Fin</span>
+              <span class="sage-info-value">{{ ticket.endDate ? (ticket.endDate | date:'dd/MM HH:mm') : '—' }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Comments sections -->
-      <div *ngIf="ticket.comments" class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4><i class="pi pi-comment mr-2"></i>Commentaires</h4>
-        <p>{{ ticket.comments }}</p>
-      </div>
-      <div *ngIf="ticket.prepComments" class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4><i class="pi pi-wrench mr-2"></i>Commentaires Préparation</h4>
-        <p>{{ ticket.prepComments }}</p>
-        <div class="text-sm text-500 mt-2">
-          Vérifié par {{ ticket.toolsVerifiedByUsername }} le {{ ticket.toolsVerifiedAt | date:'dd/MM HH:mm' }}
+      <!-- Commentaires -->
+      <div *ngIf="ticket.comments" class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-comment"></i>
+            <span>Commentaires</span>
+          </div>
+        </div>
+        <div class="sage-card-body">
+          <p class="sage-text">{{ ticket.comments }}</p>
         </div>
       </div>
-      <div *ngIf="ticket.reviewComments" class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4><i class="pi pi-eye mr-2"></i>Commentaires Revue</h4>
-        <p>{{ ticket.reviewComments }}</p>
+
+      <div *ngIf="ticket.prepComments" class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-wrench"></i>
+            <span>Commentaires Préparation</span>
+          </div>
+        </div>
+        <div class="sage-card-body">
+          <p class="sage-text">{{ ticket.prepComments }}</p>
+          <div class="sage-meta">
+            <i class="pi pi-user"></i>
+            Vérifié par <strong>{{ ticket.toolsVerifiedByUsername }}</strong>
+            le {{ ticket.toolsVerifiedAt | date:'dd/MM HH:mm' }}
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="ticket.reviewComments" class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-eye"></i>
+            <span>Commentaires Revue</span>
+          </div>
+        </div>
+        <div class="sage-card-body">
+          <p class="sage-text">{{ ticket.reviewComments }}</p>
+        </div>
       </div>
     </div>
 
-    <!-- Right: AI + Assignments -->
-    <div class="col-4">
-      <!-- AI Card -->
-      <div *ngIf="ticket.riskScore != null" class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4><i class="pi pi-bolt mr-2"></i>Prédiction IA</h4>
-        <div class="text-center my-3">
-          <div class="text-4xl font-bold" [style.color]="ticket.riskLevel === 'CRITIQUE' ? '#EF4444' : ticket.riskLevel === 'RISQUE' ? '#F59E0B' : '#22C55E'">
-            {{ ticket.riskScore | number:'1.0-0' }}%
+    <!-- RIGHT COLUMN -->
+    <div class="sage-col-side">
+      <!-- AI Risk Card -->
+      <div *ngIf="ticket.riskScore != null" class="sage-card sage-card-ai"
+           [class.risk-critique]="ticket.riskLevel === 'CRITIQUE'"
+           [class.risk-risque]="ticket.riskLevel === 'RISQUE'"
+           [class.risk-safe]="ticket.riskLevel !== 'CRITIQUE' && ticket.riskLevel !== 'RISQUE'">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-bolt"></i>
+            <span>Prédiction IA</span>
           </div>
-          <div class="text-sm text-500">Risque de non-conformité</div>
         </div>
-        <div class="text-sm"><span class="text-500">Niveau:</span> {{ ticket.riskLevel }}</div>
-        <div class="text-sm"><span class="text-500">Confiance:</span> {{ ticket.confidence | number:'1.0-0' }}%</div>
+        <div class="sage-card-body">
+          <div class="sage-risk-score">
+            <div class="sage-risk-value">{{ ticket.riskScore | number:'1.0-0' }}<small>%</small></div>
+            <div class="sage-risk-label">Risque de non-conformité</div>
+          </div>
+          <div class="sage-risk-meta">
+            <div><span>Niveau</span><strong>{{ ticket.riskLevel }}</strong></div>
+            <div><span>Confiance</span><strong>{{ ticket.confidence | number:'1.0-0' }}%</strong></div>
+          </div>
+        </div>
       </div>
 
       <!-- Assignments -->
-      <div class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4><i class="pi pi-users mr-2"></i>Affectations ({{ ticket.assignments?.length || 0 }})</h4>
-        <div *ngFor="let a of ticket.assignments" class="flex align-items-center justify-content-between py-2 border-bottom-1 surface-border">
-          <div>
-            <p-tag [value]="a.assignmentRole === 'TECH_PREPARATION' ? 'PREP' : 'VAL'"
-                   [severity]="a.assignmentRole === 'TECH_PREPARATION' ? 'warning' : 'success'" class="mr-2" [style]="{fontSize: '0.7rem'}"></p-tag>
-            <span class="font-bold">{{ a.username }}</span>
+      <div class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-users"></i>
+            <span>Affectations</span>
           </div>
-          <p-tag [value]="a.status" [severity]="a.status === 'TERMINE' ? 'success' : a.status === 'EN_COURS' ? 'warning' : 'info'" [style]="{fontSize: '0.7rem'}"></p-tag>
+          <span class="sage-chip">{{ ticket.assignments?.length || 0 }}</span>
         </div>
-        <div *ngIf="!ticket.assignments?.length" class="text-500 text-center p-2">Aucune affectation</div>
+        <div class="sage-card-body">
+          <div *ngFor="let a of ticket.assignments" class="sage-assign-row">
+            <div class="left">
+              <div class="sage-avatar">{{ (a.username || '?').charAt(0).toUpperCase() }}</div>
+              <div>
+                <div class="sage-assign-name">{{ a.username }}</div>
+                <p-tag [value]="a.assignmentRole === 'TECH_PREPARATION' ? 'PREP' : 'VAL'"
+                       [severity]="a.assignmentRole === 'TECH_PREPARATION' ? 'warning' : 'success'"
+                       [style]="{fontSize: '0.65rem'}"></p-tag>
+              </div>
+            </div>
+            <p-tag [value]="a.status"
+                   [severity]="a.status === 'TERMINE' ? 'success' : a.status === 'EN_COURS' ? 'warning' : 'info'"
+                   [style]="{fontSize: '0.65rem'}"></p-tag>
+          </div>
+          <div *ngIf="!ticket.assignments?.length" class="sage-empty">
+            <i class="pi pi-user-plus"></i>
+            <span>Aucune affectation</span>
+          </div>
+        </div>
       </div>
 
       <!-- Results summary -->
-      <div *ngIf="ticket.resultsCount" class="surface-card p-4 border-round shadow-1 mb-3">
-        <h4><i class="pi pi-chart-bar mr-2"></i>Résultats</h4>
-        <div class="grid text-center">
-          <div class="col-4">
-            <div class="text-xl font-bold">{{ ticket.resultsCount }}</div>
-            <div class="text-xs text-500">Total</div>
+      <div *ngIf="ticket.resultsCount" class="sage-card">
+        <div class="sage-card-header">
+          <div class="sage-card-title">
+            <i class="pi pi-chart-bar"></i>
+            <span>Résultats</span>
           </div>
-          <div class="col-4">
-            <div class="text-xl font-bold" style="color: #22C55E;">{{ ticket.conformCount }}</div>
-            <div class="text-xs text-500">Conforme</div>
-          </div>
-          <div class="col-4">
-            <div class="text-xl font-bold" style="color: #EF4444;">{{ ticket.nonConformCount }}</div>
-            <div class="text-xs text-500">Non conf.</div>
+        </div>
+        <div class="sage-card-body">
+          <div class="sage-stats">
+            <div class="sage-stat">
+              <div class="sage-stat-val">{{ ticket.resultsCount }}</div>
+              <div class="sage-stat-lbl">Total</div>
+            </div>
+            <div class="sage-stat success">
+              <div class="sage-stat-val">{{ ticket.conformCount }}</div>
+              <div class="sage-stat-lbl">Conforme</div>
+            </div>
+            <div class="sage-stat danger">
+              <div class="sage-stat-val">{{ ticket.nonConformCount }}</div>
+              <div class="sage-stat-lbl">Non conf.</div>
+            </div>
           </div>
         </div>
       </div>

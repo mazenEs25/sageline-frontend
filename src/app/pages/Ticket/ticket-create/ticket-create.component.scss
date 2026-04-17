@@ -1,0 +1,260 @@
+:host { display: block; }
+
+.sage-create-wrapper {
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.sage-create-card {
+  width: 100%;
+  max-width: 880px;
+  background: var(--sage-card, #1e293b);
+  border: 1px solid var(--sage-border, #1e293b);
+  border-radius: var(--sage-radius-lg, 12px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  padding: 2rem 2.25rem;
+}
+
+/* Header */
+.sage-create-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+.sage-create-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--sage-primary, #3b82f6), var(--sage-primary-hover, #2563eb));
+  color: #fff;
+  font-size: 1.35rem;
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+}
+.sage-create-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--sage-text, #e2e8f0);
+  letter-spacing: -0.01em;
+}
+.sage-create-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--sage-text-muted, #94a3b8);
+}
+
+/* Custom stepper */
+.sage-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+.sage-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+.sage-step-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--sage-surface, #0f172a);
+  border: 2px solid rgba(148, 163, 184, 0.25);
+  color: var(--sage-text-dim, #64748b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.25s ease;
+}
+.sage-step.is-active .sage-step-circle {
+  background: var(--sage-primary, #3b82f6);
+  border-color: var(--sage-primary, #3b82f6);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+.sage-step.is-done .sage-step-circle {
+  background: var(--sage-primary, #3b82f6);
+  border-color: var(--sage-primary, #3b82f6);
+  color: #fff;
+}
+.sage-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sage-text-dim, #64748b);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sage-step.is-active .sage-step-label,
+.sage-step.is-done .sage-step-label {
+  color: var(--sage-text, #e2e8f0);
+}
+.sage-step-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 2px;
+  margin: 0 0.25rem;
+  margin-bottom: 18px; /* align with circle vertical center */
+  transition: background 0.25s ease;
+}
+.sage-step-line.is-done { background: var(--sage-primary, #3b82f6); }
+
+/* Step body */
+.sage-step-body {
+  min-height: 220px;
+  margin-bottom: 1.25rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form grid */
+.sage-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem 1.5rem;
+}
+.sage-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sage-field-full { grid-column: 1 / -1; }
+
+.sage-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sage-text-muted, #94a3b8);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  i { color: var(--sage-primary, #3b82f6); font-size: 0.85rem; }
+}
+
+/* Assignments section */
+.sage-assignments {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--sage-surface, #0f172a);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: var(--sage-radius, 8px);
+}
+.sage-assignments-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+  font-weight: 700;
+  color: var(--sage-text, #e2e8f0);
+  font-size: 0.95rem;
+  i { color: var(--sage-primary, #3b82f6); }
+}
+.sage-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--sage-text-dim, #64748b);
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  border-radius: var(--sage-radius, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  i { font-size: 1.5rem; color: var(--sage-text-dim, #64748b); }
+}
+.sage-assignment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.9rem;
+  background: var(--sage-card, #1e293b);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: var(--sage-radius, 8px);
+  margin-top: 0.5rem;
+  transition: border-color 0.2s ease;
+  &:hover { border-color: rgba(59, 130, 246, 0.4); }
+  .left { display: flex; align-items: center; gap: 0.75rem; }
+}
+
+/* Summary */
+.sage-summary {
+  background: var(--sage-surface, #0f172a);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: var(--sage-radius-lg, 12px);
+  padding: 1.5rem;
+}
+.sage-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: var(--sage-text, #e2e8f0);
+  i { color: var(--sage-success, #10b981); font-size: 1.15rem; }
+}
+.sage-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem 1.5rem;
+}
+.sage-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  .k {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sage-text-dim, #64748b);
+    font-weight: 600;
+  }
+  strong { color: var(--sage-text, #e2e8f0); font-weight: 600; }
+}
+.sage-summary-full { grid-column: 1 / -1; }
+
+/* Navigation */
+.sage-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  gap: 0.5rem;
+}
+
+/* PrimeNG dropdowns styled consistently */
+:host ::ng-deep .p-dropdown,
+:host ::ng-deep .p-calendar .p-inputtext,
+:host ::ng-deep textarea {
+  width: 100% !important;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .sage-create-card { padding: 1.5rem 1.25rem; }
+  .sage-form-grid { grid-template-columns: 1fr; }
+  .sage-summary-grid { grid-template-columns: 1fr; }
+  .sage-step-label { display: none; }
+  .sage-create-title { font-size: 1.15rem; }
+}
