@@ -3,11 +3,102 @@
     <h3><i class="pi pi-inbox"></i> Messages</h3>
   </div>
 
+  <!-- New conversation button -->
+  <div class="p-3 border-bottom-1 surface-border">
+    <button pButton label="Nouvelle conversation" icon="pi pi-plus"
+            class="p-button-sm w-full" (click)="openNewConversationDialog()"></button>
+  </div>
+
+  <!-- ── New conversation dialog ─────────────────────────────────────────── -->
+  <p-dialog
+    header="Nouvelle Conversation"
+    [(visible)]="showNewConversationDialog"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="new-conv-dialog"
+    (onHide)="closeNewConversationDialog()">
+
+    <p class="dialog-subtitle">
+      Choisissez un collaborateur pour démarrer une conversation.
+    </p>
+
+    <!-- Search input -->
+    <div class="user-search">
+      <i class="pi pi-search"></i>
+      <input
+        pInputText
+        type="text"
+        placeholder="Rechercher un utilisateur..."
+        [(ngModel)]="userSearchQuery"
+        (input)="filterUsers()"
+        class="user-search-input" />
+    </div>
+
+    <!-- User list -->
+    <div class="user-list" *ngIf="filteredAvailableUsers.length > 0; else noUsers">
+      <div
+        *ngFor="let user of filteredAvailableUsers"
+        class="user-list-item"
+        [class.selected]="selectedNewUserId === user.id"
+        (click)="selectedNewUserId = user.id">
+
+        <!-- Gradient avatar -->
+        <div class="user-avatar" [style.background]="getAvatarColor(user)">
+          {{ getInitials(user) }}
+        </div>
+
+        <!-- User info -->
+        <div class="user-info">
+          <div class="user-name">
+            {{ user.firstName || user.username }} {{ user.lastName || '' }}
+          </div>
+          <div class="user-meta">
+            <span class="user-username">&#64;{{ user.username }}</span>
+            <p-tag
+              [value]="getRoleLabel(user.role)"
+              [severity]="getRoleSeverity(user.role)"
+              styleClass="role-tag">
+            </p-tag>
+            <span class="secteur-badge" *ngIf="user.secteurCode">
+              {{ user.secteurCode }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Selected check -->
+        <i class="pi pi-check-circle selected-icon"
+           *ngIf="selectedNewUserId === user.id"></i>
+      </div>
+    </div>
+
+    <ng-template #noUsers>
+      <div class="no-users-state">
+        <i class="pi pi-users"></i>
+        <p>Aucun utilisateur trouvé</p>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <button pButton
+              label="Annuler"
+              class="p-button-text p-button-secondary"
+              (click)="closeNewConversationDialog()">
+      </button>
+      <button pButton
+              icon="pi pi-send"
+              label="Démarrer la conversation"
+              [disabled]="!selectedNewUserId || creatingConversation"
+              [loading]="creatingConversation"
+              (click)="startConversation()">
+      </button>
+    </ng-template>
+  </p-dialog>
+
   <!-- Loading -->
   <div *ngIf="loading" class="loading-state">
-    <p-progressSpinner
-      [style]="{ width: '40px', height: '40px' }"
-      strokeWidth="4">
+    <p-progressSpinner [style]="{ width: '40px', height: '40px' }" strokeWidth="4">
     </p-progressSpinner>
   </div>
 
@@ -51,7 +142,7 @@
       </div>
     </div>
 
-    <!-- Badge non lus -->
+    <!-- Unread badge -->
     <p-badge
       *ngIf="conv.unreadCount > 0"
       [value]="conv.unreadCount.toString()"

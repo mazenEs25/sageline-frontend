@@ -20,13 +20,22 @@ export class AppComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.primengConfig.ripple = true;
 
-    // User ID is resolved during login (stored in localStorage).
-    // Here we just connect WebSocket if already authenticated.
     if (await this.authService.isAuthenticated()) {
-      const userId = this.authService.getCurrentUserId();
-      if (userId > 0) {
-        this.wsService.connect(userId);
-      }
+      this.authService.syncCurrentUser().subscribe({
+        next: () => {
+          const userId = this.authService.getCurrentUserId();
+          if (userId > 0) {
+            this.wsService.connect(userId);
+          }
+        },
+        error: () => {
+          // Fallback: connect with cached ID if /users/me fails
+          const userId = this.authService.getCurrentUserId();
+          if (userId > 0) {
+            this.wsService.connect(userId);
+          }
+        }
+      });
     }
   }
 }

@@ -118,7 +118,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   processRecentValidations(): void {
     this.recentValidations = [...this.validations]
-      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .sort((a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime())
       .slice(0, 8);
   }
 
@@ -174,19 +174,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   buildConformityChart(): void {
-    const conforme = this.validations.filter(v => v.status === 'CONFORME').length;
-    const nonConforme = this.validations.filter(v => v.status === 'NON_CONFORME').length;
-    const enCours = this.validations.filter(v => v.status === 'EN_COURS').length;
+    const statusCounts: Record<string, number> = {
+      PLANIFIE: 0, EN_ATTENTE_PREP: 0, PREP_VALIDEE: 0,
+      EN_COURS: 0, EN_REVUE: 0, CONFORME: 0, NON_CONFORME: 0, ANNULE: 0
+    };
+    this.validations.forEach(v => {
+      if (statusCounts[v.status] !== undefined) statusCounts[v.status]++;
+    });
 
     this.conformityChartData = {
-      labels: ['Conforme', 'Non conforme', 'En cours'],
+      labels: ['Planifié', 'Att. Prép.', 'Prép. OK', 'En Cours', 'En Revue', 'Conforme', 'Non Conforme', 'Annulé'],
       datasets: [{
-        data: [conforme, nonConforme, enCours],
-        backgroundColor: [
-          this.chartColors.success,
-          this.chartColors.danger,
-          this.chartColors.warning,
+        data: [
+          statusCounts['PLANIFIE'],
+          statusCounts['EN_ATTENTE_PREP'],
+          statusCounts['PREP_VALIDEE'],
+          statusCounts['EN_COURS'],
+          statusCounts['EN_REVUE'],
+          statusCounts['CONFORME'],
+          statusCounts['NON_CONFORME'],
+          statusCounts['ANNULE']
         ],
+        backgroundColor: ['#3B82F6', '#F59E0B', '#06B6D4', '#F97316', '#8B5CF6', '#22C55E', '#EF4444', '#6B7280'],
         borderWidth: 0,
         hoverOffset: 8,
       }]
@@ -408,6 +417,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       labels.push(label);
 
       const dayValidations = this.validations.filter(v => {
+        if (!v.startDate) return false;
         const vDate = new Date(v.startDate).toISOString().split('T')[0];
         return vDate === dateStr;
       });

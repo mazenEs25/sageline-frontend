@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { UserService } from '../../../../services/user.service';
-import { ProductionLineService } from '../../../../services/production-line.service';
+import { SecteurService } from '../../../../services/secteur.service';
 import { User, UserRequest } from '../../../../models/user.model';
-import { ProductionLine } from '../../../../models/production-line.model';
+import { Secteur } from '../../../../models/secteur.model';
 import { Role, ROLE_LABELS, ROLE_COLORS } from '../../../../shared/enums/role.enum';
 
 @Component({
@@ -14,7 +14,7 @@ import { Role, ROLE_LABELS, ROLE_COLORS } from '../../../../shared/enums/role.en
 export class UserListComponent implements OnInit {
 
   users: User[] = [];
-  lines: ProductionLine[] = [];
+  secteurs: Secteur[] = [];
   loading = true;
 
   // Dialog
@@ -28,8 +28,10 @@ export class UserListComponent implements OnInit {
   form: UserRequest = {
     username: '',
     email: '',
+    firstName: '',
+    lastName: '',
     role: Role.TECH_VAL,
-    productionLineId: undefined,
+    secteurId: undefined,
     password: ''
   };
 
@@ -39,18 +41,16 @@ export class UserListComponent implements OnInit {
     value: r
   }));
 
-  lineOptions: any[] = [];
-
   constructor(
     private userService: UserService,
-    private lineService: ProductionLineService,
+    private secteurService: SecteurService,
     private messageService: MessageService,
     private confirmService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
     this.loadUsers();
-    this.loadLines();
+    this.secteurService.getActive().subscribe(data => this.secteurs = data);
   }
 
   loadUsers(): void {
@@ -71,26 +71,16 @@ export class UserListComponent implements OnInit {
     });
   }
 
-  loadLines(): void {
-    this.lineService.getActive().subscribe({
-      next: (data) => {
-        this.lines = data;
-        this.lineOptions = [
-          { label: 'Aucune', value: null },
-          ...data.map(l => ({ label: `${l.code} — ${l.name}`, value: l.id }))
-        ];
-      }
-    });
-  }
-
   // ─── Dialog ───
 
   openNew(): void {
     this.form = {
       username: '',
       email: '',
+      firstName: '',
+      lastName: '',
       role: Role.TECH_VAL,
-      productionLineId: undefined,
+      secteurId: undefined,
       password: ''
     };
     this.isEdit = false;
@@ -103,8 +93,10 @@ export class UserListComponent implements OnInit {
     this.form = {
       username: user.username,
       email: user.email,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       role: user.role,
-      productionLineId: user.productionLineId,
+      secteurId: user.secteurId,
       password: ''
     };
     this.isEdit = true;
@@ -190,11 +182,5 @@ export class UserListComponent implements OnInit {
 
   getRoleSeverity(role: Role): 'success' | 'secondary' | 'info' | 'warning' | 'danger' | 'contrast' {
     return (ROLE_COLORS[role] as any) || 'info';
-  }
-
-  getLineName(lineId?: number): string {
-    if (!lineId) return '—';
-    const line = this.lines.find(l => l.id === lineId);
-    return line ? line.code : '—';
   }
 }

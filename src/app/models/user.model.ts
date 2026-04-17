@@ -4,10 +4,16 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  password?: string;    // ← Add this
+  password?: string;
+  firstName?: string;
+  lastName?: string;
 
   role: Role;
-  productionLineId?: number;
+  secteurId?: number;
+  secteurCode?: string;
+  secteurName?: string;
+
+  active?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -15,8 +21,12 @@ export interface User {
 export interface UserRequest {
   username: string;
   email: string;
-  password?: string;    // ← Add this
+  password?: string;
+  firstName?: string;
+  lastName?: string;
 
   role: Role;
-  productionLineId?: number;
+  secteurId?: number;
+
+  active?: boolean;
 }

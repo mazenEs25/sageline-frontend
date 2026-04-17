@@ -13,8 +13,15 @@ export class WebSocketService implements OnDestroy {
   private subscriptions: Map<string, StompSubscription> = new Map();
   private connected$ = new BehaviorSubject<boolean>(false);
 
+  // Real-time ticket event stream (for UI updates on ticket detail pages)
+  private ticketNotification$ = new BehaviorSubject<any>(null);
+
   get isConnected$(): Observable<boolean> {
     return this.connected$.asObservable();
+  }
+
+  get ticketNotifications$(): Observable<any> {
+    return this.ticketNotification$.asObservable();
   }
 
   connect(userId: number): void {
@@ -42,6 +49,11 @@ export class WebSocketService implements OnDestroy {
 
         // Enregistrer la présence utilisateur
         this.send('/app/status.connect', { senderId: userId });
+
+        // Subscribe to ticket-specific notifications
+        this.subscribe(`/user/${userId}/queue/tickets`, (notification: any) => {
+          this.ticketNotification$.next(notification);
+        });
       },
 
       onStompError: (frame) => {

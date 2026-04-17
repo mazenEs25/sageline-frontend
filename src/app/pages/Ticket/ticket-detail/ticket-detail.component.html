@@ -1,0 +1,187 @@
+<!-- ticket-detail.component.html -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div *ngIf="loading" class="text-center p-5"><p-progressSpinner></p-progressSpinner></div>
+
+<div *ngIf="ticket && !loading" class="card">
+  <!-- Header -->
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <button pButton icon="pi pi-arrow-left" class="p-button-text mr-2" routerLink="/validations"></button>
+      <span class="text-2xl font-bold text-primary">{{ ticket.ticketCode }}</span>
+      <app-ticket-status-badge [status]="ticket.status" class="ml-3"></app-ticket-status-badge>
+      <app-priority-badge [priority]="ticket.priority" class="ml-2"></app-priority-badge>
+    </div>
+    <div class="flex gap-2">
+      <button *ngIf="canStartPrep()" pButton label="Démarrer Prép." icon="pi pi-wrench" class="p-button-warning" (click)="startPrep()"></button>
+      <button *ngIf="canValidatePrep()" pButton label="Valider Outillage" icon="pi pi-check" class="p-button-info" (click)="showPrepDialog = true"></button>
+      <button *ngIf="canStartValidation()" pButton label="Lancer Validation" icon="pi pi-play" class="p-button-success" (click)="startValidation()"></button>
+      <button *ngIf="canSubmitReview()" pButton label="Soumettre Revue" icon="pi pi-send" class="p-button-help" (click)="submitForReview()"></button>
+      <button *ngIf="canClose()" pButton label="Clôturer" icon="pi pi-lock" (click)="showCloseDialog = true"></button>
+      <button *ngIf="canCancel()" pButton label="Annuler" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="showCancelDialog = true"></button>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <app-ticket-timeline [ticket]="ticket" class="mb-4"></app-ticket-timeline>
+
+  <!-- Info Grid -->
+  <div class="grid">
+    <!-- Left: Details -->
+    <div class="col-8">
+      <div class="ticket-info-card">
+        <h4><i class="pi pi-map-marker mr-2"></i>Localisation</h4>
+        <div class="ticket-info-grid">
+          <div class="ticket-info-item">
+            <span class="label">Secteur</span>
+            <span class="value">
+              <p-tag [value]="ticket.secteurCode" severity="info"></p-tag>
+            </span>
+          </div>
+          <div class="ticket-info-item">
+            <span class="label">Phase</span>
+            <span class="value">{{ ticket.phaseName }}</span>
+          </div>
+          <div class="ticket-info-item">
+            <span class="label">Ligne</span>
+            <span class="value">{{ ticket.lineCode }}</span>
+          </div>
+          <div class="ticket-info-item">
+            <span class="label">Zone / Poste</span>
+            <span class="value" style="color: var(--primary-color);">{{ ticket.zoneName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4 class="mb-3"><i class="pi pi-calendar mr-2"></i>Planification</h4>
+        <div class="grid">
+          <div class="col-4"><span class="text-500">Date planifiée</span><div>{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</div></div>
+          <div class="col-4"><span class="text-500">Début effectif</span><div>{{ ticket.startDate ? (ticket.startDate | date:'dd/MM HH:mm') : '—' }}</div></div>
+          <div class="col-4"><span class="text-500">Fin</span><div>{{ ticket.endDate ? (ticket.endDate | date:'dd/MM HH:mm') : '—' }}</div></div>
+        </div>
+      </div>
+
+      <!-- Comments sections -->
+      <div *ngIf="ticket.comments" class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4><i class="pi pi-comment mr-2"></i>Commentaires</h4>
+        <p>{{ ticket.comments }}</p>
+      </div>
+      <div *ngIf="ticket.prepComments" class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4><i class="pi pi-wrench mr-2"></i>Commentaires Préparation</h4>
+        <p>{{ ticket.prepComments }}</p>
+        <div class="text-sm text-500 mt-2">
+          Vérifié par {{ ticket.toolsVerifiedByUsername }} le {{ ticket.toolsVerifiedAt | date:'dd/MM HH:mm' }}
+        </div>
+      </div>
+      <div *ngIf="ticket.reviewComments" class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4><i class="pi pi-eye mr-2"></i>Commentaires Revue</h4>
+        <p>{{ ticket.reviewComments }}</p>
+      </div>
+    </div>
+
+    <!-- Right: AI + Assignments -->
+    <div class="col-4">
+      <!-- AI Card -->
+      <div *ngIf="ticket.riskScore != null" class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4><i class="pi pi-bolt mr-2"></i>Prédiction IA</h4>
+        <div class="text-center my-3">
+          <div class="text-4xl font-bold" [style.color]="ticket.riskLevel === 'CRITIQUE' ? '#EF4444' : ticket.riskLevel === 'RISQUE' ? '#F59E0B' : '#22C55E'">
+            {{ ticket.riskScore | number:'1.0-0' }}%
+          </div>
+          <div class="text-sm text-500">Risque de non-conformité</div>
+        </div>
+        <div class="text-sm"><span class="text-500">Niveau:</span> {{ ticket.riskLevel }}</div>
+        <div class="text-sm"><span class="text-500">Confiance:</span> {{ ticket.confidence | number:'1.0-0' }}%</div>
+      </div>
+
+      <!-- Assignments -->
+      <div class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4><i class="pi pi-users mr-2"></i>Affectations ({{ ticket.assignments?.length || 0 }})</h4>
+        <div *ngFor="let a of ticket.assignments" class="flex align-items-center justify-content-between py-2 border-bottom-1 surface-border">
+          <div>
+            <p-tag [value]="a.assignmentRole === 'TECH_PREPARATION' ? 'PREP' : 'VAL'"
+                   [severity]="a.assignmentRole === 'TECH_PREPARATION' ? 'warning' : 'success'" class="mr-2" [style]="{fontSize: '0.7rem'}"></p-tag>
+            <span class="font-bold">{{ a.username }}</span>
+          </div>
+          <p-tag [value]="a.status" [severity]="a.status === 'TERMINE' ? 'success' : a.status === 'EN_COURS' ? 'warning' : 'info'" [style]="{fontSize: '0.7rem'}"></p-tag>
+        </div>
+        <div *ngIf="!ticket.assignments?.length" class="text-500 text-center p-2">Aucune affectation</div>
+      </div>
+
+      <!-- Results summary -->
+      <div *ngIf="ticket.resultsCount" class="surface-card p-4 border-round shadow-1 mb-3">
+        <h4><i class="pi pi-chart-bar mr-2"></i>Résultats</h4>
+        <div class="grid text-center">
+          <div class="col-4">
+            <div class="text-xl font-bold">{{ ticket.resultsCount }}</div>
+            <div class="text-xs text-500">Total</div>
+          </div>
+          <div class="col-4">
+            <div class="text-xl font-bold" style="color: #22C55E;">{{ ticket.conformCount }}</div>
+            <div class="text-xs text-500">Conforme</div>
+          </div>
+          <div class="col-4">
+            <div class="text-xl font-bold" style="color: #EF4444;">{{ ticket.nonConformCount }}</div>
+            <div class="text-xs text-500">Non conf.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Prep Validation Dialog -->
+<p-dialog header="Vérification Outillage" [(visible)]="showPrepDialog" [modal]="true" [style]="{width: '500px'}">
+  <div class="flex flex-column gap-3 pt-3">
+    <div class="field">
+      <label class="font-bold">L'outillage est-il disponible ?</label>
+      <div class="flex gap-3 mt-2">
+        <p-radioButton name="tools" [value]="true" [(ngModel)]="toolsAvailable" label="Oui, disponible"></p-radioButton>
+        <p-radioButton name="tools" [value]="false" [(ngModel)]="toolsAvailable" label="Non, indisponible"></p-radioButton>
+      </div>
+    </div>
+    <div class="field">
+      <label class="font-bold">Commentaires</label>
+      <textarea pInputTextarea [(ngModel)]="prepComments" rows="3" class="w-full" placeholder="État de l'outillage..."></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler" class="p-button-text" (click)="showPrepDialog = false"></button>
+    <button pButton label="Confirmer" icon="pi pi-check" (click)="submitPrepValidation()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Close Ticket Dialog -->
+<p-dialog header="Clôturer le Ticket" [(visible)]="showCloseDialog" [modal]="true" [style]="{width: '500px'}">
+  <div class="flex flex-column gap-3 pt-3">
+    <div class="field">
+      <label class="font-bold">Décision finale *</label>
+      <div class="flex gap-3 mt-2">
+        <p-radioButton name="final" value="CONFORME" [(ngModel)]="finalStatus" label="Conforme"></p-radioButton>
+        <p-radioButton name="final" value="NON_CONFORME" [(ngModel)]="finalStatus" label="Non Conforme"></p-radioButton>
+      </div>
+    </div>
+    <div class="field">
+      <label class="font-bold">Commentaires de revue</label>
+      <textarea pInputTextarea [(ngModel)]="reviewComments" rows="3" class="w-full"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler" class="p-button-text" (click)="showCloseDialog = false"></button>
+    <button pButton label="Clôturer" icon="pi pi-lock" [class]="finalStatus === 'CONFORME' ? 'p-button-success' : 'p-button-danger'" (click)="closeTicket()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Cancel Dialog -->
+<p-dialog header="Annuler le Ticket" [(visible)]="showCancelDialog" [modal]="true" [style]="{width: '450px'}">
+  <div class="field pt-3">
+    <label class="font-bold">Raison de l'annulation</label>
+    <textarea pInputTextarea [(ngModel)]="cancelReason" rows="3" class="w-full" placeholder="Expliquer la raison..."></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Non" class="p-button-text" (click)="showCancelDialog = false"></button>
+    <button pButton label="Confirmer l'annulation" icon="pi pi-ban" class="p-button-danger" (click)="cancelTicket()"></button>
+  </ng-template>
+</p-dialog>

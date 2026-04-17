@@ -8,6 +8,7 @@ import { environment } from '../../environments/environment';
 import { Conversation } from '../models/conversation.model';
 import { ChatMessage, MessageRequest } from '../models/message.model';
 import { AppNotification, UnreadCount } from '../models/notification.model';
+import { User } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class MessageApiService {
@@ -29,6 +30,14 @@ export class MessageApiService {
     return this.http.post<Conversation>(`${this.baseUrl}/conversations`, {
       userOneId, userTwoId
     });
+  }
+
+  startConversationWith(userId: number): Observable<Conversation> {
+    return this.http.post<Conversation>(`${this.baseUrl}/conversations/with/${userId}`, {});
+  }
+
+  getMessagingContacts(): Observable<User[]> {
+    return this.http.get<User[]>(`${environment.apiUrl}/users/messaging-contacts`);
   }
 
   // =====================================================

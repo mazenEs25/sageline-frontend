@@ -10,42 +10,47 @@ import { AuthService } from '../../auth/auth.service';
 })
 export class SidebarComponent implements OnInit {
 
-allMenuItems = [
-  {
-    label: 'GESTION',
-    items: [
-      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/dashboard' },
-      { label: "Plan d'usine", icon: 'pi pi-map', route: '/admin/lines/map', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
-      { label: 'Utilisateurs', icon: 'pi pi-users', route: '/admin/users', roles: ['ADMIN_IT'] },
-      { label: 'Lignes', icon: 'pi pi-box', route: '/admin/lines', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
-      { label: 'Zones', icon: 'pi pi-th-large', route: '/admin/zones', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
-      { label: 'Plan zones', icon: 'pi pi-map-marker', route: '/admin/zones/map',roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+  allMenuItems = [
+    {
+      label: 'GESTION',
+      items: [
+        { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/dashboard', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] },
+        { label: "Plan d'usine", icon: 'pi pi-map', route: '/admin/lines/map', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+        { label: 'Utilisateurs', icon: 'pi pi-users', route: '/admin/users', roles: ['ADMIN_IT'] },
+        { label: 'Lignes', icon: 'pi pi-box', route: '/admin/lines', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+        { label: 'Zones', icon: 'pi pi-th-large', route: '/admin/zones', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+        { label: 'Plan zones', icon: 'pi pi-map-marker', route: '/admin/zones/map', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+        { label: 'Secteurs', icon: 'pi pi-building', route: '/admin/secteurs', roles: ['ADMIN_IT'] },
+        { label: 'Phases', icon: 'pi pi-sitemap', route: '/admin/phases', roles: ['ADMIN_IT'] },
 
-    ]
-  },
-  {
-    label: 'VALIDATIONS',
-    items: [
-      { label: 'Validations', icon: 'pi pi-check-square', route: '/validations', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE'] },
-      { label: 'Résultats', icon: 'pi pi-list', route: '/results', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT'] },
-    ]
-  },
-  {
-    label: 'INTELLIGENCE',
-    items: [
-      { label: 'Modèles IA', icon: 'pi pi-bolt', route: '/intelligence', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] },
-      { label: 'KPIs', icon: 'pi pi-chart-line', route: '/kpis', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] },
-    ]
-  },
-  {
-    label: 'COMMUNICATION',
-    items: [
-      { label: 'Messagerie', icon: 'pi pi-comments', route: '/messaging', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] },
-    ]
-  },
-  
-  
-];
+      ]
+    },
+    {
+      label: 'VALIDATIONS',
+      items: [
+        { label: 'Validations', icon: 'pi pi-check-square', route: '/validations', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE','TECH_PREP'] },
+        { label: 'Résultats', icon: 'pi pi-list', route: '/results', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] },
+        { label: 'Tickets', icon: 'pi pi-ticket', route: '/validations', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] },
+        { label: 'Créer Ticket', icon: 'pi pi-plus', route: '/validations/create', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+        { label: 'Planification', icon: 'pi pi-calendar', route: '/validations/planner', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
+      ]
+    },
+    {
+      label: 'INTELLIGENCE',
+      items: [
+        { label: 'Modèles IA', icon: 'pi pi-bolt', route: '/intelligence', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] },
+        { label: 'KPIs', icon: 'pi pi-chart-line', route: '/kpis', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] },
+      ]
+    },
+    {
+      label: 'COMMUNICATION',
+      items: [
+        { label: 'Messagerie', icon: 'pi pi-comments', route: '/messaging', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] },
+      ]
+    },
+
+
+  ];
 
   filteredMenuItems: any[] = [];
   userRoles: string[] = [];
@@ -56,7 +61,7 @@ allMenuItems = [
     public router: Router,
     private keycloak: KeycloakService,
     private authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Extract roles directly from the JWT token (works with Direct Access Grant)

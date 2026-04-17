@@ -60,7 +60,7 @@ export class ValidationListComponent implements OnInit {
     this.validationService.getAll().subscribe({
       next: (data) => {
         this.validations = data.sort(
-          (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+          (a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()
         );
         this.loading = false;
       },

@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
 export class ValidationService {
   private url = `${environment.apiUrl}/validations`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAll(): Observable<Validation[]> {
     return this.http.get<Validation[]>(this.url);
@@ -41,11 +41,6 @@ export class ValidationService {
   getByZone(zoneId: number): Observable<Validation[]> {
     return this.http.get<Validation[]>(`${this.url}/zone/${zoneId}`);
   }
-
-  getByLine(lineId: number): Observable<Validation[]> {
-    return this.http.get<Validation[]>(`${this.url}/line/${lineId}`);
-  }
-
   getWithResults(id: number): Observable<Validation> {
     return this.http.get<Validation>(`${this.url}/${id}/results`);
   }
@@ -56,5 +51,14 @@ export class ValidationService {
       params = params.set('comments', comments);
     }
     return this.http.patch<Validation>(`${this.url}/${id}/close`, null, { params });
+  }
+  // ADD these methods — they delegate to the new ticket endpoints:
+
+  getByLine(lineId: number): Observable<Validation[]> {
+    return this.http.get<Validation[]>(`${this.url}/line/${lineId}`);
+  }
+
+  getBySecteur(secteurId: number): Observable<Validation[]> {
+    return this.http.get<Validation[]>(`${this.url}/secteur/${secteurId}`);
   }
 }

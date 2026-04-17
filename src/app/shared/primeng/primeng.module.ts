@@ -24,6 +24,11 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { DividerModule } from 'primeng/divider';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { StepsModule } from 'primeng/steps';
+import { TimelineModule } from 'primeng/timeline';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { CalendarModule } from 'primeng/calendar';
+import { ListboxModule } from 'primeng/listbox';
 import { SortIcon } from 'primeng/table';
 
 const MODULES = [
@@ -32,7 +37,8 @@ const MODULES = [
   ToolbarModule, InputTextareaModule, ToggleButtonModule, CardModule,
   TooltipModule, RippleModule, InputSwitchModule, BadgeModule,
   ChartModule, MenuModule, AvatarModule, DividerModule, SkeletonModule,
-  ProgressSpinnerModule,OverlayPanelModule, ScrollPanelModule,
+  ProgressSpinnerModule, OverlayPanelModule, ScrollPanelModule,
+  StepsModule, TimelineModule, RadioButtonModule, CalendarModule, ListboxModule,
 ];
 
 @NgModule({

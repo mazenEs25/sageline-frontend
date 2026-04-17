@@ -80,8 +80,8 @@ export class TopbarComponent implements OnInit {
     try {
       const kc = this.keycloak.getKeycloakInstance();
       const token = kc.tokenParsed as any;
-      this.username = token?.preferred_username || '';
-      this.userInitials = this.username.slice(0, 2).toUpperCase();
+      this.username = this.computeDisplayName();
+      this.userInitials = this.computeInitials();
 
       const sageRoles = ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'];
       const roles: string[] = token?.realm_access?.roles || [];
@@ -91,6 +91,25 @@ export class TopbarComponent implements OnInit {
       this.userInitials = 'US';
       this.userRole = 'Utilisateur';
     }
+  }
+
+  private computeDisplayName(): string {
+    const firstName = this.authService.getFirstName();
+    const lastName = this.authService.getLastName();
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    return this.authService.getUsername() || 'User';
+  }
+
+  private computeInitials(): string {
+    const firstName = this.authService.getFirstName();
+    const lastName = this.authService.getLastName();
+    if (firstName && lastName) {
+      return (firstName[0] + lastName[0]).toUpperCase();
+    }
+    const username = this.authService.getUsername() || 'U';
+    return username.substring(0, 2).toUpperCase();
   }
 
   private updateBreadcrumb(url: string): void {

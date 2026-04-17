@@ -1,0 +1,90 @@
+<!-- ticket-list.component.html -->
+<p-toast></p-toast>
+
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0"><i class="pi pi-ticket mr-2"></i>Tickets de Validation</h2>
+    <div class="flex gap-2">
+      <button pButton label="Planifier" icon="pi pi-calendar" class="p-button-outlined" routerLink="/validations/planner"></button>
+      <button pButton label="Nouveau Ticket" icon="pi pi-plus" (click)="createTicket()"></button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
+      <div class="text-2xl font-bold text-primary">{{ totalCount }}</div>
+      <div class="text-sm text-500">Total</div>
+    </div>
+    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
+      <div class="text-2xl font-bold" style="color: #F59E0B;">{{ activeCount }}</div>
+      <div class="text-sm text-500">En cours</div>
+    </div>
+    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
+      <div class="text-2xl font-bold" style="color: #22C55E;">{{ conformeCount }}</div>
+      <div class="text-sm text-500">Conformes</div>
+    </div>
+    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
+      <div class="text-2xl font-bold" style="color: #EF4444;">{{ nonConformeCount }}</div>
+      <div class="text-sm text-500">Non conformes</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-3 mb-4 flex-wrap">
+    <span class="p-input-icon-left">
+      <i class="pi pi-search"></i>
+      <input pInputText [(ngModel)]="searchQuery" placeholder="Rechercher..." (input)="applyFilters()" />
+    </span>
+    <p-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" placeholder="Statut"
+                [showClear]="true" (onChange)="applyFilters()" styleClass="w-12rem"></p-dropdown>
+    <p-dropdown [options]="secteurs" [(ngModel)]="selectedSecteur" placeholder="Secteur"
+                optionLabel="name" optionValue="id" [showClear]="true" (onChange)="applyFilters()" styleClass="w-12rem"></p-dropdown>
+    <p-dropdown [options]="priorityOptions" [(ngModel)]="selectedPriority" placeholder="Priorité"
+                [showClear]="true" (onChange)="applyFilters()" styleClass="w-10rem"></p-dropdown>
+    <button pButton icon="pi pi-filter-slash" class="p-button-text" (click)="clearFilters()" pTooltip="Réinitialiser"></button>
+  </div>
+
+  <!-- Table -->
+  <p-table [value]="filteredTickets" [loading]="loading" [paginator]="true" [rows]="15"
+           [sortField]="'createdAt'" [sortOrder]="-1" styleClass="p-datatable-sm" responsiveLayout="scroll"
+           selectionMode="single" (onRowSelect)="viewTicket($event.data)">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="ticketCode" style="width: 130px;">Code</th>
+        <th pSortableColumn="status">Statut</th>
+        <th pSortableColumn="priority">Priorité</th>
+        <th>Secteur</th>
+        <th>Ligne / Zone</th>
+        <th pSortableColumn="plannedDate">Date planifiée</th>
+        <th>Créé par</th>
+        <th>IA Risque</th>
+        <th pSortableColumn="createdAt">Créé le</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-ticket>
+      <tr [pSelectableRow]="ticket" class="cursor-pointer">
+        <td><strong class="text-primary">{{ ticket.ticketCode }}</strong></td>
+        <td><app-ticket-status-badge [status]="ticket.status"></app-ticket-status-badge></td>
+        <td><app-priority-badge [priority]="ticket.priority"></app-priority-badge></td>
+        <td>{{ ticket.secteurCode || '—' }}</td>
+        <td>
+          <span class="text-sm">{{ ticket.lineCode }}</span>
+          <span class="text-xs text-500 ml-1">/ {{ ticket.zoneName }}</span>
+        </td>
+        <td>{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</td>
+        <td>{{ ticket.createdByUsername || '—' }}</td>
+        <td>
+          <span *ngIf="ticket.riskScore != null" [class]="'risk-badge risk-' + ticket.riskLevel?.toLowerCase()">
+            {{ ticket.riskScore | number:'1.0-0' }}%
+          </span>
+          <span *ngIf="ticket.riskScore == null" class="text-500">—</span>
+        </td>
+        <td>{{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="9" class="text-center p-4">Aucun ticket trouvé</td></tr>
+    </ng-template>
+  </p-table>
+</div>

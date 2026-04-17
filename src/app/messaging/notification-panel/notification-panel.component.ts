@@ -37,15 +37,37 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
     if (this.currentUserId > 0) {
       this.loadUnreadCount();
+    }
 
-      // Subscribe once WebSocket is ready
-      this.wsService.isConnected$.subscribe(connected => {
-        if (connected && !this.subscribed) {
+    // Subscribe once WebSocket is ready.
+    // By the time the WS connects, syncCurrentUser() will have stored the ID
+    // in localStorage, so we re-read it here to handle the race condition where
+    // ngOnInit ran before syncCurrentUser() completed.
+    this.wsService.isConnected$.subscribe(connected => {
+      if (connected) {
+        // Re-read in case it was 0 at ngOnInit (race condition)
+        if (!this.currentUserId) {
+          this.currentUserId = this.authService.getCurrentUserId();
+          if (this.currentUserId > 0) {
+            this.loadUnreadCount();
+          }
+        }
+
+        if (this.currentUserId > 0 && !this.subscribed) {
           this.subscribed = true;
           this.subscribeToNotifications();
         }
-      });
-    }
+      }
+    });
+
+    // Also listen to the ticket-specific WS stream (/user/{id}/queue/tickets)
+    // The backend may send assignment notifications on that channel instead of
+    // (or in addition to) /topic/notifications.{id}.
+    this.wsService.ticketNotifications$.subscribe(notification => {
+      if (notification) {
+        this.unreadCount++;
+      }
+    });
   }
 
   /**
@@ -132,6 +154,19 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Fermer le panel
     this.notifPanel.hide();
 
+    // Ticket-specific notifications → navigate to ticket detail
+    const ticketTypes: NotificationType[] = [
+      NotificationType.TICKET_ASSIGNMENT,
+      NotificationType.TICKET_STATUS_CHANGE,
+      NotificationType.PREP_VALIDATED,
+      NotificationType.TICKET_REVIEW,
+      NotificationType.TICKET_CANCELLED
+    ];
+    if (ticketTypes.includes(notif.notificationType) && notif.referenceId) {
+      this.router.navigate(['/validations', notif.referenceId]);
+      return;
+    }
+
     // Naviguer selon le type
     switch (notif.notificationType) {
       case NotificationType.LINE_ASSIGNED:
@@ -194,6 +229,16 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         return 'pi pi-exclamation-triangle';
       case NotificationType.NEW_MESSAGE:
         return 'pi pi-envelope';
+      case NotificationType.TICKET_ASSIGNMENT:
+        return 'pi pi-ticket';
+      case NotificationType.TICKET_STATUS_CHANGE:
+        return 'pi pi-sync';
+      case NotificationType.PREP_VALIDATED:
+        return 'pi pi-wrench';
+      case NotificationType.TICKET_REVIEW:
+        return 'pi pi-eye';
+      case NotificationType.TICKET_CANCELLED:
+        return 'pi pi-ban';
       default:
         return 'pi pi-info-circle';
     }
@@ -214,6 +259,16 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         return '#22c55e';
       case NotificationType.NEW_MESSAGE:
         return '#8b5cf6';
+      case NotificationType.TICKET_ASSIGNMENT:
+        return '#f59e0b';
+      case NotificationType.TICKET_STATUS_CHANGE:
+        return '#3b82f6';
+      case NotificationType.PREP_VALIDATED:
+        return '#22c55e';
+      case NotificationType.TICKET_REVIEW:
+        return '#8b5cf6';
+      case NotificationType.TICKET_CANCELLED:
+        return '#ef4444';
       default:
         return '#64748b';
     }

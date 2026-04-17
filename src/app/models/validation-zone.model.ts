@@ -3,8 +3,22 @@ export interface ValidationZone {
   name: string;
   description?: string;
   productionLineId: number;
+
+  // NEW
+  posteType?: string;
+  orderInLine?: number;
+  requiresToolCheck?: boolean;
+  lineId?: number;
+  lineCode?: string;
+  phaseId?: number;
+  phaseCode?: string;
+  secteurId?: number;
+  secteurCode?: string;
+
+  // existing
+  lineName?: string;
+  lineActive?: boolean;
   createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface ValidationZoneRequest {

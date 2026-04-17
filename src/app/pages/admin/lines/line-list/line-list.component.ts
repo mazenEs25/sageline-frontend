@@ -3,7 +3,11 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { ProductionLineService } from '../../../../services/production-line.service';
 import { UserService } from '../../../../services/user.service';
 import { ValidationZoneService } from '../../../../services/validation-zone.service';
+import { SecteurService } from '../../../../services/secteur.service';
+import { PhaseService } from '../../../../services/phase.service';
 import { ProductionLine, ProductionLineRequest } from '../../../../models/production-line.model';
+import { Secteur } from '../../../../models/secteur.model';
+import { Phase } from '../../../../models/phase.model';
 import { KeycloakService } from 'keycloak-angular';
 @Component({
   selector: 'app-line-list',
@@ -33,10 +37,18 @@ export class LineListComponent implements OnInit {
   canCreate = false;
   canDelete = false;
 
+  // Filters
+  secteurs: Secteur[] = [];
+  phases: Phase[] = [];
+  selectedSecteur: number | null = null;
+  selectedPhase: number | null = null;
+
   constructor(
     private lineService: ProductionLineService,
     private zoneService: ValidationZoneService,
     private userService: UserService,
+    private secteurService: SecteurService,
+    private phaseService: PhaseService,
     private messageService: MessageService,
     private keycloak: KeycloakService,
     private confirmService: ConfirmationService
@@ -44,9 +56,44 @@ export class LineListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLines();
+    this.secteurService.getActive().subscribe(data => this.secteurs = data);
     const roles = this.keycloak.getUserRoles();
     this.canCreate = ['ADMIN_IT', 'CHEF_SECTEUR'].some(r => roles.includes(r));
     this.canDelete = roles.includes('ADMIN_IT');
+  }
+
+  onSecteurFilter(): void {
+    this.selectedPhase = null;
+    this.phases = [];
+    if (this.selectedSecteur) {
+      this.phaseService.getBySecteur(this.selectedSecteur).subscribe(data => this.phases = data);
+      this.lineService.getBySecteur(this.selectedSecteur).subscribe({
+        next: (data) => {
+          this.lines = data;
+          this.loadRelatedCounts();
+        }
+      });
+    } else {
+      this.loadLines();
+    }
+  }
+
+  onPhaseFilter(): void {
+    if (this.selectedPhase) {
+      this.lineService.getByPhase(this.selectedPhase).subscribe({
+        next: (data) => {
+          this.lines = data;
+          this.loadRelatedCounts();
+        }
+      });
+    } else if (this.selectedSecteur) {
+      this.lineService.getBySecteur(this.selectedSecteur).subscribe({
+        next: (data) => {
+          this.lines = data;
+          this.loadRelatedCounts();
+        }
+      });
+    }
   }
 
   loadLines(): void {

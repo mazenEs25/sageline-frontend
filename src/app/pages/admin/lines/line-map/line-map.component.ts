@@ -63,7 +63,7 @@ export class LineMapComponent implements OnInit {
         this.lineMapData = lines.map((line, i) => {
           const lineZones = zones.filter(z => z.productionLineId === line.id);
           const lineZoneIds = lineZones.map(z => z.id);
-          const lineUsers = users.filter(u => u.productionLineId === line.id);
+          const lineUsers = users.filter(u => !!line.secteurId && u.secteurId === line.secteurId);
           const lineValidations = validations.filter(
             v => lineZoneIds.includes(v.validationZoneId)
           );

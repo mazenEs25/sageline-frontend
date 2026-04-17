@@ -22,6 +22,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { LayoutComponent } from './layout/layout.component';
 import { RoleFilterPipe } from './shared/pipes/role-filter.pipe';
+import { FindByIdPipe } from './shared/pipes/find-by-id.pipe';
 import { ValidationListComponent } from './pages/admin/validations/validation-list/validation-list.component';
 import { ValidationCreateComponent } from './pages/admin/validations/validation-create/validation-create.component';
 import { ValidationDetailComponent } from './pages/admin/validations/validation-detail/validation-detail.component';
@@ -40,6 +41,17 @@ import { ChatWindowComponent } from './messaging/chat-window/chat-window.compone
 import { NotificationPanelComponent } from './messaging/notification-panel/notification-panel.component';
 import { Nl2brPipe } from './shared/pipes/nl2br.pipe';
 import { MessagingPageComponent } from './messaging/messaging-page/messaging-page.component';
+import { SecteurListComponent } from './pages/admin/secteurs/secteur-list/secteur-list.component';
+import { PhaseListComponent } from './pages/admin/phases/phase-list/phase-list.component';
+import { TicketListComponent } from './pages/Ticket/ticket-list/ticket-list.component';
+import { TicketCreateComponent } from './pages/Ticket/ticket-create/ticket-create.component';
+import { TicketDetailComponent } from './pages/Ticket/ticket-detail/ticket-detail.component';
+import { WeekPlannerComponent } from './pages/Ticket/week-planner/week-planner.component';
+import { PrepCheckComponent } from './pages/Ticket/prep-check/prep-check.component';
+import { AssignmentPanelComponent } from './shared/components/assignment-panel/assignment-panel.component';
+import { TicketStatusBadgeComponent } from './shared/components/ticket-status-badge/ticket-status-badge.component';
+import { TicketTimelineComponent } from './shared/components/ticket-timeline/ticket-timeline.component';
+import { PriorityBadgeComponent } from './shared/components/priority-badge/priority-badge.component';
 
 @NgModule({
   declarations: [
@@ -58,6 +70,7 @@ import { MessagingPageComponent } from './messaging/messaging-page/messaging-pag
     StatusBadgeComponent,
     LayoutComponent,
     RoleFilterPipe,
+    FindByIdPipe,
     ValidationListComponent,
     ValidationCreateComponent,
     ValidationDetailComponent,
@@ -72,7 +85,18 @@ import { MessagingPageComponent } from './messaging/messaging-page/messaging-pag
     ChatWindowComponent,
     NotificationPanelComponent,
     Nl2brPipe,
-    MessagingPageComponent
+    MessagingPageComponent,
+    SecteurListComponent,
+    PhaseListComponent,
+    TicketListComponent,
+    TicketCreateComponent,
+    TicketDetailComponent,
+    WeekPlannerComponent,
+    PrepCheckComponent,
+    AssignmentPanelComponent,
+    TicketStatusBadgeComponent,
+    TicketTimelineComponent,
+    PriorityBadgeComponent
   ],
   imports: [
     BrowserModule,

@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { KeycloakService } from 'keycloak-angular';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 export interface LoginResponse {
   access_token: string;
@@ -119,6 +119,24 @@ export class AuthService {
     }
   }
 
+  getFirstName(): string {
+    try {
+      const token = this.keycloak.getKeycloakInstance().tokenParsed as any;
+      return token?.['given_name'] || '';
+    } catch {
+      return '';
+    }
+  }
+
+  getLastName(): string {
+    try {
+      const token = this.keycloak.getKeycloakInstance().tokenParsed as any;
+      return token?.['family_name'] || '';
+    } catch {
+      return '';
+    }
+  }
+
   /**
    * Parse a JWT token to extract the payload.
    */
@@ -158,5 +176,13 @@ getCurrentUserId(): number {
 
   console.error('User ID non disponible — fallback à 0');
   return 0;
+}
+syncCurrentUser(): Observable<any> {
+  return this.http.get(`${environment.apiUrl}/users/me`).pipe(
+    tap((user: any) => {
+      localStorage.setItem('sageline_user_id', user.id.toString());
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    })
+  );
 }
 }

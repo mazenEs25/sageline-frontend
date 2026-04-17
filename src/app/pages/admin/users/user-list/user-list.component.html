@@ -40,7 +40,7 @@
   [paginator]="true"
   [rows]="10"
   [loading]="loading"
-  [globalFilterFields]="['username', 'email', 'role']"
+  [globalFilterFields]="['username', 'email', 'firstName', 'lastName', 'role']"
   [rowHover]="true"
   dataKey="id"
   #dt>
@@ -62,9 +62,11 @@
   <ng-template pTemplate="header">
     <tr>
       <th pSortableColumn="username">Utilisateur <p-sortIcon field="username"></p-sortIcon></th>
+      <th pSortableColumn="firstName">Prénom <p-sortIcon field="firstName"></p-sortIcon></th>
+      <th pSortableColumn="lastName">Nom <p-sortIcon field="lastName"></p-sortIcon></th>
       <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
       <th pSortableColumn="role">Rôle <p-sortIcon field="role"></p-sortIcon></th>
-      <th>Ligne</th>
+      <th>Secteur</th>
       <th pSortableColumn="createdAt">Créé le <p-sortIcon field="createdAt"></p-sortIcon></th>
       <th>Actions</th>
     </tr>
@@ -83,11 +85,16 @@
           <span class="username">{{ user.username }}</span>
         </div>
       </td>
+      <td>{{ user.firstName || '—' }}</td>
+      <td>{{ user.lastName || '—' }}</td>
       <td><span class="email-mono">{{ user.email }}</span></td>
       <td>
         <p-tag [value]="getRoleLabel(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
       </td>
-      <td>{{ getLineName(user.productionLineId) }}</td>
+      <td>
+        <span *ngIf="user.secteurCode">{{ user.secteurCode }}</span>
+        <span *ngIf="!user.secteurCode" class="text-500">—</span>
+      </td>
       <td class="date-cell">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
       <td>
         <button pButton icon="pi pi-pencil"
@@ -107,7 +114,7 @@
   <!-- Empty State -->
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="6" class="empty-state">
+      <td colspan="8" class="empty-state">
         <i class="pi pi-inbox"></i>
         <p>Aucun utilisateur trouvé</p>
       </td>
@@ -136,6 +143,24 @@
       <small class="field-hint" *ngIf="!isEdit">
         Ce nom sera utilisé pour la connexion Keycloak
       </small>
+    </div>
+
+    <!-- First name -->
+    <div class="field">
+      <label for="firstName">Prénom</label>
+      <input pInputText id="firstName"
+        [(ngModel)]="form.firstName"
+        class="w-full"
+        placeholder="Prénom" />
+    </div>
+
+    <!-- Last name -->
+    <div class="field">
+      <label for="lastName">Nom de famille</label>
+      <input pInputText id="lastName"
+        [(ngModel)]="form.lastName"
+        class="w-full"
+        placeholder="Nom" />
     </div>
 
     <!-- Email -->
@@ -185,15 +210,16 @@
       </small>
     </div>
 
-    <!-- Production Line -->
+    <!-- Secteur -->
     <div class="field">
-      <label for="line">Ligne de production</label>
-      <p-dropdown id="line"
-        [(ngModel)]="form.productionLineId"
-        [options]="lineOptions"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Sélectionner..."
+      <label for="secteur">Secteur</label>
+      <p-dropdown id="secteur"
+        [options]="secteurs"
+        [(ngModel)]="form.secteurId"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Sélectionner un secteur"
+        [showClear]="true"
         [style]="{ width: '100%' }">
       </p-dropdown>
     </div>

@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
 export class ProductionLineService {
   private url = `${environment.apiUrl}/lines`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAll(): Observable<ProductionLine[]> {
     return this.http.get<ProductionLine[]>(this.url);
@@ -40,5 +40,12 @@ export class ProductionLineService {
 
   deactivate(id: number): Observable<ProductionLine> {
     return this.http.patch<ProductionLine>(`${this.url}/${id}/deactivate`, {});
+  }
+  getByPhase(phaseId: number): Observable<ProductionLine[]> {
+    return this.http.get<ProductionLine[]>(`${this.url}/phase/${phaseId}`);
+  }
+
+  getBySecteur(secteurId: number): Observable<ProductionLine[]> {
+    return this.http.get<ProductionLine[]>(`${this.url}/secteur/${secteurId}`);
   }
 }

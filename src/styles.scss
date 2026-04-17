@@ -702,3 +702,79 @@ app-stat-card {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
 }
+
+
+// ═══════════════════════════════════════════════════
+// TICKET DETAIL STYLES
+// ═══════════════════════════════════════════════════
+
+.ticket-info-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+
+  h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--surface-border);
+    padding-bottom: 0.5rem;
+  }
+}
+
+.ticket-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.ticket-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .label {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .value {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+}
+
+::ng-deep .ticket-timeline .p-timeline-event-separator .p-timeline-event-marker {
+  border: 2px solid var(--primary-color) !important;
+}
+
+.ticket-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 1rem;
+}
+
+.risk-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  margin: 0 auto;
+
+  &.low { background: linear-gradient(135deg, #22C55E, #16A34A); }
+  &.medium { background: linear-gradient(135deg, #F59E0B, #D97706); }
+  &.high { background: linear-gradient(135deg, #EF4444, #DC2626); }
+  &.critical { background: linear-gradient(135deg, #DC2626, #991B1B); }
+}

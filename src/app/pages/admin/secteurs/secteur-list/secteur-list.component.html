@@ -1,0 +1,75 @@
+<!-- secteur-list.component.html -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0"><i class="pi pi-building mr-2"></i>Gestion des Secteurs</h2>
+    <button pButton label="Nouveau Secteur" icon="pi pi-plus" (click)="openNew()"></button>
+  </div>
+
+  <p-table [value]="secteurs" [loading]="loading" [paginator]="true" [rows]="10"
+           styleClass="p-datatable-sm" responsiveLayout="scroll"
+           [globalFilterFields]="['code', 'name']">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="code">Code <p-sortIcon field="code"></p-sortIcon></th>
+        <th pSortableColumn="name">Nom <p-sortIcon field="name"></p-sortIcon></th>
+        <th>Description</th>
+        <th>Phases</th>
+        <th>Lignes</th>
+        <th>Statut</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-secteur>
+      <tr>
+        <td><strong>{{ secteur.code }}</strong></td>
+        <td>{{ secteur.name }}</td>
+        <td>{{ secteur.description || '—' }}</td>
+        <td><p-badge [value]="secteur.phaseCount" severity="info"></p-badge></td>
+        <td><p-badge [value]="secteur.lineCount" severity="success"></p-badge></td>
+        <td>
+          <p-tag [value]="secteur.active ? 'Actif' : 'Inactif'" [severity]="secteur.active ? 'success' : 'danger'"></p-tag>
+        </td>
+        <td>
+          <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="editSecteur(secteur)"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteSecteur(secteur)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="text-center p-4">Aucun secteur trouvé</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Dialog -->
+<p-dialog [header]="isEdit ? 'Modifier le Secteur' : 'Nouveau Secteur'" [(visible)]="displayDialog"
+          [modal]="true" [style]="{width: '450px'}" [closable]="true">
+  <div class="flex flex-column gap-3 pt-3">
+    <div class="field">
+      <label for="code">Code *</label>
+      <input pInputText id="code" [(ngModel)]="form.code" class="w-full" [style.text-transform]="'uppercase'" maxlength="10" />
+    </div>
+    <div class="field">
+      <label for="name">Nom *</label>
+      <input pInputText id="name" [(ngModel)]="form.name" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="desc">Description</label>
+      <textarea pInputTextarea id="desc" [(ngModel)]="form.description" class="w-full" rows="3"></textarea>
+    </div>
+    <div class="field">
+      <label>Statut</label>
+      <div class="flex gap-3">
+        <p-radioButton name="active" [value]="true" [(ngModel)]="form.active" label="Actif"></p-radioButton>
+        <p-radioButton name="active" [value]="false" [(ngModel)]="form.active" label="Inactif"></p-radioButton>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+    <button pButton label="Enregistrer" icon="pi pi-check" (click)="save()" [disabled]="!form.code || !form.name"></button>
+  </ng-template>
+</p-dialog>

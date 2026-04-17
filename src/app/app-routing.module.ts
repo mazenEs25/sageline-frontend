@@ -10,9 +10,13 @@ import { LineListComponent } from './pages/admin/lines/line-list/line-list.compo
 import { LineMapComponent } from './pages/admin/lines/line-map/line-map.component';
 import { ZoneListComponent } from './pages/admin/zones/zone-list/zone-list.component';
 import { ZoneMapComponent } from './pages/admin/zones/zone-map/zone-map.component';
-import { ValidationListComponent } from './pages/admin/validations/validation-list/validation-list.component';
-import { ValidationCreateComponent } from './pages/admin/validations/validation-create/validation-create.component';
-import { ValidationDetailComponent } from './pages/admin/validations/validation-detail/validation-detail.component';
+import { SecteurListComponent } from './pages/admin/secteurs/secteur-list/secteur-list.component';
+import { PhaseListComponent } from './pages/admin/phases/phase-list/phase-list.component';
+import { TicketListComponent } from './pages/Ticket/ticket-list/ticket-list.component';
+import { TicketCreateComponent } from './pages/Ticket/ticket-create/ticket-create.component';
+import { TicketDetailComponent } from './pages/Ticket/ticket-detail/ticket-detail.component';
+import { WeekPlannerComponent } from './pages/Ticket/week-planner/week-planner.component';
+import { PrepCheckComponent } from './pages/Ticket/prep-check/prep-check.component';
 import { ResultListComponent } from './pages/results/result-list/result-list.component';
 import { KpiDashboardComponent } from './pages/kpis/kpi-dashboard/kpi-dashboard.component';
 import { AiDashboardComponent } from './pages/intelligence/ai-dashboard/ai-dashboard.component';
@@ -31,27 +35,42 @@ const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
 
       // Admin
-      { path: 'admin/users', component: UserListComponent, data: { roles: ['ADMIN_IT'] } },
-      { path: 'admin/lines', component: LineListComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
-      { path: 'admin/lines/map', component: LineMapComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
-      { path: 'admin/zones', component: ZoneListComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
-      { path: 'admin/zones/map', component: ZoneMapComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
+      { path: 'admin/users', component: UserListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT'] } },
+      { path: 'admin/lines', component: LineListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
+      { path: 'admin/lines/map', component: LineMapComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
+      { path: 'admin/zones', component: ZoneListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
+      { path: 'admin/zones/map', component: ZoneMapComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
 
-      // Validations
-      { path: 'validations', component: ValidationListComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE'] } },
-      { path: 'validations/create', component: ValidationCreateComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL'] } },
-      { path: 'validations/:id', component: ValidationDetailComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE'] } },
+      // Secteurs + Phases
+      { path: 'admin/secteurs', component: SecteurListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT'] } },
+      { path: 'admin/phases', component: PhaseListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT'] } },
 
-      // Results (with PDF export)
-      { path: 'results', component: ResultListComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT'] } },
+      // Tickets (replaces old Validations routes)
+      { path: 'validations', component: TicketListComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] } },
+      { path: 'validations/create', component: TicketCreateComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
+      { path: 'validations/planner', component: WeekPlannerComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
+      { path: 'validations/:id', component: TicketDetailComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] } },
+      { path: 'validations/:id/prep', component: PrepCheckComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'TECH_PREP'] } },
+
+      // Results
+      { path: 'results', component: ResultListComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL'] } },
 
       // KPIs
-      { path: 'kpis', component: KpiDashboardComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] } },
+      { path: 'kpis', component: KpiDashboardComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] } },
 
       // Intelligence IA
-      { path: 'intelligence', component: AiDashboardComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] } },
+      { path: 'intelligence', component: AiDashboardComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] } },
+
       // Messaging
-      {path: 'messaging',component:MessagingPageComponent, data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE'],breadcrumb: 'Messagerie' }},
+      { path: 'messaging', component: MessagingPageComponent, data: { breadcrumb: 'Messagerie' } },
 
       { path: 'access-denied', component: AccessDeniedComponent },
     ],

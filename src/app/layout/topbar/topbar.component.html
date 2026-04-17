@@ -56,54 +56,54 @@
       </div>
     </div>
   </div>
-</div>
 
-<!-- Settings -->
-<div class="tb-icon-btn" title="Paramètres">
-  <i class="pi pi-cog"></i>
-</div>
-
-<div class="tb-divider"></div>
-
-<!-- User Profile Wrapper -->
-<div class="tb-user-wrapper">
-  <div class="tb-user" (click)="toggleDropdown()">
-    <div class="tb-avatar">{{ userInitials }}</div>
-    <div class="tb-user-info">
-      <span class="tb-username">{{ username }}</span>
-      <span class="tb-role">{{ userRole }}</span>
-    </div>
-    <i class="pi pi-chevron-down tb-chevron"></i>
+  <!-- Settings -->
+  <div class="tb-icon-btn" title="Paramètres">
+    <i class="pi pi-cog"></i>
   </div>
 
-  <!-- User Dropdown — INSIDE the wrapper -->
-  <div class="user-dropdown" *ngIf="showDropdown">
-    <div class="dd-header">
-      <div class="dd-user-card">
-        <div class="dd-avatar">{{ userInitials }}</div>
-        <div class="dd-user-details">
-          <div class="dd-fullname">{{ username }}</div>
-          <div class="dd-email">{{ userRole }}</div>
+  <div class="tb-divider"></div>
+
+  <!-- User Profile Wrapper -->
+  <div class="tb-user-wrapper">
+    <div class="tb-user" (click)="toggleDropdown()">
+      <div class="tb-avatar">{{ userInitials }}</div>
+      <div class="tb-user-info">
+        <span class="tb-username">{{ username }}</span>
+        <span class="tb-role">{{ userRole }}</span>
+      </div>
+      <i class="pi pi-chevron-down tb-chevron"></i>
+    </div>
+
+    <!-- User Dropdown — INSIDE the wrapper -->
+    <div class="user-dropdown" *ngIf="showDropdown">
+      <div class="dd-header">
+        <div class="dd-user-card">
+          <div class="dd-avatar">{{ userInitials }}</div>
+          <div class="dd-user-details">
+            <div class="dd-fullname">{{ username }}</div>
+            <div class="dd-email">{{ userRole }}</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="dd-sep"></div>
-    <div class="dd-item" (click)="navigateTo('/kpis')">
-      <i class="pi pi-chart-line"></i>
-      <span>Mes KPIs</span>
-    </div>
-    <div class="dd-item" (click)="openSwagger()">
-      <i class="pi pi-book"></i>
-      <span>Documentation API</span>
-    </div>
-    <div class="dd-item">
-      <i class="pi pi-question-circle"></i>
-      <span>Aide</span>
-    </div>
-    <div class="dd-sep"></div>
-    <div class="dd-item danger" (click)="logout()">
-      <i class="pi pi-sign-out"></i>
-      <span>Se déconnecter</span>
+      <div class="dd-sep"></div>
+      <div class="dd-item" (click)="navigateTo('/kpis')">
+        <i class="pi pi-chart-line"></i>
+        <span>Mes KPIs</span>
+      </div>
+      <div class="dd-item" (click)="openSwagger()">
+        <i class="pi pi-book"></i>
+        <span>Documentation API</span>
+      </div>
+      <div class="dd-item">
+        <i class="pi pi-question-circle"></i>
+        <span>Aide</span>
+      </div>
+      <div class="dd-sep"></div>
+      <div class="dd-item danger" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span>Se déconnecter</span>
+      </div>
     </div>
   </div>
 </div>

@@ -41,6 +41,29 @@
   </app-stat-card>
 </div>
 
+<!-- Filters -->
+<div class="flex gap-3 mb-3">
+  <p-dropdown
+    [options]="secteurs"
+    [(ngModel)]="selectedSecteur"
+    optionLabel="name"
+    optionValue="id"
+    placeholder="Filtrer par secteur"
+    [showClear]="true"
+    (onChange)="onSecteurFilter()">
+  </p-dropdown>
+  <p-dropdown
+    [options]="phases"
+    [(ngModel)]="selectedPhase"
+    optionLabel="name"
+    optionValue="id"
+    placeholder="Filtrer par phase"
+    [showClear]="true"
+    (onChange)="onPhaseFilter()"
+    [disabled]="!selectedSecteur">
+  </p-dropdown>
+</div>
+
 <!-- Data Table -->
 <p-table
   [value]="lines"
