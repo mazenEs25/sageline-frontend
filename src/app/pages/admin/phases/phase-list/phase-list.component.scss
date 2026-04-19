@@ -1,0 +1,23 @@
+.secteur-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.card {
+  background: var(--surface-card, #1e293b);
+  border: 1px solid var(--surface-border, #334155);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+:host ::ng-deep {
+  .p-datatable .p-datatable-tbody > tr > td {
+    vertical-align: middle;
+  }
+
+  .p-badge {
+    font-weight: 600;
+  }
+}

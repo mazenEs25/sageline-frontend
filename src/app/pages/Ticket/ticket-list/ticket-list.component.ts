@@ -1,19 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Secteur } from '../../../models/secteur.model';
 import { Validation } from '../../../models/validation.model';
 import { SecteurService } from '../../../services/secteur.service';
 import { TicketService } from '../../../services/ticket.service';
+import { WebSocketService } from '../../../services/websocket.service';
 import { TicketStatus, Priority, TICKET_STATUS_LABELS, PRIORITY_LABELS } from '../../../shared/enums/ticket.enum';
 
 
 @Component({
   selector: 'app-ticket-list',
   templateUrl: './ticket-list.component.html',
+  styleUrls: ['./ticket-list.component.scss'],
   providers: [MessageService]
 })
-export class TicketListComponent implements OnInit {
+export class TicketListComponent implements OnInit, OnDestroy {
   tickets: Validation[] = [];
   filteredTickets: Validation[] = [];
   secteurs: Secteur[] = [];
@@ -28,15 +30,55 @@ export class TicketListComponent implements OnInit {
   statusOptions = Object.entries(TICKET_STATUS_LABELS).map(([k, v]) => ({ label: v, value: k }));
   priorityOptions = Object.entries(PRIORITY_LABELS).map(([k, v]) => ({ label: v, value: k }));
 
+  private readonly wsTopic = '/topic/tickets';
+
   constructor(
     private ticketService: TicketService,
     private secteurService: SecteurService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private wsService: WebSocketService
   ) {}
 
   ngOnInit() {
     this.loadData();
+    this.subscribeToTicketUpdates();
+  }
+
+  ngOnDestroy() {
+    this.wsService.unsubscribe(this.wsTopic);
+  }
+
+  /**
+   * Listen for broadcasts of any ticket transition so the list view stays
+   * in sync across sessions (chef_secteur / tech_val / tech_prep).
+   * The backend publishes the refreshed DTO to /topic/tickets on every
+   * create/startPrep/validatePrep/startValidation/submitForReview/close/cancel.
+   */
+  private subscribeToTicketUpdates(): void {
+    this.wsService.subscribe(this.wsTopic, (msg: any) => {
+      if (!msg || !msg.id) {
+        // Unknown payload — safest is to re-fetch
+        this.reloadTickets();
+        return;
+      }
+      const idx = this.tickets.findIndex(t => t.id === msg.id);
+      if (idx >= 0) {
+        // Replace in place so references stay stable for the rest of the template
+        this.tickets[idx] = msg as Validation;
+      } else {
+        // New ticket — prepend so it surfaces at the top
+        this.tickets = [msg as Validation, ...this.tickets];
+      }
+      this.applyFilters();
+    });
+  }
+
+  private reloadTickets(): void {
+    this.ticketService.getAll().subscribe({
+      next: (data) => { this.tickets = data; this.applyFilters(); },
+      error: () => { /* silent — a later broadcast will try again */ }
+    });
   }
 
   loadData() {

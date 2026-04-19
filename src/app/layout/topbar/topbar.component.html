@@ -13,6 +13,7 @@
   <div class="tb-search" [class.active]="searchOpen" (click)="openSearch()">
     <i class="pi pi-search"></i>
     <input *ngIf="searchOpen" #searchInput type="text" [(ngModel)]="searchQuery" placeholder="Rechercher..."
+      (input)="onSearchInput()"
       (keydown.enter)="executeSearch()" (keydown.escape)="closeSearch()" class="search-input" />
     <span *ngIf="!searchOpen">Rechercher...</span>
     <span class="shortcut" *ngIf="!searchOpen">Ctrl+K</span>

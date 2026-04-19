@@ -26,6 +26,12 @@ export class SidebarComponent implements OnInit {
       ]
     },
     {
+      label: 'MES AFFECTATIONS',
+      items: [
+        { label: 'Mes Affectations', icon: 'pi pi-map-marker', route: '/mes-affectations', roles: ['TECH_VAL', 'TECH_PREP'] },
+      ]
+    },
+    {
       label: 'VALIDATIONS',
       items: [
         { label: 'Validations', icon: 'pi pi-check-square', route: '/validations', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'TECH_VAL', 'EXPERT', 'RESPONSABLE','TECH_PREP'] },

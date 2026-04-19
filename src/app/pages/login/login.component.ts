@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { IdleService } from '../../auth/idle.service';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 
@@ -22,12 +23,13 @@ export class LoginComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private idleService: IdleService
   ) {
-    // If already authenticated, redirect to dashboard
+    // If already authenticated, redirect to the correct landing page for the user's role
     this.authService.isAuthenticated().then(isAuth => {
       if (isAuth) {
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([this.authService.getLandingRoute()]);
       }
     });
   }
@@ -46,8 +48,12 @@ export class LoginComponent {
     this.authService.login(this.username, this.password).subscribe({
       next: async (tokens) => {
         try {
-          // Initialize Keycloak with the received tokens
+          // Initialize Keycloak with the received tokens (also persists them)
           await this.authService.initWithTokens(tokens);
+
+          // Start idle tracking now — otherwise it would only kick in after
+          // the next app bootstrap / page reload.
+          this.idleService.start();
 
           // Resolve user ID before navigating so components can access it
           try {
@@ -61,8 +67,8 @@ export class LoginComponent {
             console.warn('Could not resolve user ID at login');
           }
 
-          // Navigate to dashboard
-          this.router.navigate(['/dashboard']);
+          // Navigate to the landing page that matches the user's role
+          this.router.navigate([this.authService.getLandingRoute()]);
         } catch (err) {
           this.error = 'Erreur lors de l\'initialisation de la session';
           this.loading = false;

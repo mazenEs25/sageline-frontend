@@ -1,6 +1,7 @@
-import { Component, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
 import { KeycloakService } from 'keycloak-angular';
 import { AuthService } from '../../auth/auth.service';
 import { ValidationService } from '../../services/validation.service';
@@ -15,7 +16,7 @@ import { ValidationZoneService } from '../../services/validation-zone.service';
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss']
 })
-export class TopbarComponent implements OnInit {
+export class TopbarComponent implements OnInit, OnDestroy {
 
   username = '';
   userRole = '';
@@ -27,6 +28,10 @@ export class TopbarComponent implements OnInit {
   searchQuery = '';
   searchResults: any[] = [];
   @ViewChild('searchInput') searchInput: any;
+
+  // Live search subject for debouncing
+  private searchSubject = new Subject<string>();
+  private searchSub?: Subscription;
 
   // Data
   zones: ValidationZone[] = [];
@@ -68,12 +73,28 @@ export class TopbarComponent implements OnInit {
     this.loadLines();
     this.loadNotifications();
 
+    // Debounced live search — triggers 300ms after user stops typing
+    this.searchSub = this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      if (query.trim()) {
+        this.executeSearch();
+      } else {
+        this.searchResults = [];
+      }
+    });
+
     // Update breadcrumb on route change
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.updateBreadcrumb(event.urlAfterRedirects || event.url);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.searchSub?.unsubscribe();
   }
 
   private loadUserInfo(): void {
@@ -246,6 +267,11 @@ closeSearch(): void {
   this.searchOpen = false;
   this.searchQuery = '';
   this.searchResults = [];
+}
+
+// Called on every keystroke — feeds the debounce subject
+onSearchInput(): void {
+  this.searchSubject.next(this.searchQuery);
 }
 
 executeSearch(): void {

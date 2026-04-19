@@ -29,6 +29,9 @@ import { TimelineModule } from 'primeng/timeline';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CalendarModule } from 'primeng/calendar';
 import { ListboxModule } from 'primeng/listbox';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { TabViewModule } from 'primeng/tabview';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { SortIcon } from 'primeng/table';
 
 const MODULES = [
@@ -39,6 +42,7 @@ const MODULES = [
   ChartModule, MenuModule, AvatarModule, DividerModule, SkeletonModule,
   ProgressSpinnerModule, OverlayPanelModule, ScrollPanelModule,
   StepsModule, TimelineModule, RadioButtonModule, CalendarModule, ListboxModule,
+  InputNumberModule, TabViewModule, MultiSelectModule,
 ];
 
 @NgModule({

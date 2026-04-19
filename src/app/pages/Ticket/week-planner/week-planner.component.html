@@ -1,1 +1,318 @@
-<p>week-planner works!</p>
+<!-- week-planner.component.html -->
+<p-toast></p-toast>
+<p-confirmDialog [style]="{ width: '460px' }" acceptButtonStyleClass="p-button-primary p-button-sm"
+                 rejectButtonStyleClass="p-button-text p-button-sm"></p-confirmDialog>
+
+<div class="planner-page">
+
+  <!-- ═══ Header ═══ -->
+  <div class="page-header">
+    <div class="title-block">
+      <span class="eyebrow">PLANIFICATION HEBDOMADAIRE</span>
+      <h1><i class="pi pi-calendar-plus"></i> Planificateur de Validations</h1>
+      <p>Planifiez les validations de la semaine par poste, priorité et affectation</p>
+    </div>
+
+    <div class="header-actions">
+      <button pButton
+              icon="pi pi-list"
+              label="Voir les tickets"
+              class="p-button-outlined p-button-sm"
+              routerLink="/validations"></button>
+      <button pButton
+              icon="pi pi-upload"
+              [label]="publishing ? 'Publication...' : 'Publier la semaine'"
+              class="p-button-primary p-button-sm"
+              [disabled]="publishing || drafts.length === 0"
+              (click)="publishWeek()"></button>
+    </div>
+  </div>
+
+  <!-- ═══ KPI Row ═══ -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(59,130,246,0.12); color: #3b82f6">
+        <i class="pi pi-calendar"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ weekRangeLabel() }}</div>
+        <div class="kpi-label">Semaine planifiée</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(139,92,246,0.12); color: #8b5cf6">
+        <i class="pi pi-file-edit"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ totalDrafts }}</div>
+        <div class="kpi-label">Brouillons (non publiés)</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(16,185,129,0.12); color: #10b981">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ totalExisting }}</div>
+        <div class="kpi-label">Déjà planifiées</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(245,158,11,0.12); color: #f59e0b">
+        <i class="pi pi-bolt"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ totalDrafts + totalExisting }}</div>
+        <div class="kpi-label">Total de la semaine</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Week toolbar ═══ -->
+  <div class="week-toolbar">
+    <div class="nav-group">
+      <button pButton
+              icon="pi pi-chevron-left"
+              class="p-button-text p-button-sm nav-btn"
+              (click)="prevWeek()"
+              pTooltip="Semaine précédente"></button>
+      <button pButton
+              label="Cette semaine"
+              icon="pi pi-refresh"
+              class="p-button-text p-button-sm today-btn"
+              (click)="goToCurrentWeek()"></button>
+      <button pButton
+              icon="pi pi-chevron-right"
+              class="p-button-text p-button-sm nav-btn"
+              (click)="nextWeek()"
+              pTooltip="Semaine suivante"></button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <button *ngIf="drafts.length > 0"
+            pButton
+            icon="pi pi-trash"
+            label="Effacer les brouillons"
+            class="p-button-text p-button-sm clear-btn"
+            (click)="clearDrafts()"></button>
+  </div>
+
+  <!-- ═══ Week grid ═══ -->
+  <div class="week-grid" [class.loading]="loadingWeek">
+    <div *ngFor="let day of days; trackBy: trackDay"
+         class="day-col"
+         [class.is-today]="day.isToday"
+         [class.is-weekend]="day.isWeekend">
+
+      <!-- Day header -->
+      <div class="day-header">
+        <div class="day-meta">
+          <span class="day-label">{{ day.label }}</span>
+          <span class="day-date">{{ day.dayNumber }} {{ day.monthShort }}</span>
+        </div>
+        <button pButton
+                icon="pi pi-plus"
+                class="p-button-rounded p-button-sm add-day-btn"
+                (click)="openAddDialog(day.dateIso)"
+                pTooltip="Ajouter une validation"></button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="day-empty"
+           *ngIf="day.existing.length === 0 && day.drafts.length === 0 && !loadingWeek">
+        <i class="pi pi-plus-circle"></i>
+        <small>Aucune validation</small>
+      </div>
+
+      <!-- Existing tickets (already saved) -->
+      <div *ngFor="let t of day.existing; trackBy: trackExisting"
+           class="validation-card existing"
+           (click)="viewExisting(t)"
+           pTooltip="Validation existante — cliquer pour ouvrir">
+        <div class="card-head">
+          <span class="ticket-code">{{ t.ticketCode }}</span>
+          <span [class]="priorityClass(t.priority)">{{ t.priority }}</span>
+        </div>
+        <div class="card-body">
+          <div class="zone-name">
+            <i class="pi pi-map-marker"></i>
+            {{ t.zoneName || '—' }}
+          </div>
+          <div class="line-info">
+            <i class="pi pi-sitemap"></i>
+            {{ t.lineCode || t.lineName || '—' }}
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="existing-badge">
+            <i class="pi pi-check"></i> Publiée
+          </span>
+        </div>
+      </div>
+
+      <!-- Draft tickets (in this session, not yet saved) -->
+      <div *ngFor="let d of day.drafts; trackBy: trackDraft"
+           class="validation-card draft">
+        <div class="card-head">
+          <span class="draft-badge"><i class="pi pi-file-edit"></i> Brouillon</span>
+          <span [class]="priorityClass(d.priority)">{{ d.priority }}</span>
+        </div>
+        <div class="card-body">
+          <div class="zone-name">
+            <i class="pi pi-map-marker"></i>
+            {{ d.zoneLabel }}
+          </div>
+          <div class="line-info">
+            <i class="pi pi-sitemap"></i>
+            {{ d.lineCode || '—' }}
+          </div>
+          <div *ngIf="d.assignments.length > 0" class="assignees">
+            <i class="pi pi-users"></i>
+            <span>{{ d.assignments.length }} affecté{{ d.assignments.length > 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button pButton
+                  icon="pi pi-times"
+                  class="p-button-text p-button-danger p-button-sm remove-btn"
+                  (click)="removeDraft(d.tempId)"
+                  pTooltip="Retirer"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ Add validation dialog ═══ -->
+<p-dialog
+  [(visible)]="showAddDialog"
+  header="Ajouter une validation"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [style]="{ width: '620px' }"
+  styleClass="planner-dialog"
+  (onHide)="closeAddDialog()">
+
+  <div class="dialog-body" *ngIf="showAddDialog">
+    <div class="dialog-target">
+      <i class="pi pi-calendar"></i>
+      Cible : <strong>{{ selectedDayIso }}</strong>
+    </div>
+
+    <!-- Cascading pickers -->
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Secteur <span class="req">*</span></label>
+        <p-dropdown [options]="secteurs"
+                    [(ngModel)]="formSecteur"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Sélectionner..."
+                    [showClear]="true"
+                    (onChange)="onSecteurChange()"
+                    styleClass="modern-dd"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Phase <span class="req">*</span></label>
+        <p-dropdown [options]="phases"
+                    [(ngModel)]="formPhase"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Sélectionner..."
+                    [showClear]="true"
+                    [disabled]="!formSecteur"
+                    (onChange)="onPhaseChange()"
+                    styleClass="modern-dd"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Ligne <span class="req">*</span></label>
+        <p-dropdown [options]="lines"
+                    [(ngModel)]="formLine"
+                    optionLabel="code"
+                    optionValue="id"
+                    placeholder="Sélectionner..."
+                    [showClear]="true"
+                    [disabled]="!formPhase"
+                    (onChange)="onLineChange()"
+                    styleClass="modern-dd"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Zone / Poste <span class="req">*</span></label>
+        <p-dropdown [options]="zones"
+                    [(ngModel)]="formZone"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Sélectionner..."
+                    [showClear]="true"
+                    [disabled]="!formLine"
+                    styleClass="modern-dd"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Priorité</label>
+        <p-dropdown [options]="priorityOptions"
+                    [(ngModel)]="formPriority"
+                    optionLabel="label"
+                    optionValue="value"
+                    styleClass="modern-dd"></p-dropdown>
+      </div>
+    </div>
+
+    <!-- Assignments -->
+    <div class="form-field full">
+      <label>Techniciens de validation</label>
+      <p-multiSelect [options]="techValUsers"
+                     [(ngModel)]="formTechValIds"
+                     optionLabel="username"
+                     optionValue="id"
+                     placeholder="Sélectionner un ou plusieurs..."
+                     styleClass="modern-ms"
+                     [showToggleAll]="false"
+                     display="chip"></p-multiSelect>
+    </div>
+
+    <div class="form-field full">
+      <label>Techniciens de préparation</label>
+      <p-multiSelect [options]="techPrepUsers"
+                     [(ngModel)]="formTechPrepIds"
+                     optionLabel="username"
+                     optionValue="id"
+                     placeholder="Sélectionner un ou plusieurs..."
+                     styleClass="modern-ms"
+                     [showToggleAll]="false"
+                     display="chip"></p-multiSelect>
+    </div>
+
+    <!-- Comments -->
+    <div class="form-field full">
+      <label>Commentaires</label>
+      <textarea pInputTextarea
+                rows="2"
+                [(ngModel)]="formComments"
+                placeholder="Note optionnelle pour l'équipe..."></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton
+            label="Annuler"
+            icon="pi pi-times"
+            class="p-button-text p-button-sm"
+            (click)="closeAddDialog()"></button>
+    <button pButton
+            label="Ajouter au planning"
+            icon="pi pi-plus"
+            class="p-button-primary p-button-sm"
+            [disabled]="!canSaveDraft"
+            (click)="saveDraft()"></button>
+  </ng-template>
+</p-dialog>

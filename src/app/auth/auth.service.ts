@@ -18,11 +18,100 @@ export class AuthService {
   private tokenUrl = `${environment.keycloak.url}/realms/${environment.keycloak.realm}/protocol/openid-connect/token`;
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
 
+  /** localStorage keys used for session persistence */
+  static readonly ACCESS_TOKEN_KEY = 'sageline_access_token';
+  static readonly REFRESH_TOKEN_KEY = 'sageline_refresh_token';
+  static readonly LAST_ACTIVITY_KEY = 'sageline_last_activity';
+
+  /** Max idle duration before a stored session is considered expired (ms). */
+  static readonly IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
   constructor(
     private http: HttpClient,
     private keycloak: KeycloakService,
     private router: Router
   ) {}
+
+  /**
+   * Persist tokens + last-activity timestamp so we can restore the session
+   * after a page reload (see `restorePersistedSession`).
+   */
+  private persistTokens(accessToken: string, refreshToken: string): void {
+    try {
+      localStorage.setItem(AuthService.ACCESS_TOKEN_KEY, accessToken);
+      localStorage.setItem(AuthService.REFRESH_TOKEN_KEY, refreshToken);
+      this.touchLastActivity();
+    } catch { /* storage may be disabled */ }
+  }
+
+  /** Record current time as the "last user activity" marker. */
+  touchLastActivity(): void {
+    try {
+      localStorage.setItem(AuthService.LAST_ACTIVITY_KEY, Date.now().toString());
+    } catch { /* ignore */ }
+  }
+
+  /** Wipe persisted session markers — called on logout. */
+  private clearPersistedSession(): void {
+    try {
+      localStorage.removeItem(AuthService.ACCESS_TOKEN_KEY);
+      localStorage.removeItem(AuthService.REFRESH_TOKEN_KEY);
+      localStorage.removeItem(AuthService.LAST_ACTIVITY_KEY);
+    } catch { /* ignore */ }
+  }
+
+  /** True if there's a previously-persisted session that hasn't gone idle. */
+  hasFreshPersistedSession(): boolean {
+    try {
+      const access = localStorage.getItem(AuthService.ACCESS_TOKEN_KEY);
+      const refresh = localStorage.getItem(AuthService.REFRESH_TOKEN_KEY);
+      const last = parseInt(localStorage.getItem(AuthService.LAST_ACTIVITY_KEY) || '0', 10);
+      if (!access || !refresh || !last) return false;
+      return (Date.now() - last) < AuthService.IDLE_TIMEOUT_MS;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * If tokens were previously persisted AND we're still within the idle window,
+   * re-hydrate the Keycloak instance so the user skips the login screen.
+   * Called from keycloak-init after `keycloak.init`.
+   */
+  async restorePersistedSession(): Promise<boolean> {
+    if (!this.hasFreshPersistedSession()) {
+      this.clearPersistedSession();
+      return false;
+    }
+
+    try {
+      const access = localStorage.getItem(AuthService.ACCESS_TOKEN_KEY)!;
+      const refresh = localStorage.getItem(AuthService.REFRESH_TOKEN_KEY)!;
+
+      await this.initWithTokens({
+        access_token: access,
+        refresh_token: refresh,
+        expires_in: 0,
+        token_type: 'Bearer'
+      });
+
+      // Proactively refresh — if the access token is stale the refresh token
+      // (longer lived) will mint a fresh one. If refresh fails, bail out.
+      const kc = this.keycloak.getKeycloakInstance();
+      try {
+        await kc.updateToken(-1);
+      } catch {
+        this.clearPersistedSession();
+        kc.authenticated = false;
+        return false;
+      }
+      this.touchLastActivity();
+      return true;
+    } catch {
+      this.clearPersistedSession();
+      return false;
+    }
+  }
 
   /**
    * Login using Keycloak's Direct Access Grant (password grant).
@@ -58,11 +147,26 @@ export class AuthService {
     keycloakInstance.refreshTokenParsed = this.parseJwt(tokens.refresh_token);
     keycloakInstance.authenticated = true;
 
+    // Persist so the user survives a page reload
+    this.persistTokens(tokens.access_token, tokens.refresh_token);
+
     // Set up auto-refresh
     keycloakInstance.onTokenExpired = () => {
-      keycloakInstance.updateToken(30).catch(() => {
-        this.logout();
-      });
+      keycloakInstance.updateToken(30)
+        .then(() => {
+          // Token rotated — re-persist
+          if (keycloakInstance.token && keycloakInstance.refreshToken) {
+            this.persistTokens(keycloakInstance.token, keycloakInstance.refreshToken);
+          }
+        })
+        .catch(() => this.logout());
+    };
+
+    // Also re-persist whenever Keycloak emits the "authSuccess" / onAuthRefreshSuccess events
+    keycloakInstance.onAuthRefreshSuccess = () => {
+      if (keycloakInstance.token && keycloakInstance.refreshToken) {
+        this.persistTokens(keycloakInstance.token, keycloakInstance.refreshToken);
+      }
     };
 
     this.isAuthenticatedSubject.next(true);
@@ -72,17 +176,20 @@ export class AuthService {
    * Logout — clear Keycloak session and redirect to login.
    */
   logout(): void {
+    // Always wipe persisted tokens first so a reload doesn't re-hydrate
+    this.clearPersistedSession();
+
     try {
-      this.keycloak.logout(window.location.origin + '/login');
-    } catch {
-      // If Keycloak logout fails, just clear and redirect
       const kc = this.keycloak.getKeycloakInstance();
       kc.token = undefined;
       kc.refreshToken = undefined;
+      kc.tokenParsed = undefined;
+      kc.refreshTokenParsed = undefined;
       kc.authenticated = false;
-      this.isAuthenticatedSubject.next(false);
-      this.router.navigate(['/login']);
-    }
+    } catch { /* ignore */ }
+
+    this.isAuthenticatedSubject.next(false);
+    this.router.navigate(['/login']);
   }
 
   /**
@@ -101,10 +208,30 @@ export class AuthService {
    */
   getRoles(): string[] {
     try {
+      const kc = this.keycloak.getKeycloakInstance();
+      const tokenParsed = kc.tokenParsed as any;
+      if (tokenParsed?.realm_access?.roles) {
+        return tokenParsed.realm_access.roles;
+      }
       return this.keycloak.getUserRoles(true);
     } catch {
       return [];
     }
+  }
+
+  /**
+   * Return the landing route a user should be sent to after login,
+   * based on their primary role.
+   *
+   * - TECH_VAL / TECH_PREP → ticket list (they have no dashboard access)
+   * - All others → dashboard
+   */
+  getLandingRoute(): string {
+    const roles = this.getRoles();
+    if (roles.includes('TECH_VAL') || roles.includes('TECH_PREP')) {
+      return '/validations';
+    }
+    return '/dashboard';
   }
 
   /**

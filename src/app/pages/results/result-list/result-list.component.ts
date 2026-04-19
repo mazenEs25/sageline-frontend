@@ -29,6 +29,18 @@ export class ResultListComponent implements OnInit {
   selectedValidationId: number | null = null;
   validationOptions: any[] = [];
 
+  // Add Result Dialog
+  showAddDialog = false;
+  saving = false;
+  newResult = {
+    validationId: null as number | null,
+    parameter: '',
+    measuredValue: null as number | null,
+    expectedValue: null as number | null
+  };
+  // Only EN_COURS validations should be available to TECH_VAL
+  enCoursOptions: any[] = [];
+
   constructor(
     private resultService: ValidationResultService,
     private validationService: ValidationService,
@@ -63,11 +75,62 @@ export class ResultListComponent implements OnInit {
           }))
         ];
 
+        // Only EN_COURS validations can receive new results
+        this.enCoursOptions = validations
+          .filter(v => v.status === 'EN_COURS')
+          .map(v => ({
+            label: `#${v.id} — ${this.getZoneName(v.validationZoneId)}`,
+            value: v.id
+          }));
+
         this.loading = false;
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les résultats' });
         this.loading = false;
+      }
+    });
+  }
+
+  // ─── Add Result Dialog ───
+
+  openAddDialog(): void {
+    this.newResult = {
+      validationId: this.selectedValidationId,
+      parameter: '',
+      measuredValue: null,
+      expectedValue: null
+    };
+    this.showAddDialog = true;
+  }
+
+  saveResult(): void {
+    if (!this.newResult.validationId || !this.newResult.parameter.trim()
+        || this.newResult.measuredValue === null || this.newResult.expectedValue === null) {
+      this.messageService.add({ severity: 'warn', summary: 'Champs requis', detail: 'Tous les champs sont obligatoires' });
+      return;
+    }
+
+    this.saving = true;
+    const payload = {
+      validationId: this.newResult.validationId,
+      parameter: this.newResult.parameter.trim(),
+      measuredValue: this.newResult.measuredValue,
+      expectedValue: this.newResult.expectedValue
+    };
+
+    this.resultService.create(payload as any).subscribe({
+      next: (created) => {
+        this.results = [...this.results, created];
+        this.messageService.add({ severity: 'success', summary: 'Résultat ajouté',
+          detail: `"${created.parameter}" — ${created.conform ? 'Conforme ✓' : 'Non conforme ✗'}` });
+        this.showAddDialog = false;
+        this.saving = false;
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Erreur',
+          detail: err?.error?.message || 'Impossible d\'ajouter le résultat' });
+        this.saving = false;
       }
     });
   }
@@ -79,8 +142,14 @@ export class ResultListComponent implements OnInit {
 
   // ─── PDF Export ───
 
-  exportPDF(): void {
-    const data = this.filteredResults;
+  exportPDF(validationIdOverride?: number): void {
+    // If a specific validation was requested, force-filter on it — otherwise
+    // fall back to whatever's currently selected in the dropdown.
+    const scopeId = validationIdOverride ?? this.selectedValidationId ?? null;
+    const data = scopeId
+      ? this.results.filter(r => r.validationId === scopeId)
+      : this.results;
+
     if (data.length === 0) {
       this.messageService.add({ severity: 'warn', summary: 'Aucune donnée', detail: 'Pas de résultats à exporter' });
       return;
@@ -116,11 +185,13 @@ export class ResultListComponent implements OnInit {
     doc.text(`Non conformes: ${nonConformCount}`, 120, 58);
     doc.text(`Taux conformité: ${conformRate}%`, 14, 65);
 
-    if (this.selectedValidationId) {
-      const v = this.validations.find(val => val.id === this.selectedValidationId);
+    if (scopeId) {
+      const v = this.validations.find(val => val.id === scopeId);
       if (v) {
         doc.text(`Validation: #${v.id} — ${this.getZoneName(v.validationZoneId)}`, 14, 72);
         doc.text(`Statut: ${this.getStatusLabel(v.status)}`, 120, 72);
+      } else {
+        doc.text(`Validation: #${scopeId}`, 14, 72);
       }
     }
 
@@ -140,7 +211,7 @@ export class ResultListComponent implements OnInit {
     });
 
     autoTable(doc, {
-      startY: this.selectedValidationId ? 80 : 73,
+      startY: scopeId ? 80 : 73,
       head: [['Paramètre', 'Mesuré', 'Attendu', 'Écart', 'Conformité', 'Validation']],
       body: tableData,
       theme: 'grid',
@@ -188,8 +259,8 @@ export class ResultListComponent implements OnInit {
     }
 
     // Save
-    const filename = this.selectedValidationId
-      ? `SageLine_Resultats_Validation_${this.selectedValidationId}.pdf`
+    const filename = scopeId
+      ? `SageLine_Resultats_Validation_${scopeId}.pdf`
       : `SageLine_Resultats_${now.toISOString().split('T')[0]}.pdf`;
 
     doc.save(filename);
@@ -201,9 +272,18 @@ export class ResultListComponent implements OnInit {
     });
   }
 
-  exportValidationPDF(validationId: number): void {
-    this.selectedValidationId = validationId;
-    setTimeout(() => this.exportPDF(), 100);
+  exportValidationPDF(validationId: number | undefined | null): void {
+    if (!validationId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Export impossible',
+        detail: 'ID de validation introuvable pour cette ligne.'
+      });
+      return;
+    }
+    // Pass the id directly — avoids a race where selectedValidationId isn't
+    // yet applied when exportPDF runs, and avoids mutating the dropdown state.
+    this.exportPDF(validationId);
   }
 
   // ─── Helpers ───

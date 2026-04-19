@@ -22,6 +22,8 @@ import { KpiDashboardComponent } from './pages/kpis/kpi-dashboard/kpi-dashboard.
 import { AiDashboardComponent } from './pages/intelligence/ai-dashboard/ai-dashboard.component';
 import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
 import { MessagingPageComponent } from './messaging/messaging-page/messaging-page.component';
+import { MesAffectationsComponent } from './pages/mes-affectations/mes-affectations.component';
+import { HomeRedirectComponent } from './pages/home-redirect/home-redirect.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -31,8 +33,9 @@ const routes: Routes = [
     component: LayoutComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: '', component: HomeRedirectComponent, pathMatch: 'full' },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard],
+        data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'RESPONSABLE'] } },
 
       // Admin
       { path: 'admin/users', component: UserListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT'] } },
@@ -68,6 +71,10 @@ const routes: Routes = [
       // Intelligence IA
       { path: 'intelligence', component: AiDashboardComponent, canActivate: [AuthGuard],
         data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT'] } },
+
+      // Mes Affectations — for techs
+      { path: 'mes-affectations', component: MesAffectationsComponent, canActivate: [AuthGuard],
+        data: { roles: ['TECH_VAL', 'TECH_PREP', 'ADMIN_IT'] } },
 
       // Messaging
       { path: 'messaging', component: MessagingPageComponent, data: { breadcrumb: 'Messagerie' } },

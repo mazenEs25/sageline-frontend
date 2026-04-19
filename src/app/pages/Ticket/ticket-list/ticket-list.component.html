@@ -1,90 +1,179 @@
 <!-- ticket-list.component.html -->
 <p-toast></p-toast>
 
-<div class="card">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <h2 class="m-0"><i class="pi pi-ticket mr-2"></i>Tickets de Validation</h2>
-    <div class="flex gap-2">
-      <button pButton label="Planifier" icon="pi pi-calendar" class="p-button-outlined" routerLink="/validations/planner"></button>
-      <button pButton label="Nouveau Ticket" icon="pi pi-plus" (click)="createTicket()"></button>
+<div class="tickets-page">
+
+  <!-- ═══ Header (centered) ═══ -->
+  <div class="page-header">
+    <div class="title-block">
+      <span class="eyebrow">GESTION QUALITÉ</span>
+      <h1><i class="pi pi-ticket"></i> Tickets de Validation</h1>
+      <p>Suivi temps réel de toutes les validations en cours et passées</p>
+    </div>
+
+    <div class="header-actions">
+      <button pButton
+              icon="pi pi-calendar"
+              label="Planifier"
+              class="p-button-outlined p-button-sm"
+              routerLink="/validations/planner"></button>
+      <button pButton
+              icon="pi pi-plus"
+              label="Nouveau Ticket"
+              class="p-button-primary p-button-sm"
+              (click)="createTicket()"></button>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
-      <div class="text-2xl font-bold text-primary">{{ totalCount }}</div>
-      <div class="text-sm text-500">Total</div>
+  <!-- ═══ KPI Cards ═══ -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(59,130,246,0.12); color: #3b82f6">
+        <i class="pi pi-list"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ totalCount }}</div>
+        <div class="kpi-label">Total tickets</div>
+      </div>
     </div>
-    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
-      <div class="text-2xl font-bold" style="color: #F59E0B;">{{ activeCount }}</div>
-      <div class="text-sm text-500">En cours</div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(245,158,11,0.12); color: #f59e0b">
+        <i class="pi pi-spinner"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ activeCount }}</div>
+        <div class="kpi-label">En cours</div>
+      </div>
     </div>
-    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
-      <div class="text-2xl font-bold" style="color: #22C55E;">{{ conformeCount }}</div>
-      <div class="text-sm text-500">Conformes</div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(16,185,129,0.12); color: #10b981">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ conformeCount }}</div>
+        <div class="kpi-label">Conformes</div>
+      </div>
     </div>
-    <div style="flex: 1; min-width: 150px;" class="surface-card p-3 border-round shadow-1 text-center">
-      <div class="text-2xl font-bold" style="color: #EF4444;">{{ nonConformeCount }}</div>
-      <div class="text-sm text-500">Non conformes</div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(239,68,68,0.12); color: #ef4444">
+        <i class="pi pi-times-circle"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ nonConformeCount }}</div>
+        <div class="kpi-label">Non conformes</div>
+      </div>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="flex gap-3 mb-4 flex-wrap">
-    <span class="p-input-icon-left">
+  <!-- ═══ Filters ═══ -->
+  <div class="filters-bar">
+    <div class="search-box">
       <i class="pi pi-search"></i>
-      <input pInputText [(ngModel)]="searchQuery" placeholder="Rechercher..." (input)="applyFilters()" />
-    </span>
-    <p-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" placeholder="Statut"
-                [showClear]="true" (onChange)="applyFilters()" styleClass="w-12rem"></p-dropdown>
-    <p-dropdown [options]="secteurs" [(ngModel)]="selectedSecteur" placeholder="Secteur"
-                optionLabel="name" optionValue="id" [showClear]="true" (onChange)="applyFilters()" styleClass="w-12rem"></p-dropdown>
-    <p-dropdown [options]="priorityOptions" [(ngModel)]="selectedPriority" placeholder="Priorité"
-                [showClear]="true" (onChange)="applyFilters()" styleClass="w-10rem"></p-dropdown>
-    <button pButton icon="pi pi-filter-slash" class="p-button-text" (click)="clearFilters()" pTooltip="Réinitialiser"></button>
+      <input pInputText
+             [(ngModel)]="searchQuery"
+             placeholder="Rechercher code, zone, ligne..."
+             (input)="applyFilters()" />
+    </div>
+
+    <div class="filter-group">
+      <p-dropdown [options]="statusOptions"
+                  [(ngModel)]="selectedStatus"
+                  placeholder="Statut"
+                  [showClear]="true"
+                  (onChange)="applyFilters()"
+                  styleClass="modern-dd w-11rem"></p-dropdown>
+
+      <p-dropdown [options]="secteurs"
+                  [(ngModel)]="selectedSecteur"
+                  placeholder="Secteur"
+                  optionLabel="name"
+                  optionValue="id"
+                  [showClear]="true"
+                  (onChange)="applyFilters()"
+                  styleClass="modern-dd w-11rem"></p-dropdown>
+
+      <p-dropdown [options]="priorityOptions"
+                  [(ngModel)]="selectedPriority"
+                  placeholder="Priorité"
+                  [showClear]="true"
+                  (onChange)="applyFilters()"
+                  styleClass="modern-dd w-10rem"></p-dropdown>
+
+      <button pButton
+              icon="pi pi-filter-slash"
+              label="Réinitialiser"
+              class="p-button-text p-button-sm reset-btn"
+              (click)="clearFilters()"></button>
+    </div>
   </div>
 
-  <!-- Table -->
-  <p-table [value]="filteredTickets" [loading]="loading" [paginator]="true" [rows]="15"
-           [sortField]="'createdAt'" [sortOrder]="-1" styleClass="p-datatable-sm" responsiveLayout="scroll"
-           selectionMode="single" (onRowSelect)="viewTicket($event.data)">
-    <ng-template pTemplate="header">
-      <tr>
-        <th pSortableColumn="ticketCode" style="width: 130px;">Code</th>
-        <th pSortableColumn="status">Statut</th>
-        <th pSortableColumn="priority">Priorité</th>
-        <th>Secteur</th>
-        <th>Ligne / Zone</th>
-        <th pSortableColumn="plannedDate">Date planifiée</th>
-        <th>Créé par</th>
-        <th>IA Risque</th>
-        <th pSortableColumn="createdAt">Créé le</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-ticket>
-      <tr [pSelectableRow]="ticket" class="cursor-pointer">
-        <td><strong class="text-primary">{{ ticket.ticketCode }}</strong></td>
-        <td><app-ticket-status-badge [status]="ticket.status"></app-ticket-status-badge></td>
-        <td><app-priority-badge [priority]="ticket.priority"></app-priority-badge></td>
-        <td>{{ ticket.secteurCode || '—' }}</td>
-        <td>
-          <span class="text-sm">{{ ticket.lineCode }}</span>
-          <span class="text-xs text-500 ml-1">/ {{ ticket.zoneName }}</span>
-        </td>
-        <td>{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</td>
-        <td>{{ ticket.createdByUsername || '—' }}</td>
-        <td>
-          <span *ngIf="ticket.riskScore != null" [class]="'risk-badge risk-' + ticket.riskLevel?.toLowerCase()">
-            {{ ticket.riskScore | number:'1.0-0' }}%
-          </span>
-          <span *ngIf="ticket.riskScore == null" class="text-500">—</span>
-        </td>
-        <td>{{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr><td colspan="9" class="text-center p-4">Aucun ticket trouvé</td></tr>
-    </ng-template>
-  </p-table>
+  <!-- ═══ Table card ═══ -->
+  <div class="table-card">
+    <p-table [value]="filteredTickets"
+             [loading]="loading"
+             [paginator]="true"
+             [rows]="15"
+             [sortField]="'createdAt'"
+             [sortOrder]="-1"
+             styleClass="p-datatable-sm modern-table"
+             responsiveLayout="scroll"
+             selectionMode="single"
+             [rowHover]="true"
+             (onRowSelect)="viewTicket($event.data)">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="ticketCode" style="width: 140px;">Code <p-sortIcon field="ticketCode"></p-sortIcon></th>
+          <th pSortableColumn="status">Statut <p-sortIcon field="status"></p-sortIcon></th>
+          <th pSortableColumn="priority">Priorité <p-sortIcon field="priority"></p-sortIcon></th>
+          <th>Secteur</th>
+          <th>Ligne / Zone</th>
+          <th pSortableColumn="plannedDate">Date planifiée <p-sortIcon field="plannedDate"></p-sortIcon></th>
+          <th>Créé par</th>
+          <th>IA Risque</th>
+          <th pSortableColumn="createdAt">Créé le <p-sortIcon field="createdAt"></p-sortIcon></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-ticket>
+        <tr [pSelectableRow]="ticket" class="clickable-row">
+          <td><span class="ticket-code">{{ ticket.ticketCode }}</span></td>
+          <td><app-ticket-status-badge [status]="ticket.status"></app-ticket-status-badge></td>
+          <td><app-priority-badge [priority]="ticket.priority"></app-priority-badge></td>
+          <td>
+            <span class="secteur-pill">{{ ticket.secteurCode || '—' }}</span>
+          </td>
+          <td>
+            <div class="line-zone">
+              <strong>{{ ticket.lineCode }}</strong>
+              <small>{{ ticket.zoneName }}</small>
+            </div>
+          </td>
+          <td class="date-cell">{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</td>
+          <td class="muted-cell">{{ ticket.createdByUsername || '—' }}</td>
+          <td>
+            <span *ngIf="ticket.riskScore != null"
+                  [class]="'risk-pill risk-' + ticket.riskLevel?.toLowerCase()">
+              {{ ticket.riskScore | number:'1.0-0' }}%
+            </span>
+            <span *ngIf="ticket.riskScore == null" class="muted-cell">—</span>
+          </td>
+          <td class="date-cell">{{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-state">
+            <i class="pi pi-inbox"></i>
+            <p>Aucun ticket trouvé</p>
+            <small>Ajustez vos filtres ou créez un nouveau ticket</small>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>

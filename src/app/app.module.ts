@@ -31,6 +31,7 @@ import { ZoneMapComponent } from './pages/admin/zones/zone-map/zone-map.componen
 // Keycloak
 import { KeycloakAngularModule, KeycloakService } from 'keycloak-angular';
 import { initializeKeycloak } from './auth/keycloak-init';
+import { AuthService } from './auth/auth.service';
 import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
 import { LoginComponent } from './pages/login/login.component';
 import { AiDashboardComponent } from './pages/intelligence/ai-dashboard/ai-dashboard.component';
@@ -52,6 +53,8 @@ import { AssignmentPanelComponent } from './shared/components/assignment-panel/a
 import { TicketStatusBadgeComponent } from './shared/components/ticket-status-badge/ticket-status-badge.component';
 import { TicketTimelineComponent } from './shared/components/ticket-timeline/ticket-timeline.component';
 import { PriorityBadgeComponent } from './shared/components/priority-badge/priority-badge.component';
+import { MesAffectationsComponent } from './pages/mes-affectations/mes-affectations.component';
+import { HomeRedirectComponent } from './pages/home-redirect/home-redirect.component';
 
 @NgModule({
   declarations: [
@@ -96,7 +99,9 @@ import { PriorityBadgeComponent } from './shared/components/priority-badge/prior
     AssignmentPanelComponent,
     TicketStatusBadgeComponent,
     TicketTimelineComponent,
-    PriorityBadgeComponent
+    PriorityBadgeComponent,
+    MesAffectationsComponent,
+    HomeRedirectComponent
   ],
   imports: [
     BrowserModule,
@@ -115,7 +120,7 @@ import { PriorityBadgeComponent } from './shared/components/priority-badge/prior
       provide: APP_INITIALIZER,
       useFactory: initializeKeycloak,
       multi: true,
-      deps: [KeycloakService],
+      deps: [KeycloakService, AuthService],
     },
   ],
   bootstrap: [AppComponent]
