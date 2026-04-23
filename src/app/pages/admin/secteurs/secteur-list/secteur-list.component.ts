@@ -6,6 +6,7 @@ import { SecteurService } from '../../../../services/secteur.service';
 @Component({
   selector: 'app-secteur-list',
   templateUrl: './secteur-list.component.html',
+  styleUrls: ['./secteur-list.component.scss'],
   providers: [MessageService, ConfirmationService]
 })
 export class SecteurListComponent implements OnInit {
@@ -14,6 +15,13 @@ export class SecteurListComponent implements OnInit {
   displayDialog = false;
   isEdit = false;
   selectedSecteur: Secteur | null = null;
+
+  // Filters
+  statusFilter: boolean | null = null;
+  statusOptions = [
+    { label: 'Actifs', value: true },
+    { label: 'Inactifs', value: false }
+  ];
 
   form: SecteurRequest = { code: '', name: '', description: '', active: true };
 

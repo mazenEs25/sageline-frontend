@@ -14,8 +14,13 @@ import { Role, ROLE_LABELS, ROLE_COLORS } from '../../../../shared/enums/role.en
 export class UserListComponent implements OnInit {
 
   users: User[] = [];
+  filteredUsers: User[] = [];
   secteurs: Secteur[] = [];
   loading = true;
+
+  // Search & filters
+  searchQuery = '';
+  selectedRoleFilter: string | null = null;
 
   // Dialog
   userDialog = false;
@@ -41,6 +46,12 @@ export class UserListComponent implements OnInit {
     value: r
   }));
 
+  // For the filter dropdown in the toolbar
+  roleFilterOptions = Object.values(Role).map(r => ({
+    label: ROLE_LABELS[r],
+    value: r
+  }));
+
   constructor(
     private userService: UserService,
     private secteurService: SecteurService,
@@ -58,6 +69,7 @@ export class UserListComponent implements OnInit {
     this.userService.getAll().subscribe({
       next: (data) => {
         this.users = data;
+        this.filteredUsers = [...data];
         this.loading = false;
       },
       error: () => {
@@ -69,6 +81,28 @@ export class UserListComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  // ─── Stats helpers ───
+
+  countByRole(role: string): number {
+    return this.users.filter(u => u.role === role).length;
+  }
+
+  // ─── Filters ───
+
+  applyRoleFilter(): void {
+    if (!this.selectedRoleFilter) {
+      this.filteredUsers = [...this.users];
+    } else {
+      this.filteredUsers = this.users.filter(u => u.role === this.selectedRoleFilter);
+    }
+  }
+
+  clearFilters(): void {
+    this.selectedRoleFilter = null;
+    this.searchQuery = '';
+    this.filteredUsers = [...this.users];
   }
 
   // ─── Dialog ───

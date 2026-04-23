@@ -1,126 +1,205 @@
-<!-- Header -->
-<div class="page-header">
-  <div>
-    <h1>Utilisateurs</h1>
-    <p>Gérer les comptes utilisateurs du système</p>
-  </div>
-  <button pButton
-    label="Nouveau"
-    icon="pi pi-plus"
-    class="p-button-primary"
-    (click)="openNew()">
-  </button>
-</div>
+<!-- user-list.component.html -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
 
-<!-- Stats -->
-<div class="stats-row">
-  <app-stat-card
-    icon="pi pi-users"
-    label="Total utilisateurs"
-    [value]="users.length"
-    color="#3b82f6">
-  </app-stat-card>
-  <app-stat-card
-    icon="pi pi-shield"
-    label="Admins"
-    [value]="(users | roleFilter:'ADMIN_IT').length"
-    color="#ef4444">
-  </app-stat-card>
-  <app-stat-card
-    icon="pi pi-wrench"
-    label="Techniciens"
-    [value]="(users | roleFilter:'TECH_VALIDATION').length + (users | roleFilter:'TECH_PREPARATION').length"
-    color="#10b981">
-  </app-stat-card>
-</div>
+<div class="users-page">
 
-<!-- Data Table -->
-<p-table
-  [value]="users"
-  [paginator]="true"
-  [rows]="10"
-  [loading]="loading"
-  [globalFilterFields]="['username', 'email', 'firstName', 'lastName', 'role']"
-  [rowHover]="true"
-  dataKey="id"
-  #dt>
-
-  <!-- Table Header with Search -->
-  <ng-template pTemplate="caption">
-    <div class="table-header">
-      <span class="p-input-icon-left">
-        <i class="pi pi-search"></i>
-        <input pInputText
-          type="text"
-          placeholder="Rechercher..."
-          (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
-      </span>
+  <!-- ═══ Header ═══ -->
+  <div class="sage-page-header">
+    <div class="title-block">
+      <span class="eyebrow">Administration</span>
+      <h1><i class="pi pi-users"></i> Utilisateurs</h1>
+      <p>Gérez les comptes, rôles et secteurs des utilisateurs du système</p>
     </div>
-  </ng-template>
 
-  <!-- Columns -->
-  <ng-template pTemplate="header">
-    <tr>
-      <th pSortableColumn="username">Utilisateur <p-sortIcon field="username"></p-sortIcon></th>
-      <th pSortableColumn="firstName">Prénom <p-sortIcon field="firstName"></p-sortIcon></th>
-      <th pSortableColumn="lastName">Nom <p-sortIcon field="lastName"></p-sortIcon></th>
-      <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
-      <th pSortableColumn="role">Rôle <p-sortIcon field="role"></p-sortIcon></th>
-      <th>Secteur</th>
-      <th pSortableColumn="createdAt">Créé le <p-sortIcon field="createdAt"></p-sortIcon></th>
-      <th>Actions</th>
-    </tr>
-  </ng-template>
+    <div class="header-actions">
+      <button pButton
+              icon="pi pi-plus"
+              label="Nouvel utilisateur"
+              class="p-button-primary p-button-sm"
+              (click)="openNew()"></button>
+    </div>
+  </div>
 
-  <!-- Rows -->
-  <ng-template pTemplate="body" let-user>
-    <tr>
-      <td>
-        <div class="user-cell">
-          <p-avatar
-            [label]="user.username.slice(0,2).toUpperCase()"
-            shape="circle"
-            [style]="{'background-color': 'rgba(59,130,246,0.15)', 'color': '#60a5fa'}">
-          </p-avatar>
-          <span class="username">{{ user.username }}</span>
-        </div>
-      </td>
-      <td>{{ user.firstName || '—' }}</td>
-      <td>{{ user.lastName || '—' }}</td>
-      <td><span class="email-mono">{{ user.email }}</span></td>
-      <td>
-        <p-tag [value]="getRoleLabel(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
-      </td>
-      <td>
-        <span *ngIf="user.secteurCode">{{ user.secteurCode }}</span>
-        <span *ngIf="!user.secteurCode" class="text-500">—</span>
-      </td>
-      <td class="date-cell">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
-      <td>
-        <button pButton icon="pi pi-pencil"
-          class="p-button-text p-button-sm"
-          (click)="editUser(user)"
-          pTooltip="Modifier">
-        </button>
-        <button pButton icon="pi pi-trash"
-          class="p-button-text p-button-danger p-button-sm"
-          (click)="deleteUser(user)"
-          pTooltip="Supprimer">
-        </button>
-      </td>
-    </tr>
-  </ng-template>
+  <!-- ═══ Role KPI cards ═══ -->
+  <div class="sage-kpi-row role-kpis">
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(59,130,246,0.12); color: #3b82f6">
+        <i class="pi pi-users"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ users.length }}</div>
+        <div class="kpi-label">Total</div>
+      </div>
+    </div>
 
-  <!-- Empty State -->
-  <ng-template pTemplate="emptymessage">
-    <tr>
-      <td colspan="8" class="empty-state">
-        <i class="pi pi-inbox"></i>
-        <p>Aucun utilisateur trouvé</p>
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(239,68,68,0.12); color: #ef4444">
+        <i class="pi pi-shield"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ countByRole('ADMIN_IT') }}</div>
+        <div class="kpi-label">Admin IT</div>
+      </div>
+    </div>
+
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(59,130,246,0.12); color: #60a5fa">
+        <i class="pi pi-briefcase"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ countByRole('CHEF_SECTEUR') }}</div>
+        <div class="kpi-label">Chef Secteur</div>
+      </div>
+    </div>
+
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(139,92,246,0.12); color: #a78bfa">
+        <i class="pi pi-star"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ countByRole('EXPERT') }}</div>
+        <div class="kpi-label">Expert</div>
+      </div>
+    </div>
+
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(16,185,129,0.12); color: #10b981">
+        <i class="pi pi-check-square"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ countByRole('TECH_VAL') }}</div>
+        <div class="kpi-label">Tech Validation</div>
+      </div>
+    </div>
+
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(245,158,11,0.12); color: #f59e0b">
+        <i class="pi pi-wrench"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ countByRole('TECH_PREP') }}</div>
+        <div class="kpi-label">Tech Préparation</div>
+      </div>
+    </div>
+
+    <div class="sage-kpi-card">
+      <div class="kpi-icon-wrap" style="background: rgba(14,165,233,0.12); color: #38bdf8">
+        <i class="pi pi-flag"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-value">{{ countByRole('RESPONSABLE') }}</div>
+        <div class="kpi-label">Responsable</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Filters bar ═══ -->
+  <div class="sage-filters-bar">
+    <div class="sage-search-box">
+      <i class="pi pi-search"></i>
+      <input pInputText
+             type="text"
+             [(ngModel)]="searchQuery"
+             placeholder="Rechercher par nom, email ou username..."
+             (input)="dt.filterGlobal(searchQuery, 'contains')" />
+    </div>
+
+    <div class="filter-group">
+      <p-dropdown [options]="roleFilterOptions"
+                  [(ngModel)]="selectedRoleFilter"
+                  placeholder="Tous les rôles"
+                  [showClear]="true"
+                  (onChange)="applyRoleFilter()"
+                  styleClass="modern-dd"></p-dropdown>
+
+      <button pButton
+              icon="pi pi-filter-slash"
+              label="Réinitialiser"
+              class="p-button-text p-button-sm reset-btn"
+              (click)="clearFilters()"></button>
+    </div>
+  </div>
+
+  <!-- ═══ Table card ═══ -->
+  <div class="sage-table-card">
+    <p-table
+      [value]="filteredUsers"
+      [paginator]="true"
+      [rows]="10"
+      [loading]="loading"
+      [globalFilterFields]="['username', 'email', 'firstName', 'lastName', 'role']"
+      [rowHover]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+      #dt>
+
+      <!-- Columns -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="username">Utilisateur <p-sortIcon field="username"></p-sortIcon></th>
+          <th pSortableColumn="firstName">Prénom <p-sortIcon field="firstName"></p-sortIcon></th>
+          <th pSortableColumn="lastName">Nom <p-sortIcon field="lastName"></p-sortIcon></th>
+          <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+          <th pSortableColumn="role">Rôle <p-sortIcon field="role"></p-sortIcon></th>
+          <th>Secteur</th>
+          <th pSortableColumn="createdAt">Créé le <p-sortIcon field="createdAt"></p-sortIcon></th>
+          <th style="width: 110px;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <!-- Rows -->
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>
+            <div class="user-cell">
+              <p-avatar
+                [label]="user.username.slice(0,2).toUpperCase()"
+                shape="circle"
+                [style]="{'background-color': 'rgba(59,130,246,0.15)', 'color': '#60a5fa'}">
+              </p-avatar>
+              <span class="username">{{ user.username }}</span>
+            </div>
+          </td>
+          <td>{{ user.firstName || '—' }}</td>
+          <td>{{ user.lastName || '—' }}</td>
+          <td><span class="email-mono">{{ user.email }}</span></td>
+          <td>
+            <p-tag [value]="getRoleLabel(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
+          </td>
+          <td>
+            <span *ngIf="user.secteurCode">{{ user.secteurCode }}</span>
+            <span *ngIf="!user.secteurCode" class="text-500">—</span>
+          </td>
+          <td class="date-cell">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <button pButton icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              (click)="editUser(user)"
+              pTooltip="Modifier">
+            </button>
+            <button pButton icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              (click)="deleteUser(user)"
+              pTooltip="Supprimer">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-state">
+            <i class="pi pi-inbox"></i>
+            <p>Aucun utilisateur trouvé</p>
+            <small>Ajustez votre recherche ou créez un nouvel utilisateur</small>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
 
 <!-- ═══ User Dialog (Create / Edit) ═══ -->
 <p-dialog
@@ -203,6 +282,7 @@
         [options]="roles"
         optionLabel="label"
         optionValue="value"
+        styleClass="modern-dd"
         [style]="{ width: '100%' }">
       </p-dropdown>
       <small class="field-hint">
@@ -220,6 +300,7 @@
         optionValue="id"
         placeholder="Sélectionner un secteur"
         [showClear]="true"
+        styleClass="modern-dd"
         [style]="{ width: '100%' }">
       </p-dropdown>
     </div>

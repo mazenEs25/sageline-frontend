@@ -45,6 +45,12 @@ export class TicketCreateComponent implements OnInit {
   assignments: TicketAssignment[] = [];
   techValUsers: User[] = [];
   techPrepUsers: User[] = [];
+  techValIds: number[] = [];
+  techPrepIds: number[] = [];
+
+  // Search for the assignment pickers (Step 2)
+  techPrepSearch = '';
+  techValSearch = '';
 
   priorityOptions = [
     { label: 'Basse', value: 'BASSE' },
@@ -113,25 +119,121 @@ export class TicketCreateComponent implements OnInit {
   }
 
   // Assignment management
-  addAssignment(userId: number, role: string) {
-    if (!this.selectedZone) return;
-    const exists = this.assignments.find(a => a.userId === userId && a.assignmentRole === role);
-    if (exists) return;
 
-    this.assignments.push({
-      userId,
-      assignmentRole: role,
-      zoneId: this.selectedZone
-    });
+  /**
+   * Recompute `assignments` whenever either multiselect changes. Using two
+   * independent lists (techPrepIds / techValIds) lets the multiselect chip
+   * display stay in sync with the recap card and avoids the old "dropdown
+   * adds, can't remove from dropdown" confusion.
+   */
+  syncAssignments(): void {
+    const zoneId = this.selectedZone ?? 0;
+    this.assignments = [
+      ...this.techPrepIds.map(userId => ({
+        userId,
+        assignmentRole: 'TECH_PREPARATION',
+        zoneId
+      })),
+      ...this.techValIds.map(userId => ({
+        userId,
+        assignmentRole: 'TECH_VALIDATION',
+        zoneId
+      }))
+    ];
   }
 
   removeAssignment(idx: number) {
+    const removed = this.assignments[idx];
     this.assignments.splice(idx, 1);
+    if (!removed) return;
+    if (removed.assignmentRole === 'TECH_PREPARATION') {
+      this.techPrepIds = this.techPrepIds.filter(id => id !== removed.userId);
+    } else if (removed.assignmentRole === 'TECH_VALIDATION') {
+      this.techValIds = this.techValIds.filter(id => id !== removed.userId);
+    }
   }
 
   getUserName(userId: number): string {
     return this.users.find(u => u.id === userId)?.username || 'Inconnu';
   }
+
+  // ─── Assignment picker helpers (Step 2) ──────────────────────────
+
+  /** Two-letter initials used inside the avatar bubble. */
+  userInitials(u: User): string {
+    const first = (u.firstName || u.username || '?').charAt(0);
+    const second = (u.lastName || u.username?.charAt(1) || '').charAt(0);
+    return (first + second).toUpperCase();
+  }
+
+  /** Nice display name with fallback to username. */
+  userDisplay(u: User): string {
+    const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+    return name || u.username;
+  }
+
+  /** Stable color class for the avatar (8 buckets based on user id). */
+  avatarTone(u: User): string {
+    return `tone-${(u.id ?? 0) % 8}`;
+  }
+
+  filteredTechPrep(): User[] {
+    const q = this.techPrepSearch.trim().toLowerCase();
+    if (!q) return this.techPrepUsers;
+    return this.techPrepUsers.filter(u =>
+      (u.username || '').toLowerCase().includes(q) ||
+      (u.firstName || '').toLowerCase().includes(q) ||
+      (u.lastName || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q));
+  }
+
+  filteredTechVal(): User[] {
+    const q = this.techValSearch.trim().toLowerCase();
+    if (!q) return this.techValUsers;
+    return this.techValUsers.filter(u =>
+      (u.username || '').toLowerCase().includes(q) ||
+      (u.firstName || '').toLowerCase().includes(q) ||
+      (u.lastName || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q));
+  }
+
+  isPrepSelected(u: User): boolean {
+    return this.techPrepIds.includes(u.id);
+  }
+
+  isValSelected(u: User): boolean {
+    return this.techValIds.includes(u.id);
+  }
+
+  togglePrep(u: User): void {
+    if (this.isPrepSelected(u)) {
+      this.techPrepIds = this.techPrepIds.filter(id => id !== u.id);
+    } else {
+      this.techPrepIds = [...this.techPrepIds, u.id];
+    }
+    this.syncAssignments();
+  }
+
+  toggleVal(u: User): void {
+    if (this.isValSelected(u)) {
+      this.techValIds = this.techValIds.filter(id => id !== u.id);
+    } else {
+      this.techValIds = [...this.techValIds, u.id];
+    }
+    this.syncAssignments();
+  }
+
+  clearPrepSelection(): void {
+    this.techPrepIds = [];
+    this.syncAssignments();
+  }
+
+  clearValSelection(): void {
+    this.techValIds = [];
+    this.syncAssignments();
+  }
+
+  trackUser = (_: number, u: User) => u.id;
 
   // Steps
   nextStep() { if (this.currentStep < 3) this.currentStep++; }

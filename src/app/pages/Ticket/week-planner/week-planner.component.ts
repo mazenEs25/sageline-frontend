@@ -183,14 +183,43 @@ export class WeekPlannerComponent implements OnInit {
     const dateParam = this.toIso(this.weekStart);
     this.ticketService.getByWeek(dateParam).subscribe({
       next: (tickets) => {
-        // Bucket existing tickets by plannedDate (yyyy-MM-dd)
+        // Bucket existing tickets by plannedDate (yyyy-MM-dd). The backend may
+        // send the date as either "yyyy-MM-dd" or a full ISO string with a
+        // time component, so we normalize to the first 10 characters before
+        // comparing.
+        const unbucketed: Validation[] = [];
         for (const day of this.days) {
-          day.existing = tickets.filter(t => (t.plannedDate || '').startsWith(day.dateIso));
+          day.existing = [];
         }
+        for (const t of tickets) {
+          const rawDate = (t.plannedDate || '').toString();
+          const isoDay = rawDate.length >= 10 ? rawDate.substring(0, 10) : rawDate;
+          const bucket = this.days.find(d => d.dateIso === isoDay);
+          if (bucket) {
+            bucket.existing.push(t);
+          } else {
+            unbucketed.push(t);
+          }
+        }
+        if (unbucketed.length) {
+          console.warn(
+            '[WeekPlanner] Received tickets outside the current week window:',
+            unbucketed.map(t => ({ id: t.id, code: t.ticketCode, plannedDate: t.plannedDate }))
+          );
+        }
+        console.log(
+          `[WeekPlanner] Loaded week ${dateParam}: ${tickets.length} ticket(s), ` +
+          `${tickets.length - unbucketed.length} placed in day buckets`
+        );
         this.loadingWeek = false;
       },
-      error: () => {
-        // Endpoint may not yet have data — show empty week
+      error: (err) => {
+        console.error('[WeekPlanner] Failed to load week', dateParam, err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Chargement impossible',
+          detail: err?.error?.message || 'Impossible de charger les validations de la semaine.'
+        });
         this.loadingWeek = false;
       }
     });

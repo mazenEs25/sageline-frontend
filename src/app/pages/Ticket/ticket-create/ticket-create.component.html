@@ -77,39 +77,155 @@
       </div>
 
       <!-- Step 2: Assignments -->
-      <div *ngIf="currentStep === 2">
-        <div class="sage-form-grid">
-          <div class="sage-field">
-            <label class="sage-label"><i class="pi pi-wrench"></i> TECH_PREP (Préparation)</label>
-            <p-dropdown [options]="techPrepUsers" optionLabel="username" optionValue="id"
-                        placeholder="Ajouter un TECH_PREP" styleClass="w-full"
-                        (onChange)="addAssignment($event.value, 'TECH_PREPARATION')"></p-dropdown>
+      <div *ngIf="currentStep === 2" class="sage-assign-step">
+        <div class="sage-assign-intro">
+          <i class="pi pi-users"></i>
+          <div>
+            <div class="sage-assign-intro-title">Affecter les techniciens</div>
+            <div class="sage-assign-intro-sub">Cliquez sur une carte pour ajouter ou retirer un technicien dans chaque rôle.</div>
           </div>
-          <div class="sage-field">
-            <label class="sage-label"><i class="pi pi-check-square"></i> TECH_VAL (Validation)</label>
-            <p-dropdown [options]="techValUsers" optionLabel="username" optionValue="id"
-                        placeholder="Ajouter un TECH_VAL" styleClass="w-full"
-                        (onChange)="addAssignment($event.value, 'TECH_VALIDATION')"></p-dropdown>
+          <div class="sage-assign-count-pill" [class.empty]="assignments.length === 0">
+            <i class="pi pi-check-circle"></i>
+            {{ assignments.length }} affectation{{ assignments.length !== 1 ? 's' : '' }}
           </div>
         </div>
 
-        <div class="sage-assignments">
-          <div class="sage-assignments-header">
-            <i class="pi pi-users"></i>
-            <span>Affectations ({{ assignments.length }})</span>
-          </div>
-          <div *ngIf="assignments.length === 0" class="sage-empty">
-            <i class="pi pi-user-plus"></i>
-            <span>Aucune affectation. Sélectionnez au moins un technicien.</span>
-          </div>
-          <div *ngFor="let a of assignments; let i = index" class="sage-assignment-item">
-            <div class="left">
-              <p-tag [value]="a.assignmentRole === 'TECH_PREPARATION' ? 'PREP' : 'VAL'"
-                     [severity]="a.assignmentRole === 'TECH_PREPARATION' ? 'warning' : 'success'"></p-tag>
-              <strong>{{ getUserName(a.userId) }}</strong>
+        <div class="sage-picker-grid">
+          <!-- Préparation picker -->
+          <section class="sage-picker prep">
+            <header class="sage-picker-header">
+              <div class="sage-picker-title">
+                <span class="sage-picker-icon"><i class="pi pi-wrench"></i></span>
+                <div>
+                  <h4>Préparation</h4>
+                  <span class="sage-picker-hint">Préparation de la zone avant validation</span>
+                </div>
+              </div>
+              <div class="sage-picker-counter">
+                <strong>{{ techPrepIds.length }}</strong>
+                <span>/ {{ techPrepUsers.length }}</span>
+              </div>
+            </header>
+
+            <div class="sage-picker-search">
+              <i class="pi pi-search"></i>
+              <input type="text"
+                     [(ngModel)]="techPrepSearch"
+                     placeholder="Rechercher un technicien de préparation..." />
+              <button *ngIf="techPrepSearch" class="clear" (click)="techPrepSearch = ''" type="button">
+                <i class="pi pi-times"></i>
+              </button>
             </div>
-            <button pButton icon="pi pi-times" class="p-button-text p-button-danger p-button-sm" (click)="removeAssignment(i)"></button>
+
+            <div class="sage-picker-list" *ngIf="filteredTechPrep().length > 0">
+              <button *ngFor="let u of filteredTechPrep(); trackBy: trackUser"
+                      type="button"
+                      class="sage-tech-card"
+                      [class.is-selected]="isPrepSelected(u)"
+                      (click)="togglePrep(u)">
+                <span class="sage-tech-avatar" [ngClass]="avatarTone(u)">{{ userInitials(u) }}</span>
+                <span class="sage-tech-info">
+                  <span class="sage-tech-name">{{ userDisplay(u) }}</span>
+                  <span class="sage-tech-sub">&#64;{{ u.username }}</span>
+                </span>
+                <span class="sage-tech-check">
+                  <i class="pi" [ngClass]="isPrepSelected(u) ? 'pi-check-circle' : 'pi-plus-circle'"></i>
+                </span>
+              </button>
+            </div>
+
+            <div class="sage-picker-empty" *ngIf="filteredTechPrep().length === 0">
+              <i class="pi pi-inbox"></i>
+              <span *ngIf="techPrepUsers.length === 0">Aucun technicien de préparation disponible.</span>
+              <span *ngIf="techPrepUsers.length > 0">Aucun résultat pour « {{ techPrepSearch }} »</span>
+            </div>
+
+            <footer class="sage-picker-footer" *ngIf="techPrepIds.length > 0">
+              <button type="button" class="sage-link" (click)="clearPrepSelection()">
+                <i class="pi pi-eraser"></i> Tout désélectionner
+              </button>
+            </footer>
+          </section>
+
+          <!-- Validation picker -->
+          <section class="sage-picker val">
+            <header class="sage-picker-header">
+              <div class="sage-picker-title">
+                <span class="sage-picker-icon"><i class="pi pi-check-square"></i></span>
+                <div>
+                  <h4>Validation</h4>
+                  <span class="sage-picker-hint">Validation sur site</span>
+                </div>
+              </div>
+              <div class="sage-picker-counter">
+                <strong>{{ techValIds.length }}</strong>
+                <span>/ {{ techValUsers.length }}</span>
+              </div>
+            </header>
+
+            <div class="sage-picker-search">
+              <i class="pi pi-search"></i>
+              <input type="text"
+                     [(ngModel)]="techValSearch"
+                     placeholder="Rechercher un technicien de validation..." />
+              <button *ngIf="techValSearch" class="clear" (click)="techValSearch = ''" type="button">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+
+            <div class="sage-picker-list" *ngIf="filteredTechVal().length > 0">
+              <button *ngFor="let u of filteredTechVal(); trackBy: trackUser"
+                      type="button"
+                      class="sage-tech-card"
+                      [class.is-selected]="isValSelected(u)"
+                      (click)="toggleVal(u)">
+                <span class="sage-tech-avatar" [ngClass]="avatarTone(u)">{{ userInitials(u) }}</span>
+                <span class="sage-tech-info">
+                  <span class="sage-tech-name">{{ userDisplay(u) }}</span>
+                  <span class="sage-tech-sub">&#64;{{ u.username }}</span>
+                </span>
+                <span class="sage-tech-check">
+                  <i class="pi" [ngClass]="isValSelected(u) ? 'pi-check-circle' : 'pi-plus-circle'"></i>
+                </span>
+              </button>
+            </div>
+
+            <div class="sage-picker-empty" *ngIf="filteredTechVal().length === 0">
+              <i class="pi pi-inbox"></i>
+              <span *ngIf="techValUsers.length === 0">Aucun technicien de validation disponible.</span>
+              <span *ngIf="techValUsers.length > 0">Aucun résultat pour « {{ techValSearch }} »</span>
+            </div>
+
+            <footer class="sage-picker-footer" *ngIf="techValIds.length > 0">
+              <button type="button" class="sage-link" (click)="clearValSelection()">
+                <i class="pi pi-eraser"></i> Tout désélectionner
+              </button>
+            </footer>
+          </section>
+        </div>
+
+        <!-- Compact summary strip -->
+        <div class="sage-assign-summary" *ngIf="assignments.length > 0">
+          <span class="sage-assign-summary-title">
+            <i class="pi pi-user-plus"></i> Équipe affectée
+          </span>
+          <div class="sage-assign-chips">
+            <span *ngFor="let a of assignments; let i = index"
+                  class="sage-assign-chip"
+                  [class.prep]="a.assignmentRole === 'TECH_PREPARATION'"
+                  [class.val]="a.assignmentRole === 'TECH_VALIDATION'">
+              <span class="chip-role">{{ a.assignmentRole === 'TECH_PREPARATION' ? 'PREP' : 'VAL' }}</span>
+              <span class="chip-name">{{ getUserName(a.userId) }}</span>
+              <button type="button" class="chip-x" (click)="removeAssignment(i)" aria-label="Retirer">
+                <i class="pi pi-times"></i>
+              </button>
+            </span>
           </div>
+        </div>
+
+        <div class="sage-assign-empty-hint" *ngIf="assignments.length === 0">
+          <i class="pi pi-info-circle"></i>
+          Sélectionnez au moins un technicien pour continuer.
         </div>
       </div>
 
