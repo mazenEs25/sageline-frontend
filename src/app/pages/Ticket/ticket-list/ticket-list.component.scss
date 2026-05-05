@@ -204,6 +204,11 @@
       font-size: 11px;
       color: #64748b;
       margin-top: 1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      i { font-size: 10px; color: #3b82f6; }
     }
   }
 

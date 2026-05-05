@@ -28,7 +28,19 @@ export class TicketCreateComponent implements OnInit {
   secteurs: Secteur[] = [];
   phases: Phase[] = [];
   lines: ProductionLine[] = [];
+  /**
+   * 2026-04 line-ticket model: the cascade stops at the line. The postes
+   * below are shown as toggleable chips — by default every poste is
+   * included (= covered by the ticket). The user may click a chip to
+   * exclude it; only the remaining postes get a ValidationPosteStatus
+   * sub-row on the server.
+   */
   zones: ValidationZone[] = [];
+  /**
+   * Zone ids the user explicitly excluded from the ticket. Rebuilt every
+   * time the line changes so we never carry exclusions across lines.
+   */
+  excludedZoneIds = new Set<number>();
   users: User[] = [];
   today = new Date();
 
@@ -36,7 +48,6 @@ export class TicketCreateComponent implements OnInit {
   selectedSecteur: number | null = null;
   selectedPhase: number | null = null;
   selectedLine: number | null = null;
-  selectedZone: number | null = null;
   plannedDate: Date | null = null;
   selectedPriority: Priority = 'NORMALE';
   comments = '';
@@ -91,7 +102,6 @@ export class TicketCreateComponent implements OnInit {
     this.zones = [];
     this.selectedPhase = null;
     this.selectedLine = null;
-    this.selectedZone = null;
 
     if (this.selectedSecteur) {
       this.phaseService.getBySecteur(this.selectedSecteur).subscribe(data => this.phases = data);
@@ -102,7 +112,6 @@ export class TicketCreateComponent implements OnInit {
     this.lines = [];
     this.zones = [];
     this.selectedLine = null;
-    this.selectedZone = null;
 
     if (this.selectedPhase) {
       this.lineService.getByPhase(this.selectedPhase).subscribe(data => this.lines = data);
@@ -111,11 +120,45 @@ export class TicketCreateComponent implements OnInit {
 
   onLineChange() {
     this.zones = [];
-    this.selectedZone = null;
+    // Never carry exclusions across lines — a poste id that was "excluded"
+    // on line A would silently exclude a different poste on line B.
+    this.excludedZoneIds = new Set<number>();
+    // Re-sync assignments so the zone hint on each assignment falls back
+    // to the new line's primary poste on the server side.
+    this.syncAssignments();
 
     if (this.selectedLine) {
-      this.zoneService.getByLine(this.selectedLine).subscribe(data => this.zones = data);
+      // Load the postes. Each poste starts INCLUDED (not in excludedZoneIds).
+      // The user can click a chip to exclude it from the ticket.
+      this.zoneService.getByLine(this.selectedLine).subscribe(data => {
+        this.zones = (data || []).sort((a, b) =>
+          (a.orderInLine ?? 0) - (b.orderInLine ?? 0));
+      });
     }
+  }
+
+  // ─── Poste inclusion/exclusion (Step 0) ──────────────────────────
+
+  isPosteExcluded(zoneId: number): boolean {
+    return this.excludedZoneIds.has(zoneId);
+  }
+
+  togglePoste(zoneId: number): void {
+    if (this.excludedZoneIds.has(zoneId)) {
+      this.excludedZoneIds.delete(zoneId);
+    } else {
+      this.excludedZoneIds.add(zoneId);
+    }
+    // Trigger change detection for OnPush-style consumers by replacing the Set.
+    this.excludedZoneIds = new Set(this.excludedZoneIds);
+  }
+
+  includeAllPostes(): void {
+    this.excludedZoneIds = new Set<number>();
+  }
+
+  get includedPostesCount(): number {
+    return this.zones.length - this.excludedZoneIds.size;
   }
 
   // Assignment management
@@ -127,17 +170,18 @@ export class TicketCreateComponent implements OnInit {
    * adds, can't remove from dropdown" confusion.
    */
   syncAssignments(): void {
-    const zoneId = this.selectedZone ?? 0;
+    // 2026-04 line-ticket model: we don't pin assignments to a specific poste
+    // at creation time. The server will fall back to the line's primary poste
+    // (first ValidationZone by orderInLine) when zoneId is undefined, and the
+    // tech can later mark any poste of the line as done via markPosteDone.
     this.assignments = [
       ...this.techPrepIds.map(userId => ({
         userId,
-        assignmentRole: 'TECH_PREPARATION',
-        zoneId
+        assignmentRole: 'TECH_PREPARATION'
       })),
       ...this.techValIds.map(userId => ({
         userId,
-        assignmentRole: 'TECH_VALIDATION',
-        zoneId
+        assignmentRole: 'TECH_VALIDATION'
       }))
     ];
   }
@@ -239,21 +283,38 @@ export class TicketCreateComponent implements OnInit {
   nextStep() { if (this.currentStep < 3) this.currentStep++; }
   prevStep() { if (this.currentStep > 0) this.currentStep--; }
 
-  get canProceedStep0() { return this.selectedSecteur && this.selectedPhase && this.selectedLine && this.selectedZone; }
+  get canProceedStep0() {
+    // Line-ticket model: cascade stops at the line. Require at least one
+    // poste on that line AND at least one poste still included — the user
+    // can't exclude every poste.
+    return !!(this.selectedSecteur && this.selectedPhase && this.selectedLine
+              && this.zones.length > 0
+              && this.includedPostesCount > 0);
+  }
   get canProceedStep1() { return this.plannedDate; }
   get canProceedStep2() { return this.assignments.length > 0; }
 
   // Submit
   submit() {
-    if (!this.selectedZone || !this.plannedDate) return;
+    if (!this.selectedLine || !this.plannedDate) return;
     this.submitting = true;
 
+    // Build the included list only when the user actually excluded something.
+    // Passing the full list when nothing is excluded would be noise and force
+    // the backend to re-validate every id.
+    const includedZoneIds = this.excludedZoneIds.size > 0
+      ? this.zones
+          .filter(z => !this.excludedZoneIds.has(z.id))
+          .map(z => z.id)
+      : undefined;
+
     const dto: TicketCreateRequest = {
-      validationZoneId: this.selectedZone,
+      productionLineId: this.selectedLine,
       plannedDate: this.formatDate(this.plannedDate),
       priority: this.selectedPriority,
       comments: this.comments || undefined,
-      assignments: this.assignments
+      assignments: this.assignments,
+      includedZoneIds
     };
 
     console.log('[TicketCreate] Submitting payload:', JSON.stringify(dto, null, 2));

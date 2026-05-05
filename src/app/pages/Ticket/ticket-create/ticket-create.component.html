@@ -51,11 +51,51 @@
                       placeholder="Choisir une ligne" styleClass="w-full" (onChange)="onLineChange()"
                       [disabled]="!selectedPhase"></p-dropdown>
         </div>
-        <div class="sage-field">
-          <label class="sage-label"><i class="pi pi-map-marker"></i> Zone / Poste *</label>
-          <p-dropdown [options]="zones" [(ngModel)]="selectedZone" optionLabel="name" optionValue="id"
-                      placeholder="Choisir une zone" styleClass="w-full"
-                      [disabled]="!selectedLine"></p-dropdown>
+
+        <!-- Postes selector: one ticket = one line; every poste is included
+             by default. Click a chip to exclude it — only included postes
+             will get a sub-status row on the server. -->
+        <div class="sage-field sage-field-full" *ngIf="selectedLine">
+          <label class="sage-label">
+            <i class="pi pi-map-marker"></i>
+            Postes couverts par le ticket
+            <span class="sage-pill">{{ includedPostesCount }}/{{ zones.length }}</span>
+            <button *ngIf="excludedZoneIds.size > 0"
+                    type="button"
+                    class="sage-link sage-reset-postes"
+                    (click)="includeAllPostes()">
+              <i class="pi pi-refresh"></i> Tout inclure
+            </button>
+          </label>
+          <div class="sage-poste-preview" *ngIf="zones.length > 0; else noPostes">
+            <button *ngFor="let z of zones"
+                    type="button"
+                    class="sage-poste-chip"
+                    [class.is-excluded]="isPosteExcluded(z.id)"
+                    (click)="togglePoste(z.id)"
+                    [attr.aria-pressed]="!isPosteExcluded(z.id)"
+                    [attr.title]="isPosteExcluded(z.id) ? 'Cliquer pour inclure' : 'Cliquer pour exclure'">
+              <i class="pi" [ngClass]="isPosteExcluded(z.id) ? 'pi-times-circle' : 'pi-check-circle'"></i>
+              <strong>{{ z.name }}</strong>
+              <span *ngIf="z.posteType" class="muted">· {{ z.posteType }}</span>
+            </button>
+          </div>
+          <ng-template #noPostes>
+            <div class="sage-poste-empty">
+              <i class="pi pi-exclamation-triangle"></i>
+              Cette ligne n'a aucun poste configuré — impossible de créer un ticket.
+            </div>
+          </ng-template>
+          <small class="sage-hint">
+            Un seul ticket couvre toute la ligne. Cliquez sur un poste pour l'exclure —
+            seuls les postes inclus obtiendront un statut indépendant
+            (PLANIFIE → CONFORME/NON_CONFORME). Au moins un poste doit rester inclus.
+          </small>
+          <div *ngIf="zones.length > 0 && includedPostesCount === 0"
+               class="sage-poste-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Vous devez inclure au moins un poste pour continuer.
+          </div>
         </div>
       </div>
 
@@ -239,7 +279,15 @@
           <div class="sage-summary-item"><span class="k">Secteur</span><strong>{{ secteurs | findById:selectedSecteur:'name' }}</strong></div>
           <div class="sage-summary-item"><span class="k">Phase</span><strong>{{ phases | findById:selectedPhase:'name' }}</strong></div>
           <div class="sage-summary-item"><span class="k">Ligne</span><strong>{{ lines | findById:selectedLine:'name' }}</strong></div>
-          <div class="sage-summary-item"><span class="k">Zone</span><strong>{{ zones | findById:selectedZone:'name' }}</strong></div>
+          <div class="sage-summary-item sage-summary-full">
+            <span class="k">Postes couverts</span>
+            <strong>
+              {{ includedPostesCount }} / {{ zones.length }} poste{{ zones.length !== 1 ? 's' : '' }}
+              <span *ngIf="excludedZoneIds.size > 0" class="muted">
+                ({{ excludedZoneIds.size }} exclu{{ excludedZoneIds.size !== 1 ? 's' : '' }})
+              </span>
+            </strong>
+          </div>
           <div class="sage-summary-item"><span class="k">Date</span><strong>{{ plannedDate | date:'dd/MM/yyyy' }}</strong></div>
           <div class="sage-summary-item">
             <span class="k">Priorité</span>

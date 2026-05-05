@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Validation } from '../models/validation.model';
+import { Validation, PosteCompleteRequest } from '../models/validation.model';
 import { TicketCreateRequest, TicketWeekPlanRequest, PrepValidationRequest, TicketCloseRequest } from '../models/ticket.model';
 import { TicketStatus } from '../shared/enums/ticket.enum';
 
@@ -78,6 +78,22 @@ export class TicketService {
   cancelTicket(id: number, reason?: string): Observable<Validation> {
     const params = reason ? new HttpParams().set('reason', reason) : undefined;
     return this.http.patch<Validation>(`${this.apiUrl}/${id}/cancel`, {}, { params });
+  }
+
+  /**
+   * 2026-04 line-ticket model: close a single poste of the line.
+   * Server auto-advances the parent ticket to EN_REVUE when the last poste
+   * is closed.
+   */
+  markPosteDone(
+    validationId: number,
+    zoneId: number,
+    dto: PosteCompleteRequest
+  ): Observable<Validation> {
+    return this.http.patch<Validation>(
+      `${this.apiUrl}/${validationId}/postes/${zoneId}/complete`,
+      dto
+    );
   }
 
   // ===== DELETE =====

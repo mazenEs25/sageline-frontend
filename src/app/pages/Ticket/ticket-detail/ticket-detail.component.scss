@@ -63,11 +63,25 @@
 .sage-hero-sub {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.65rem;
   margin-top: 0.35rem;
   font-size: 0.82rem;
   color: var(--sage-text-muted, #94a3b8);
+  flex-wrap: wrap;
   i { color: var(--sage-primary, #3b82f6); font-size: 0.8rem; }
+}
+.sage-hero-postes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 999px;
+  color: var(--sage-primary, #60a5fa);
+  font-weight: 600;
+  font-size: 0.75rem;
+  i { color: inherit; font-size: 0.75rem; }
 }
 .sage-hero-actions {
   display: flex;
@@ -370,6 +384,245 @@
   i { font-size: 12px; color: #334155; }
 }
 
+/* Batch result dialog (per-poste) */
+.rd-empty {
+  padding: 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  i { color: #64748b; }
+}
+.rd-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.rd-row-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rd-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rd-row-idx {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #60a5fa;
+  letter-spacing: 0.04em;
+}
+.rd-row-remove {
+  padding: 4px 8px !important;
+  min-width: auto !important;
+}
+.rd-add-row {
+  align-self: flex-start;
+}
+
+/* ===== Postes sub-status card (2026-04 line-ticket model) ===== */
+.sage-postes-card .sage-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.sage-poste-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sage-poste-progress-bar {
+  height: 8px;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.sage-poste-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  transition: width 0.4s ease;
+  border-radius: 999px;
+}
+.sage-poste-progress-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--sage-text-muted, #94a3b8);
+}
+.sage-poste-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  i { font-size: 0.8rem; }
+  &.success { color: #10b981; }
+  &.danger  { color: #ef4444; }
+  &.muted   { color: #94a3b8; }
+}
+.sage-poste-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.sage-poste-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-left: 3px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  flex-wrap: wrap;
+
+  &.conforme {
+    border-left-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+  }
+  &.non-conforme {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+  }
+  &.done {
+    opacity: 0.85;
+  }
+}
+.sage-poste-row-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.sage-poste-order {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--sage-primary, #60a5fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.sage-poste-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.sage-poste-name {
+  font-weight: 600;
+  color: var(--sage-text, #e2e8f0);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sage-poste-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--sage-text-muted, #94a3b8);
+  align-items: center;
+  i { font-size: 0.7rem; }
+}
+.sage-poste-type {
+  padding: 0.1rem 0.4rem;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+}
+.sage-poste-by {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.sage-poste-measures {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+
+  &.has-nc {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+  &.muted {
+    background: rgba(148, 163, 184, 0.08);
+    color: var(--sage-text-muted, #94a3b8);
+    border-color: rgba(148, 163, 184, 0.18);
+    font-weight: 500;
+  }
+}
+.sage-poste-notes {
+  font-size: 0.72rem;
+  color: var(--sage-text-muted, #94a3b8);
+  font-style: italic;
+  margin-top: 0.15rem;
+  i { font-size: 0.7rem; margin-right: 0.2rem; }
+}
+.sage-poste-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ===== Poste dialog ===== */
+.poste-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+.pd-hint {
+  padding: 0.6rem 0.8rem;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--sage-text-muted, #94a3b8);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  i { color: var(--sage-primary, #60a5fa); margin-top: 1px; }
+}
+.pd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  label { font-size: 0.85rem; color: var(--sage-text, #e2e8f0); }
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .sage-grid { grid-template-columns: 1fr; }
@@ -380,4 +633,6 @@
   .sage-code { font-size: 1.15rem; }
   .sage-info-grid, .sage-info-grid.sage-cols-3 { grid-template-columns: 1fr; }
   .sage-hero-actions { width: 100%; }
+  .sage-poste-row { align-items: flex-start; }
+  .sage-poste-row-right { width: 100%; justify-content: flex-end; }
 }

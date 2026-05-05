@@ -130,7 +130,7 @@
           <th pSortableColumn="status">Statut <p-sortIcon field="status"></p-sortIcon></th>
           <th pSortableColumn="priority">Priorité <p-sortIcon field="priority"></p-sortIcon></th>
           <th>Secteur</th>
-          <th>Ligne / Zone</th>
+          <th>Ligne / Postes</th>
           <th pSortableColumn="plannedDate">Date planifiée <p-sortIcon field="plannedDate"></p-sortIcon></th>
           <th>Créé par</th>
           <th>IA Risque</th>
@@ -149,7 +149,13 @@
           <td>
             <div class="line-zone">
               <strong>{{ ticket.lineCode }}</strong>
-              <small>{{ ticket.zoneName }}</small>
+              <small *ngIf="ticket.posteTotal && ticket.posteTotal > 0; else legacyZone">
+                <i class="pi pi-th-large"></i>
+                {{ ticket.posteDone || 0 }} / {{ ticket.posteTotal }} postes
+              </small>
+              <ng-template #legacyZone>
+                <small>{{ ticket.zoneName }}</small>
+              </ng-template>
             </div>
           </td>
           <td class="date-cell">{{ ticket.plannedDate | date:'dd/MM/yyyy' }}</td>

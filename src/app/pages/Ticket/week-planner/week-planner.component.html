@@ -139,13 +139,19 @@
         </div>
         <div class="card-body">
           <div class="zone-name">
-            <i class="pi pi-map-marker"></i>
-            {{ t.zoneName || '—' }}
-          </div>
-          <div class="line-info">
             <i class="pi pi-sitemap"></i>
             {{ t.lineCode || t.lineName || '—' }}
           </div>
+          <div class="line-info" *ngIf="t.posteTotal && t.posteTotal > 0; else legacyZone">
+            <i class="pi pi-th-large"></i>
+            {{ t.posteDone || 0 }} / {{ t.posteTotal }} postes
+          </div>
+          <ng-template #legacyZone>
+            <div class="line-info">
+              <i class="pi pi-map-marker"></i>
+              {{ t.zoneName || '—' }}
+            </div>
+          </ng-template>
         </div>
         <div class="card-footer">
           <span class="existing-badge">
@@ -163,12 +169,12 @@
         </div>
         <div class="card-body">
           <div class="zone-name">
-            <i class="pi pi-map-marker"></i>
-            {{ d.zoneLabel }}
+            <i class="pi pi-sitemap"></i>
+            {{ d.lineLabel }}
           </div>
           <div class="line-info">
-            <i class="pi pi-sitemap"></i>
-            {{ d.lineCode || '—' }}
+            <i class="pi pi-th-large"></i>
+            {{ d.posteCount }} poste{{ d.posteCount > 1 ? 's' : '' }}
           </div>
           <div *ngIf="d.assignments.length > 0" class="assignees">
             <i class="pi pi-users"></i>
@@ -195,7 +201,8 @@
   [modal]="true"
   [closable]="true"
   [draggable]="false"
-  [style]="{ width: '620px' }"
+  [style]="{ width: '920px' }"
+  [breakpoints]="{ '1100px': '90vw' }"
   styleClass="planner-dialog"
   (onHide)="closeAddDialog()">
 
@@ -246,18 +253,6 @@
       </div>
 
       <div class="form-field">
-        <label>Zone / Poste <span class="req">*</span></label>
-        <p-dropdown [options]="zones"
-                    [(ngModel)]="formZone"
-                    optionLabel="name"
-                    optionValue="id"
-                    placeholder="Sélectionner..."
-                    [showClear]="true"
-                    [disabled]="!formLine"
-                    styleClass="modern-dd"></p-dropdown>
-      </div>
-
-      <div class="form-field">
         <label>Priorité</label>
         <p-dropdown [options]="priorityOptions"
                     [(ngModel)]="formPriority"
@@ -267,29 +262,154 @@
       </div>
     </div>
 
-    <!-- Assignments -->
-    <div class="form-field full">
-      <label>Techniciens de validation</label>
-      <p-multiSelect [options]="techValUsers"
-                     [(ngModel)]="formTechValIds"
-                     optionLabel="username"
-                     optionValue="id"
-                     placeholder="Sélectionner un ou plusieurs..."
-                     styleClass="modern-ms"
-                     [showToggleAll]="false"
-                     display="chip"></p-multiSelect>
+    <!-- Postes preview (read-only) — line-ticket model auto-seeds these -->
+    <div class="postes-preview" *ngIf="formLine">
+      <div class="postes-preview-head">
+        <i class="pi pi-th-large"></i>
+        <span>Postes auto-créés pour la ligne</span>
+        <span class="postes-count">{{ zones.length }}</span>
+      </div>
+      <div class="postes-preview-body" *ngIf="zones.length > 0; else postesEmpty">
+        <span *ngFor="let z of zones" class="poste-chip">
+          <span class="poste-chip-order">{{ z.orderInLine ?? '—' }}</span>
+          {{ z.name }}
+        </span>
+      </div>
+      <ng-template #postesEmpty>
+        <div class="postes-preview-empty">
+          <i class="pi pi-exclamation-triangle"></i>
+          Aucun poste configuré sur cette ligne. Configurer les zones avant de créer le ticket.
+        </div>
+      </ng-template>
     </div>
 
-    <div class="form-field full">
-      <label>Techniciens de préparation</label>
-      <p-multiSelect [options]="techPrepUsers"
-                     [(ngModel)]="formTechPrepIds"
-                     optionLabel="username"
-                     optionValue="id"
-                     placeholder="Sélectionner un ou plusieurs..."
-                     styleClass="modern-ms"
-                     [showToggleAll]="false"
-                     display="chip"></p-multiSelect>
+    <!-- Assignments picker — matches ticket-create Step 2 -->
+    <div class="sage-assign-step">
+      <div class="sage-assign-intro">
+        <i class="pi pi-users"></i>
+        <div>
+          <div class="sage-assign-intro-title">Affecter les techniciens</div>
+          <div class="sage-assign-intro-sub">Cliquez sur une carte pour ajouter ou retirer un technicien dans chaque rôle.</div>
+        </div>
+        <div class="sage-assign-count-pill" [class.empty]="formTotalAssignments === 0">
+          <i class="pi pi-check-circle"></i>
+          {{ formTotalAssignments }} affectation{{ formTotalAssignments !== 1 ? 's' : '' }}
+        </div>
+      </div>
+
+      <div class="sage-picker-grid">
+        <!-- Préparation picker -->
+        <section class="sage-picker prep">
+          <header class="sage-picker-header">
+            <div class="sage-picker-title">
+              <span class="sage-picker-icon"><i class="pi pi-wrench"></i></span>
+              <div>
+                <h4>Préparation</h4>
+                <span class="sage-picker-hint">Préparation de la zone</span>
+              </div>
+            </div>
+            <div class="sage-picker-counter">
+              <strong>{{ formTechPrepIds.length }}</strong>
+              <span>/ {{ techPrepUsers.length }}</span>
+            </div>
+          </header>
+
+          <div class="sage-picker-search">
+            <i class="pi pi-search"></i>
+            <input type="text"
+                   [(ngModel)]="formTechPrepSearch"
+                   placeholder="Rechercher un technicien de préparation..." />
+            <button *ngIf="formTechPrepSearch" class="clear" (click)="formTechPrepSearch = ''" type="button">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <div class="sage-picker-list" *ngIf="filteredFormTechPrep().length > 0">
+            <button *ngFor="let u of filteredFormTechPrep(); trackBy: trackUser"
+                    type="button"
+                    class="sage-tech-card"
+                    [class.is-selected]="isFormPrepSelected(u)"
+                    (click)="toggleFormPrep(u)">
+              <span class="sage-tech-avatar" [ngClass]="avatarTone(u)">{{ userInitials(u) }}</span>
+              <span class="sage-tech-info">
+                <span class="sage-tech-name">{{ userDisplay(u) }}</span>
+                <span class="sage-tech-sub">&#64;{{ u.username }}</span>
+              </span>
+              <span class="sage-tech-check">
+                <i class="pi" [ngClass]="isFormPrepSelected(u) ? 'pi-check-circle' : 'pi-plus-circle'"></i>
+              </span>
+            </button>
+          </div>
+
+          <div class="sage-picker-empty" *ngIf="filteredFormTechPrep().length === 0">
+            <i class="pi pi-inbox"></i>
+            <span *ngIf="techPrepUsers.length === 0">Aucun technicien de préparation disponible.</span>
+            <span *ngIf="techPrepUsers.length > 0">Aucun résultat pour « {{ formTechPrepSearch }} »</span>
+          </div>
+
+          <footer class="sage-picker-footer" *ngIf="formTechPrepIds.length > 0">
+            <button type="button" class="sage-link" (click)="clearFormPrep()">
+              <i class="pi pi-eraser"></i> Tout désélectionner
+            </button>
+          </footer>
+        </section>
+
+        <!-- Validation picker -->
+        <section class="sage-picker val">
+          <header class="sage-picker-header">
+            <div class="sage-picker-title">
+              <span class="sage-picker-icon"><i class="pi pi-check-square"></i></span>
+              <div>
+                <h4>Validation</h4>
+                <span class="sage-picker-hint">Validation sur site</span>
+              </div>
+            </div>
+            <div class="sage-picker-counter">
+              <strong>{{ formTechValIds.length }}</strong>
+              <span>/ {{ techValUsers.length }}</span>
+            </div>
+          </header>
+
+          <div class="sage-picker-search">
+            <i class="pi pi-search"></i>
+            <input type="text"
+                   [(ngModel)]="formTechValSearch"
+                   placeholder="Rechercher un technicien de validation..." />
+            <button *ngIf="formTechValSearch" class="clear" (click)="formTechValSearch = ''" type="button">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <div class="sage-picker-list" *ngIf="filteredFormTechVal().length > 0">
+            <button *ngFor="let u of filteredFormTechVal(); trackBy: trackUser"
+                    type="button"
+                    class="sage-tech-card"
+                    [class.is-selected]="isFormValSelected(u)"
+                    (click)="toggleFormVal(u)">
+              <span class="sage-tech-avatar" [ngClass]="avatarTone(u)">{{ userInitials(u) }}</span>
+              <span class="sage-tech-info">
+                <span class="sage-tech-name">{{ userDisplay(u) }}</span>
+                <span class="sage-tech-sub">&#64;{{ u.username }}</span>
+              </span>
+              <span class="sage-tech-check">
+                <i class="pi" [ngClass]="isFormValSelected(u) ? 'pi-check-circle' : 'pi-plus-circle'"></i>
+              </span>
+            </button>
+          </div>
+
+          <div class="sage-picker-empty" *ngIf="filteredFormTechVal().length === 0">
+            <i class="pi pi-inbox"></i>
+            <span *ngIf="techValUsers.length === 0">Aucun technicien de validation disponible.</span>
+            <span *ngIf="techValUsers.length > 0">Aucun résultat pour « {{ formTechValSearch }} »</span>
+          </div>
+
+          <footer class="sage-picker-footer" *ngIf="formTechValIds.length > 0">
+            <button type="button" class="sage-link" (click)="clearFormVal()">
+              <i class="pi pi-eraser"></i> Tout désélectionner
+            </button>
+          </footer>
+        </section>
+      </div>
     </div>
 
     <!-- Comments -->
