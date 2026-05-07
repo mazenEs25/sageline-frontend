@@ -1,0 +1,45 @@
+<p-toast></p-toast>
+
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  header="Initier la passation"
+  [modal]="true"
+  [style]="{ width: '500px' }">
+
+  <div class="field">
+    <label for="progressSummary">Résumé du travail effectué</label>
+    <textarea
+      id="progressSummary"
+      pInputTextarea
+      [(ngModel)]="form.progressSummary"
+      rows="4"
+      placeholder="Décrivez le travail réalisé..."
+      class="w-full"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="handoverNote">Note de passation</label>
+    <textarea
+      id="handoverNote"
+      pInputTextarea
+      [(ngModel)]="form.handoverNote"
+      rows="4"
+      placeholder="Informations importantes pour le technicien suivant..."
+      class="w-full"></textarea>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Annuler"
+      severity="secondary"
+      (click)="cancel()">
+    </p-button>
+    <p-button
+      label="Soumettre"
+      (click)="submit()"
+      [loading]="loading">
+    </p-button>
+  </ng-template>
+
+</p-dialog>

@@ -55,6 +55,11 @@ import { TicketTimelineComponent } from './shared/components/ticket-timeline/tic
 import { PriorityBadgeComponent } from './shared/components/priority-badge/priority-badge.component';
 import { MesAffectationsComponent } from './pages/mes-affectations/mes-affectations.component';
 import { HomeRedirectComponent } from './pages/home-redirect/home-redirect.component';
+import { HandoverInitiateDialogComponent } from './pages/Handover/handover-initiate-dialog/handover-initiate-dialog.component';
+import { HandoverAcceptPanelComponent } from './pages/Handover/handover-accept-panel/handover-accept-panel.component';
+import { HandoverQueuePanelComponent } from './pages/Handover/handover-queue-panel/handover-queue-panel.component';
+import { HandoverBannerComponent } from './pages/Handover/handover-banner/handover-banner.component';
+import { HandoverTimelineComponent } from './pages/Handover/handover-timeline/handover-timeline.component';
 
 @NgModule({
   declarations: [
@@ -101,7 +106,12 @@ import { HomeRedirectComponent } from './pages/home-redirect/home-redirect.compo
     TicketTimelineComponent,
     PriorityBadgeComponent,
     MesAffectationsComponent,
-    HomeRedirectComponent
+    HomeRedirectComponent,
+    HandoverInitiateDialogComponent,
+    HandoverAcceptPanelComponent,
+    HandoverQueuePanelComponent,
+    HandoverBannerComponent,
+    HandoverTimelineComponent
   ],
   imports: [
     BrowserModule,

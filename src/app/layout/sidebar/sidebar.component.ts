@@ -54,6 +54,12 @@ export class SidebarComponent implements OnInit {
         { label: 'Messagerie', icon: 'pi pi-comments', route: '/messaging', roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] },
       ]
     },
+    {
+      label: 'PASSATIONS',
+      items: [
+        { label: 'Passations', icon: 'pi pi-arrows-h', route: '/handovers/queue', roles: ['CHEF_SECTEUR', 'ADMIN_IT'] }
+      ]
+    },
 
 
   ];

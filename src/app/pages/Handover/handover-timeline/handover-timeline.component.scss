@@ -1,0 +1,24 @@
+h3 {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+}
+
+.timeline-content {
+  padding: 0.5rem 0;
+
+  p {
+    margin-bottom: 0.5rem;
+
+    &.note {
+      color: var(--text-color-secondary);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+  }
+
+  .date {
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,22 @@
+<div *ngIf="handovers.length > 0">
+  <h3>Historique des passations</h3>
+
+  <p-timeline [value]="handovers" align="alternate">
+    <ng-template pTemplate="content" let-item>
+      <div class="timeline-content">
+        <p>
+          <strong>{{ item.fromTechUsername }}</strong> → <strong>{{ item.toTechUsername ?? 'Non assigné' }}</strong>
+        </p>
+
+        <p-tag
+          [value]="getTriggerTypeLabel(item.triggeredBy)"
+          [severity]="getTriggerTypeSeverity(item.triggeredBy)">
+        </p-tag>
+
+        <p *ngIf="item.handoverNote" class="note">{{ item.handoverNote }}</p>
+
+        <small class="date">{{ item.scheduledAt | date:'dd/MM/yyyy HH:mm' }}</small>
+      </div>
+    </ng-template>
+  </p-timeline>
+</div>

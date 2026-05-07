@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PrimeNGConfig } from 'primeng/api';
+import { PrimeNGConfig, MessageService } from 'primeng/api';
 import { WebSocketService } from './services/websocket.service';
 import { AuthService } from './auth/auth.service';
 import { IdleService } from './auth/idle.service';
@@ -7,7 +7,8 @@ import { IdleService } from './auth/idle.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
+  providers: [MessageService]
 })
 export class AppComponent implements OnInit {
   title = 'sageline-frontend';
@@ -16,7 +17,8 @@ export class AppComponent implements OnInit {
     private primengConfig: PrimeNGConfig,
     private wsService: WebSocketService,
     private authService: AuthService,
-    private idleService: IdleService
+    private idleService: IdleService,
+    private messageService: MessageService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -31,6 +33,7 @@ export class AppComponent implements OnInit {
           const userId = this.authService.getCurrentUserId();
           if (userId > 0) {
             this.wsService.connect(userId);
+            this.wireHandoverNotifications(userId);
           }
         },
         error: () => {
@@ -38,9 +41,21 @@ export class AppComponent implements OnInit {
           const userId = this.authService.getCurrentUserId();
           if (userId > 0) {
             this.wsService.connect(userId);
+            this.wireHandoverNotifications(userId);
           }
         }
       });
     }
+  }
+
+  private wireHandoverNotifications(userId: number): void {
+    this.wsService.subscribe(`/user/${userId}/queue/handover`, (notification: any) => {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Passation',
+        detail: notification.message || 'Nouvelle passation en attente.',
+        life: 8000
+      });
+    });
   }
 }

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"C:\\\\Users\\\\mouaf\\\\OneDrive\\\\Bureau\\\\stagePFE\\\\PROJECT\\\\Sageline\\\\sageline-frontend\\\\spec-Plan-Frontend\\\\.specify\\\\extensions\\\\git\\\\scripts\\\\powershell\\\\initialize-repo.ps1\")",
+      "PowerShell(& \"C:\\\\Users\\\\mouaf\\\\OneDrive\\\\Bureau\\\\stagePFE\\\\PROJECT\\\\Sageline\\\\sageline-frontend\\\\spec-Plan-Frontend\\\\.specify\\\\extensions\\\\git\\\\scripts\\\\powershell\\\\create-new-feature.ps1\" -Json -ShortName \"handover-frontend\" \"Handover System Frontend Angular Components\")",
+      "PowerShell(& \"C:\\\\Users\\\\mouaf\\\\OneDrive\\\\Bureau\\\\stagePFE\\\\PROJECT\\\\Sageline\\\\sageline-frontend\\\\spec-Plan-Frontend\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -PathsOnly)",
+      "PowerShell(& \"C:\\\\Users\\\\mouaf\\\\OneDrive\\\\Bureau\\\\stagePFE\\\\PROJECT\\\\Sageline\\\\sageline-frontend\\\\spec-Plan-Frontend\\\\.specify\\\\scripts\\\\powershell\\\\setup-plan.ps1\" -Json)",
+      "PowerShell(& \"C:\\\\Users\\\\mouaf\\\\OneDrive\\\\Bureau\\\\stagePFE\\\\PROJECT\\\\Sageline\\\\sageline-frontend\\\\spec-Plan-Frontend\\\\.specify\\\\scripts\\\\powershell\\\\setup-tasks.ps1\" -Json)",
+      "Bash(Test-Path *)",
+      "PowerShell(.\\\\.claude\\\\skills\\\\speckit-implement\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
+      "Bash(powershell.exe -File \".\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "PowerShell(cd \"C:\\\\Users\\\\mouaf\\\\OneDrive\\\\Bureau\\\\stagePFE\\\\PROJECT\\\\Sageline\\\\sageline-frontend\"; $gitDir = git rev-parse --git-dir 2>&1; if \\($LASTEXITCODE -eq 0\\) { Write-Host \"Git repository found: $gitDir\" } else { Write-Host \"Not a git repo\" })",
+      "Read(//c/Users/mouaf/OneDrive/Bureau/stagePFE/PROJECT/Sageline/sageline-frontend/**)",
+      "Bash(ng build *)",
+      "Bash(npx --no-install ng build --configuration development)"
+    ]
+  }
+}

@@ -9,6 +9,8 @@ export interface User {
   lastName?: string;
 
   role: Role;
+  /** Sector the user is bound to — used by CHEF_SECTEUR to subscribe
+   *  to /topic/handover.secteur.{secteurId}. Provided by GET /api/users/me. */
   secteurId?: number;
   secteurCode?: string;
   secteurName?: string;

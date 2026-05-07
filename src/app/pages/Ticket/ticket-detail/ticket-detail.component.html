@@ -38,11 +38,18 @@
               (click)="openResultDialog()"
               pTooltip="Saisir une mesure de validation">
       </button>
+      <button *ngIf="canInitiateHandover()" pButton label="Initier la passation" icon="pi pi-arrows-h"
+              class="p-button-warning p-button-outlined"
+              (click)="showInitiateHandoverDialog = true"
+              pTooltip="Transférer ce ticket à un autre technicien"></button>
       <button *ngIf="canSubmitReview()" pButton label="Soumettre Revue" icon="pi pi-send" class="p-button-help" (click)="submitForReview()"></button>
       <button *ngIf="canClose()" pButton label="Clôturer" icon="pi pi-lock" (click)="showCloseDialog = true"></button>
       <button *ngIf="canCancel()" pButton label="Annuler" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="showCancelDialog = true"></button>
     </div>
   </div>
+
+  <!-- ===== Handover Banner ===== -->
+  <app-handover-banner [ticket]="ticket" (actionCompleted)="loadTicket()" *ngIf="ticket && ticket.status === 'EN_ATTENTE_HANDOVER'"></app-handover-banner>
 
   <!-- ===== Progress Timeline ===== -->
   <app-ticket-timeline [ticket]="ticket" class="sage-timeline-block"></app-ticket-timeline>
@@ -317,6 +324,9 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== Handover Timeline ===== -->
+  <app-handover-timeline [validationId]="ticket.id" *ngIf="ticket"></app-handover-timeline>
 </div>
 
 <!-- Prep Validation Dialog -->
@@ -480,6 +490,14 @@
     </button>
   </ng-template>
 </p-dialog>
+
+<!-- ===== Handover Initiate Dialog ===== -->
+<app-handover-initiate-dialog
+  *ngIf="ticket"
+  [validationId]="ticket.id"
+  [(visible)]="showInitiateHandoverDialog"
+  (initiated)="loadTicket()">
+</app-handover-initiate-dialog>
 
 <!-- ===== Mark Poste Done Dialog (2026-04 line-ticket model) ===== -->
 <p-dialog

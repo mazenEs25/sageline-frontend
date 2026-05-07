@@ -33,6 +33,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TabViewModule } from 'primeng/tabview';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { SortIcon } from 'primeng/table';
+import { MessageModule } from 'primeng/message';
 
 const MODULES = [
   TableModule, ButtonModule, InputTextModule, DropdownModule,
@@ -42,7 +43,7 @@ const MODULES = [
   ChartModule, MenuModule, AvatarModule, DividerModule, SkeletonModule,
   ProgressSpinnerModule, OverlayPanelModule, ScrollPanelModule,
   StepsModule, TimelineModule, RadioButtonModule, CalendarModule, ListboxModule,
-  InputNumberModule, TabViewModule, MultiSelectModule,
+  InputNumberModule, TabViewModule, MultiSelectModule, MessageModule,
 ];
 
 @NgModule({

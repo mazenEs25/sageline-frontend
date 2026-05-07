@@ -24,6 +24,8 @@ import { AccessDeniedComponent } from './pages/access-denied/access-denied.compo
 import { MessagingPageComponent } from './messaging/messaging-page/messaging-page.component';
 import { MesAffectationsComponent } from './pages/mes-affectations/mes-affectations.component';
 import { HomeRedirectComponent } from './pages/home-redirect/home-redirect.component';
+import { HandoverAcceptPanelComponent } from './pages/Handover/handover-accept-panel/handover-accept-panel.component';
+import { HandoverQueuePanelComponent } from './pages/Handover/handover-queue-panel/handover-queue-panel.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -59,6 +61,12 @@ const routes: Routes = [
         data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR', 'EXPERT', 'TECH_VAL', 'TECH_PREP', 'RESPONSABLE'] } },
       { path: 'validations/:id/prep', component: PrepCheckComponent, canActivate: [AuthGuard],
         data: { roles: ['ADMIN_IT', 'TECH_PREP'] } },
+      { path: 'validations/:id/handover', component: HandoverAcceptPanelComponent, canActivate: [AuthGuard],
+        data: { roles: ['TECH_VAL', 'CHEF_SECTEUR', 'ADMIN_IT'] } },
+
+      // Handovers
+      { path: 'handovers/queue', component: HandoverQueuePanelComponent, canActivate: [AuthGuard],
+        data: { roles: ['CHEF_SECTEUR', 'ADMIN_IT'] } },
 
       // Results
       { path: 'results', component: ResultListComponent, canActivate: [AuthGuard],

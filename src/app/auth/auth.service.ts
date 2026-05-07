@@ -22,6 +22,7 @@ export class AuthService {
   static readonly ACCESS_TOKEN_KEY = 'sageline_access_token';
   static readonly REFRESH_TOKEN_KEY = 'sageline_refresh_token';
   static readonly LAST_ACTIVITY_KEY = 'sageline_last_activity';
+  static readonly SECTEUR_ID_KEY = 'sageline_secteur_id';
 
   /** Max idle duration before a stored session is considered expired (ms). */
   static readonly IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -309,7 +310,14 @@ syncCurrentUser(): Observable<any> {
     tap((user: any) => {
       localStorage.setItem('sageline_user_id', user.id.toString());
       localStorage.setItem('currentUser', JSON.stringify(user));
+      // CHEF_SECTEUR / ADMIN_IT use this for the live handover queue topic
+      localStorage.setItem(AuthService.SECTEUR_ID_KEY, user.secteurId?.toString() ?? '0');
     })
   );
+}
+
+getCurrentUserSecteurId(): number {
+  const stored = localStorage.getItem(AuthService.SECTEUR_ID_KEY);
+  return stored ? parseInt(stored, 10) : 0;
 }
 }

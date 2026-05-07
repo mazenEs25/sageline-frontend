@@ -1,5 +1,5 @@
 // ===== NEW (add these) =====
-export type TicketStatus = 'PLANIFIE' | 'EN_ATTENTE_PREP' | 'PREP_VALIDEE' | 'EN_COURS' | 'EN_REVUE' | 'CONFORME' | 'NON_CONFORME' | 'ANNULE';
+export type TicketStatus = 'PLANIFIE' | 'EN_ATTENTE_PREP' | 'PREP_VALIDEE' | 'EN_COURS' | 'EN_REVUE' | 'CONFORME' | 'NON_CONFORME' | 'ANNULE' | 'EN_ATTENTE_HANDOVER';
 export type Priority = 'BASSE' | 'NORMALE' | 'HAUTE' | 'URGENTE';
 export type AssignmentRole = 'TECH_VALIDATION' | 'TECH_PREPARATION';
 export type AssignmentStatus = 'ASSIGNE' | 'EN_COURS' | 'TERMINE';
@@ -13,7 +13,8 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
     EN_REVUE: 'En Revue',
     CONFORME: 'Conforme',
     NON_CONFORME: 'Non Conforme',
-    ANNULE: 'Annulé'
+    ANNULE: 'Annulé',
+    EN_ATTENTE_HANDOVER: 'En Attente Passation'
 };
 
 export const TICKET_STATUS_COLORS: Record<TicketStatus, string> = {
@@ -24,7 +25,8 @@ export const TICKET_STATUS_COLORS: Record<TicketStatus, string> = {
     EN_REVUE: 'help',
     CONFORME: 'success',
     NON_CONFORME: 'danger',
-    ANNULE: 'secondary'
+    ANNULE: 'secondary',
+    EN_ATTENTE_HANDOVER: 'warning'
 };
 
 export const TICKET_STATUS_ICONS: Record<TicketStatus, string> = {
@@ -35,7 +37,8 @@ export const TICKET_STATUS_ICONS: Record<TicketStatus, string> = {
     EN_REVUE: 'pi pi-eye',
     CONFORME: 'pi pi-verified',
     NON_CONFORME: 'pi pi-times-circle',
-    ANNULE: 'pi pi-ban'
+    ANNULE: 'pi pi-ban',
+    EN_ATTENTE_HANDOVER: 'pi pi-arrows-h'
 };
 
 export const PRIORITY_LABELS: Record<Priority, string> = {

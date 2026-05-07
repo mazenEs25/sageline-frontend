@@ -1,0 +1,53 @@
+<p-toast></p-toast>
+
+<div class="page-container">
+  <h2>Passation de ticket</h2>
+
+  <div *ngIf="loading">
+    <p-skeleton *ngFor="let i of [1,2,3,4]"
+                [style]="{ 'height': '2rem', 'margin-bottom': '1rem' }"></p-skeleton>
+  </div>
+
+  <div *ngIf="!loading && handover">
+    <p-card>
+      <div class="field">
+        <strong>Ticket:</strong>
+        <span>{{ handover.ticketCode }}</span>
+      </div>
+
+      <div class="field">
+        <strong>Technicien sortant:</strong>
+        <span>{{ handover.fromTechUsername }}</span>
+      </div>
+
+      <div class="field">
+        <strong>Déclenchée le:</strong>
+        <span>{{ handover.scheduledAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+
+      <div class="field">
+        <strong>Résumé du travail effectué:</strong>
+        <pre>{{ handover.progressSummary }}</pre>
+      </div>
+
+      <div class="field">
+        <strong>Note de passation:</strong>
+        <pre>{{ handover.handoverNote }}</pre>
+      </div>
+    </p-card>
+
+    <div class="accept-actions">
+      <p-button
+        label="Accepter la passation"
+        icon="pi pi-check"
+        (click)="accept()"
+        [loading]="accepting"
+        [disabled]="accepting">
+      </p-button>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && !handover">
+    <p-message severity="info" text="Aucune passation en attente pour ce ticket."></p-message>
+  </div>
+</div>

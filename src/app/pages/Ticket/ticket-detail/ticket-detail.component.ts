@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { AuthService } from '../../../auth/auth.service';
 import { PosteStatus, Validation } from '../../../models/validation.model';
@@ -34,6 +34,9 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
   showCancelDialog = false;
   cancelReason = '';
 
+  // Handover initiate dialog
+  showInitiateHandoverDialog = false;
+
   // Add Result dialog (per-poste, batch-capable)
   showResultDialog = false;
   savingResult = false;
@@ -57,6 +60,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
   posteNotes = '';
 
   private wsTopic: string | null = null;
+  private wsSubscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -73,6 +77,12 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     this.ticketId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadTicket();
     this.subscribeToTicketUpdates();
+
+    this.wsSubscription = this.wsService.ticketNotifications$.subscribe(notification => {
+      if (notification && +notification.validationId === this.ticketId) {
+        this.loadTicket();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -80,6 +90,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
       this.wsService.unsubscribe(this.wsTopic);
       this.wsTopic = null;
     }
+    this.wsSubscription?.unsubscribe();
   }
 
   /**
@@ -183,6 +194,22 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
   canSubmitReview(): boolean { return this.ticket?.status === 'EN_COURS'; }
   canClose(): boolean { return this.ticket?.status === 'EN_REVUE'; }
   canCancel(): boolean { return !['CONFORME', 'NON_CONFORME', 'ANNULE'].includes(this.ticket?.status || ''); }
+
+  /**
+   * TECH_VAL can hand off a ticket only while it is EN_COURS AND they are
+   * the active assignee. ADMIN_IT / CHEF_SECTEUR can force a handover at any
+   * time (the backend resolves the trigger type from the role + assignment).
+   */
+  canInitiateHandover(): boolean {
+    if (this.ticket?.status !== 'EN_COURS') return false;
+    const roles = this.authService.getRoles();
+    if (roles.includes('ADMIN_IT') || roles.includes('CHEF_SECTEUR')) return true;
+    if (!roles.includes('TECH_VAL')) return false;
+    const myId = this.authService.getCurrentUserId();
+    return (this.ticket?.assignments ?? []).some(
+      a => a.userId === myId && a.status === 'EN_COURS'
+    );
+  }
 
   /** Only TECH_VAL and CHEF_SECTEUR can add results, and only while the ticket is EN_COURS */
   canAddResult(): boolean {
