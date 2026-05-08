@@ -1,34 +1,55 @@
 <p-toast></p-toast>
 
-<div *ngIf="ticket.status === 'EN_ATTENTE_HANDOVER'">
-  <p-message severity="warn">
-    <div>
-      <div *ngIf="authService.getRoles().includes('TECH_VAL')">
-        Ce ticket est en attente de passation.
-        <p-button label="Accepter" icon="pi pi-check" (click)="accept()" size="small" class="ml-3"></p-button>
-      </div>
+<aside class="handover-banner" *ngIf="ticket.status === 'EN_ATTENTE_HANDOVER'">
+  <div class="banner-icon">
+    <i class="pi pi-arrows-h"></i>
+  </div>
 
-      <div *ngIf="authService.getRoles().includes('CHEF_SECTEUR') || authService.getRoles().includes('ADMIN_IT')">
-        Passation en attente — assigner un technicien
+  <div class="banner-content">
+    <div class="banner-heading">
+      <h4>Passation en attente</h4>
+      <p-tag *ngIf="pendingHandover"
+             severity="warning"
+             [value]="'Initiée par ' + pendingHandover.fromTechUsername"
+             icon="pi pi-user">
+      </p-tag>
+    </div>
+
+    <p class="banner-message" *ngIf="authService.getRoles().includes('TECH_VAL') &&
+                                      !(authService.getRoles().includes('CHEF_SECTEUR') || authService.getRoles().includes('ADMIN_IT'))">
+      Ce ticket est gelé en attente d'un nouveau technicien. Vous pouvez reprendre le travail si vous êtes affecté à cette ligne.
+    </p>
+
+    <p class="banner-message" *ngIf="authService.getRoles().includes('CHEF_SECTEUR') || authService.getRoles().includes('ADMIN_IT')">
+      Désignez un TECH_VAL pour reprendre ce ticket. La sélection envoie une notification personnelle au technicien.
+    </p>
+
+    <div class="banner-actions">
+      <p-button *ngIf="authService.getRoles().includes('TECH_VAL')"
+                label="Accepter la passation"
+                icon="pi pi-check"
+                severity="success"
+                (click)="accept()">
+      </p-button>
+
+      <ng-container *ngIf="authService.getRoles().includes('CHEF_SECTEUR') || authService.getRoles().includes('ADMIN_IT')">
         <p-dropdown
           [options]="techVals"
           [(ngModel)]="selectedTechId"
           optionLabel="username"
           optionValue="id"
           placeholder="Choisir un technicien"
-          [style]="{ 'width': '220px' }"
-          class="ml-3">
+          [filter]="true"
+          filterBy="username"
+          [style]="{ 'min-width': '240px' }">
         </p-dropdown>
-        <p-button
-          label="Assigner"
-          icon="pi pi-user-plus"
-          (click)="assign()"
-          [disabled]="!selectedTechId || assigning"
-          [loading]="assigning"
-          size="small"
-          class="ml-2">
+        <p-button label="Assigner"
+                  icon="pi pi-user-plus"
+                  (click)="assign()"
+                  [disabled]="!selectedTechId || assigning"
+                  [loading]="assigning">
         </p-button>
-      </div>
+      </ng-container>
     </div>
-  </p-message>
-</div>
+  </div>
+</aside>

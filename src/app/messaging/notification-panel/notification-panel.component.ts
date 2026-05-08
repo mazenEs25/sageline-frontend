@@ -154,13 +154,19 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Fermer le panel
     this.notifPanel.hide();
 
-    // Ticket-specific notifications → navigate to ticket detail
+    // Ticket-specific notifications → navigate to ticket detail.
+    // Handover notifications carry the validation id in referenceId, so the
+    // assigned tech lands directly on the page where they can read the
+    // progress summary and click "Accepter cette passation".
     const ticketTypes: NotificationType[] = [
       NotificationType.TICKET_ASSIGNMENT,
       NotificationType.TICKET_STATUS_CHANGE,
       NotificationType.PREP_VALIDATED,
       NotificationType.TICKET_REVIEW,
-      NotificationType.TICKET_CANCELLED
+      NotificationType.TICKET_CANCELLED,
+      NotificationType.HANDOVER_TRIGGERED,
+      NotificationType.HANDOVER_ASSIGNED,
+      NotificationType.HANDOVER_CANCELLED
     ];
     if (ticketTypes.includes(notif.notificationType) && notif.referenceId) {
       this.router.navigate(['/validations', notif.referenceId]);
@@ -239,6 +245,11 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         return 'pi pi-eye';
       case NotificationType.TICKET_CANCELLED:
         return 'pi pi-ban';
+      case NotificationType.HANDOVER_TRIGGERED:
+      case NotificationType.HANDOVER_ASSIGNED:
+        return 'pi pi-arrows-h';
+      case NotificationType.HANDOVER_CANCELLED:
+        return 'pi pi-times-circle';
       default:
         return 'pi pi-info-circle';
     }
@@ -269,6 +280,12 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         return '#8b5cf6';
       case NotificationType.TICKET_CANCELLED:
         return '#ef4444';
+      case NotificationType.HANDOVER_TRIGGERED:
+        return '#f59e0b'; // amber — "you need to act"
+      case NotificationType.HANDOVER_ASSIGNED:
+        return '#6366f1'; // indigo — "designated to you"
+      case NotificationType.HANDOVER_CANCELLED:
+        return '#64748b'; // slate — informational
       default:
         return '#64748b';
     }

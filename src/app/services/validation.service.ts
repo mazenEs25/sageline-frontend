@@ -14,6 +14,11 @@ export class ValidationService {
     return this.http.get<Validation[]>(this.url);
   }
 
+  /** Tickets where the current user has at least one ValidationAssignment (any status). */
+  getMyTickets(): Observable<Validation[]> {
+    return this.http.get<Validation[]>(`${this.url}/my-tickets`);
+  }
+
   getById(id: number): Observable<Validation> {
     return this.http.get<Validation>(`${this.url}/${id}`);
   }

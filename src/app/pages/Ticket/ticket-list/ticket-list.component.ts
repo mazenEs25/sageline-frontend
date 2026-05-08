@@ -7,6 +7,8 @@ import { SecteurService } from '../../../services/secteur.service';
 import { TicketService } from '../../../services/ticket.service';
 import { WebSocketService } from '../../../services/websocket.service';
 import { TicketStatus, Priority, TICKET_STATUS_LABELS, PRIORITY_LABELS } from '../../../shared/enums/ticket.enum';
+import { KeycloakService } from 'keycloak-angular';
+import { Observable } from 'rxjs';
 
 
 @Component({
@@ -37,8 +39,21 @@ export class TicketListComponent implements OnInit, OnDestroy {
     private secteurService: SecteurService,
     private router: Router,
     private messageService: MessageService,
-    private wsService: WebSocketService
+    private wsService: WebSocketService,
+    private keycloak: KeycloakService
   ) {}
+
+  /**
+   * TECH_VAL / TECH_PREP only see tickets they have an assignment on.
+   * ADMIN_IT / CHEF_SECTEUR / EXPERT see everything.
+   */
+  private ticketsStream(): Observable<Validation[]> {
+    const roles = this.keycloak.getUserRoles();
+    const canSeeAll = roles.includes('ADMIN_IT')
+      || roles.includes('CHEF_SECTEUR')
+      || roles.includes('EXPERT');
+    return canSeeAll ? this.ticketService.getAll() : this.ticketService.getMyTickets();
+  }
 
   ngOnInit() {
     this.loadData();
@@ -75,7 +90,7 @@ export class TicketListComponent implements OnInit, OnDestroy {
   }
 
   private reloadTickets(): void {
-    this.ticketService.getAll().subscribe({
+    this.ticketsStream().subscribe({
       next: (data) => { this.tickets = data; this.applyFilters(); },
       error: () => { /* silent — a later broadcast will try again */ }
     });
@@ -83,7 +98,7 @@ export class TicketListComponent implements OnInit, OnDestroy {
 
   loadData() {
     this.loading = true;
-    this.ticketService.getAll().subscribe({
+    this.ticketsStream().subscribe({
       next: (data) => {
         this.tickets = data;
         this.applyFilters();

@@ -1,22 +1,103 @@
-<div *ngIf="handovers.length > 0">
-  <h3>Historique des passations</h3>
+<p-toast></p-toast>
 
-  <p-timeline [value]="handovers" align="alternate">
-    <ng-template pTemplate="content" let-item>
-      <div class="timeline-content">
-        <p>
-          <strong>{{ item.fromTechUsername }}</strong> → <strong>{{ item.toTechUsername ?? 'Non assigné' }}</strong>
-        </p>
+<section class="handover-section" *ngIf="!loading || handovers.length > 0">
+  <header class="section-header">
+    <div class="section-title">
+      <i class="pi pi-arrows-h" aria-hidden="true"></i>
+      <h3>Historique des passations</h3>
+    </div>
+    <p-tag *ngIf="pendingCount > 0"
+           severity="warning"
+           [value]="pendingCount + ' en cours'"
+           icon="pi pi-clock">
+    </p-tag>
+  </header>
 
-        <p-tag
-          [value]="getTriggerTypeLabel(item.triggeredBy)"
-          [severity]="getTriggerTypeSeverity(item.triggeredBy)">
-        </p-tag>
+  <div class="empty-state" *ngIf="!loading && handovers.length === 0">
+    <i class="pi pi-inbox"></i>
+    <span>Aucune passation enregistrée pour ce ticket.</span>
+  </div>
 
-        <p *ngIf="item.handoverNote" class="note">{{ item.handoverNote }}</p>
+  <div class="handover-cards" *ngIf="handovers.length > 0">
+    <article class="handover-card"
+             *ngFor="let h of handovers"
+             [attr.data-status]="h.status">
+      <div class="card-accent" [attr.data-status]="h.status"></div>
 
-        <small class="date">{{ item.scheduledAt | date:'dd/MM/yyyy HH:mm' }}</small>
+      <div class="card-body">
+        <div class="card-top">
+          <span class="status-pill" [attr.data-status]="h.status">
+            <i [class]="statusIcon(h.status)"></i>
+            {{ statusLabel(h.status) }}
+          </span>
+          <p-tag [value]="getTriggerTypeLabel(h.triggeredBy)"
+                 [severity]="getTriggerTypeSeverity(h.triggeredBy)"
+                 [icon]="triggerIcon(h.triggeredBy)">
+          </p-tag>
+        </div>
+
+        <div class="techs-flow">
+          <div class="tech-block from">
+            <div class="avatar from">{{ initials(h.fromTechUsername) }}</div>
+            <div class="tech-info">
+              <small>Sortant</small>
+              <strong>{{ h.fromTechUsername }}</strong>
+            </div>
+          </div>
+          <div class="flow-arrow" aria-hidden="true">
+            <i class="pi pi-arrow-right"></i>
+          </div>
+          <div class="tech-block to" [class.unassigned]="!h.toTechUsername">
+            <div class="avatar to">
+              <i *ngIf="!h.toTechUsername" class="pi pi-question-circle"></i>
+              <ng-container *ngIf="h.toTechUsername">{{ initials(h.toTechUsername) }}</ng-container>
+            </div>
+            <div class="tech-info">
+              <small>Entrant</small>
+              <strong>{{ h.toTechUsername || 'Non assigné' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-block" *ngIf="h.progressSummary">
+          <div class="block-label">
+            <i class="pi pi-list"></i>
+            Résumé du travail effectué
+          </div>
+          <p class="block-text">{{ h.progressSummary }}</p>
+        </div>
+
+        <div class="content-block" *ngIf="h.handoverNote">
+          <div class="block-label">
+            <i class="pi pi-file-edit"></i>
+            Note de passation
+          </div>
+          <p class="block-text">{{ h.handoverNote }}</p>
+        </div>
+
+        <footer class="card-footer">
+          <div class="meta-row">
+            <span class="meta">
+              <i class="pi pi-calendar"></i>
+              Initiée le {{ h.scheduledAt | date:'dd/MM/yyyy à HH:mm' }}
+            </span>
+            <span class="meta" *ngIf="h.acceptedAt">
+              <i class="pi pi-check-circle"></i>
+              Acceptée le {{ h.acceptedAt | date:'dd/MM/yyyy à HH:mm' }}
+            </span>
+          </div>
+
+          <div class="card-actions" *ngIf="canAccept(h)">
+            <p-button label="Accepter cette passation"
+                      icon="pi pi-check"
+                      severity="success"
+                      [loading]="accepting === h.id"
+                      [disabled]="accepting !== null"
+                      (click)="accept(h)">
+            </p-button>
+          </div>
+        </footer>
       </div>
-    </ng-template>
-  </p-timeline>
-</div>
+    </article>
+  </div>
+</section>

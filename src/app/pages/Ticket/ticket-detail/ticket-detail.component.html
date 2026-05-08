@@ -326,7 +326,10 @@
   </div>
 
   <!-- ===== Handover Timeline ===== -->
-  <app-handover-timeline [validationId]="ticket.id" *ngIf="ticket"></app-handover-timeline>
+  <app-handover-timeline
+      [validationId]="ticket.id"
+      (actionCompleted)="loadTicket()"
+      *ngIf="ticket"></app-handover-timeline>
 </div>
 
 <!-- Prep Validation Dialog -->

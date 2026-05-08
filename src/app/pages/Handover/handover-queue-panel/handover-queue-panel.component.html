@@ -1,6 +1,51 @@
 <p-toast></p-toast>
 <p-confirmDialog></p-confirmDialog>
 
+<!-- Shared overlay panel — one instance, toggled per row -->
+<p-overlayPanel #techPanel [style]="{ width: '320px' }" styleClass="tech-pick-panel">
+  <div class="tech-overlay">
+    <div class="tech-overlay-header">
+      <i class="pi pi-users"></i>
+      <span>Choisir un technicien</span>
+    </div>
+
+    <div class="sage-picker-search">
+      <i class="pi pi-search"></i>
+      <input type="text"
+             [(ngModel)]="techSearch"
+             placeholder="Rechercher un technicien..." />
+      <button *ngIf="techSearch" class="clear" type="button" (click)="techSearch = ''">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="sage-picker-list">
+      <button *ngFor="let u of filteredTechs()"
+              type="button"
+              class="sage-tech-card val"
+              [class.is-selected]="activeHandoverId !== null && selectedTechId[activeHandoverId] === u.id"
+              (click)="selectTech(u.id, techPanel)">
+        <span class="sage-tech-avatar" [ngClass]="avatarTone(u)">{{ userInitials(u) }}</span>
+        <span class="sage-tech-info">
+          <span class="sage-tech-name">{{ userDisplay(u) }}</span>
+          <span class="sage-tech-sub">&#64;{{ u.username }}</span>
+        </span>
+        <span class="sage-tech-check">
+          <i class="pi"
+             [ngClass]="activeHandoverId !== null && selectedTechId[activeHandoverId] === u.id
+               ? 'pi-check-circle' : 'pi-plus-circle'"></i>
+        </span>
+      </button>
+    </div>
+
+    <div class="sage-picker-empty" *ngIf="filteredTechs().length === 0">
+      <i class="pi pi-inbox"></i>
+      <span *ngIf="techVals.length === 0">Aucun technicien disponible.</span>
+      <span *ngIf="techVals.length > 0">Aucun résultat pour « {{ techSearch }} »</span>
+    </div>
+  </div>
+</p-overlayPanel>
+
 <div class="page-container">
   <h2>File d'attente des passations</h2>
 
@@ -23,6 +68,7 @@
         <th pSortableColumn="validationId">Zone <p-sortIcon field="validationId"></p-sortIcon></th>
         <th>Technicien sortant</th>
         <th pSortableColumn="scheduledAt">Créé le <p-sortIcon field="scheduledAt"></p-sortIcon></th>
+        <th>Technicien entrant</th>
         <th>Actions</th>
       </tr>
     </ng-template>
@@ -32,19 +78,31 @@
         <td>{{ rowData.validationId }}</td>
         <td>{{ rowData.fromTechUsername }}</td>
         <td>{{ rowData.scheduledAt | date:'dd/MM/yyyy HH:mm' }}</td>
+
+        <!-- Tech picker cell -->
         <td>
-          <p-dropdown
-            [options]="techVals"
-            [(ngModel)]="selectedTechId[rowData.id]"
-            optionLabel="username"
-            optionValue="id"
-            placeholder="Choisir un tech"
-            [style]="{ 'width': '200px' }"
-            class="mr-2">
-          </p-dropdown>
+          <button type="button"
+                  class="tech-pick-btn"
+                  [class.has-selection]="!!selectedTechId[rowData.id]"
+                  (click)="openTechPanel($event, rowData.id, techPanel)">
+            <ng-container *ngIf="selectedTechId[rowData.id] as selId; else noSel">
+              <span class="sage-tech-avatar small"
+                    [ngClass]="avatarTone(getTech(selId))">{{ userInitials(getTech(selId)) }}</span>
+              <span class="pick-label">{{ userDisplay(getTech(selId)) }}</span>
+            </ng-container>
+            <ng-template #noSel>
+              <i class="pi pi-user-plus"></i>
+              <span class="pick-label muted">Choisir un technicien</span>
+            </ng-template>
+            <i class="pi pi-chevron-down chevron"></i>
+          </button>
+        </td>
+
+        <!-- Action buttons -->
+        <td class="actions-cell">
           <p-button
             label="Assigner"
-            icon="pi pi-user-plus"
+            icon="pi pi-check"
             (click)="assign(rowData.id)"
             [disabled]="!selectedTechId[rowData.id]"
             size="small"
@@ -53,7 +111,7 @@
           <p-button
             label="Annuler"
             icon="pi pi-times"
-            [severity]="'danger'"
+            severity="danger"
             (click)="confirmCancel(rowData.id)"
             size="small">
           </p-button>

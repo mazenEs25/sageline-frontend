@@ -276,20 +276,9 @@
   background: rgba(15, 23, 42, 0.4);
 }
 
-// ═══ OverlayPanel global overrides ═══
-:host ::ng-deep .p-overlaypanel {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
-  border: 1px solid #334155 !important;
-  border-radius: 14px !important;
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(59, 130, 246, 0.05) !important;
-  overflow: hidden;
-
-  &::before, &::after { display: none !important; }
-
-  .p-overlaypanel-content { padding: 0 !important; }
-}
+// ═══ OverlayPanel background is set globally in styles.scss ═══
+// (appendTo="body" moves the element outside :host, so ::ng-deep
+//  cannot reach it — the real override lives in .notif-overlay global rule)
 
 // Scope button refinements for the "Tout marquer lu" action in header
 :host ::ng-deep .notif-header .p-button.p-button-text {

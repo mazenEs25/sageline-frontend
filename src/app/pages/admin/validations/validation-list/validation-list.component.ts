@@ -57,7 +57,19 @@ export class ValidationListComponent implements OnInit {
 
   loadValidations(): void {
     this.loading = true;
-    this.validationService.getAll().subscribe({
+    // Role-based scoping: TECH_VAL / TECH_PREP only see tickets they're assigned to.
+    // ADMIN_IT / CHEF_SECTEUR / EXPERT see everything.
+    const roles = this.keycloak.getUserRoles();
+    const restrictedRole = !roles.includes('ADMIN_IT')
+      && !roles.includes('CHEF_SECTEUR')
+      && !roles.includes('EXPERT')
+      && (roles.includes('TECH_VAL') || roles.includes('TECH_PREP'));
+
+    const stream$ = restrictedRole
+      ? this.validationService.getMyTickets()
+      : this.validationService.getAll();
+
+    stream$.subscribe({
       next: (data) => {
         this.validations = data.sort(
           (a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()

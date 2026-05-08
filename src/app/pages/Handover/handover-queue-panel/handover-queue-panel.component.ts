@@ -19,6 +19,10 @@ export class HandoverQueuePanelComponent implements OnInit, OnDestroy {
   selectedTechId: { [key: number]: number } = {};
   loading = true;
   refreshing = false;
+
+  activeHandoverId: number | null = null;
+  techSearch = '';
+
   private secteurId = 0;
 
   constructor(
@@ -76,11 +80,11 @@ export class HandoverQueuePanelComponent implements OnInit, OnDestroy {
   }
 
   loadTechVals(): void {
-    this.userService.getByRole('TECH_VAL').subscribe({
+    this.userService.getAll().subscribe({
       next: (users) => {
-        this.techVals = users;
+        this.techVals = users.filter(u => u.role === 'TECH_VAL');
       },
-      error: (error) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Erreur',
@@ -89,6 +93,51 @@ export class HandoverQueuePanelComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  // ─── Tech picker overlay ──────────────────────────────────────────
+
+  openTechPanel(event: Event, handoverId: number, op: any): void {
+    this.activeHandoverId = handoverId;
+    this.techSearch = '';
+    op.toggle(event);
+  }
+
+  selectTech(userId: number, op: any): void {
+    if (this.activeHandoverId !== null) {
+      this.selectedTechId[this.activeHandoverId] = userId;
+    }
+    op.hide();
+  }
+
+  filteredTechs(): User[] {
+    const q = this.techSearch.trim().toLowerCase();
+    if (!q) return this.techVals;
+    return this.techVals.filter(u =>
+      (u.username || '').toLowerCase().includes(q) ||
+      (u.firstName || '').toLowerCase().includes(q) ||
+      (u.lastName || '').toLowerCase().includes(q));
+  }
+
+  getTech(id: number): User {
+    return this.techVals.find(u => u.id === id) ?? { id: 0, username: '?', role: 'TECH_VAL' } as User;
+  }
+
+  userInitials(u: User): string {
+    const first = (u.firstName || u.username || '?').charAt(0);
+    const second = (u.lastName || u.username?.charAt(1) || '').charAt(0);
+    return (first + second).toUpperCase();
+  }
+
+  userDisplay(u: User): string {
+    const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+    return name || u.username;
+  }
+
+  avatarTone(u: User): string {
+    return `tone-${(u.id ?? 0) % 8}`;
+  }
+
+  // ─── Actions ─────────────────────────────────────────────────────
 
   assign(handoverId: number): void {
     const techId = this.selectedTechId[handoverId];
