@@ -1,0 +1,8 @@
+<span class="measure-badge" [pTooltip]="MEASURE_CATEGORY_LABELS[category]" tooltipPosition="top">
+  <i [class]="MEASURE_CATEGORY_ICONS[category]"></i>
+  <code>{{ code }}</code>
+  <span class="badge-suffix" *ngIf="antenna || frequencyMhz != null">
+    <ng-container *ngIf="antenna">· {{ antenna }}</ng-container>
+    <ng-container *ngIf="frequencyMhz != null">· {{ frequencyMhz }} MHz</ng-container>
+  </span>
+</span>

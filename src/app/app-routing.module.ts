@@ -12,6 +12,7 @@ import { ZoneListComponent } from './pages/admin/zones/zone-list/zone-list.compo
 import { ZoneMapComponent } from './pages/admin/zones/zone-map/zone-map.component';
 import { SecteurListComponent } from './pages/admin/secteurs/secteur-list/secteur-list.component';
 import { PhaseListComponent } from './pages/admin/phases/phase-list/phase-list.component';
+import { PosteCatalogListComponent } from './pages/admin/poste-catalog/poste-catalog-list/poste-catalog-list.component';
 import { TicketListComponent } from './pages/Ticket/ticket-list/ticket-list.component';
 import { TicketCreateComponent } from './pages/Ticket/ticket-create/ticket-create.component';
 import { TicketDetailComponent } from './pages/Ticket/ticket-detail/ticket-detail.component';
@@ -49,6 +50,7 @@ const routes: Routes = [
       // Secteurs + Phases
       { path: 'admin/secteurs', component: SecteurListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT'] } },
       { path: 'admin/phases', component: PhaseListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT'] } },
+      { path: 'admin/poste-catalog', component: PosteCatalogListComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN_IT', 'CHEF_SECTEUR'] } },
 
       // Tickets (replaces old Validations routes)
       { path: 'validations', component: TicketListComponent, canActivate: [AuthGuard],

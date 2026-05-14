@@ -1,0 +1,184 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [style]="{ width: '640px' }"
+  [header]="initial ? 'Modifier la mesure' : 'Ajouter une mesure'"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-content">
+      <!-- PosteType -->
+      <div class="form-group">
+        <label for="posteType">Poste *</label>
+        <p-dropdown
+          id="posteType"
+          formControlName="posteType"
+          [options]="posteTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+          pTooltip="Sélectionner un type de poste"
+        ></p-dropdown>
+        <small class="p-error" *ngIf="form.get('posteType')?.hasError('required') && form.get('posteType')?.touched">
+          Le poste est requis
+        </small>
+      </div>
+
+      <!-- MeasureCode -->
+      <div class="form-group">
+        <label for="measureCode">Code *</label>
+        <p-inputText
+          id="measureCode"
+          formControlName="measureCode"
+          placeholder="Ex: WIFI_RSSI"
+        ></p-inputText>
+        <small class="p-error" *ngIf="form.get('measureCode')?.hasError('required') && form.get('measureCode')?.touched">
+          Le code est requis
+        </small>
+        <small class="p-error" *ngIf="form.get('measureCode')?.hasError('pattern') && form.get('measureCode')?.touched">
+          Le code doit contenir uniquement des majuscules, chiffres et tirets bas
+        </small>
+        <small class="p-error" *ngIf="form.get('measureCode')?.hasError('duplicate') && form.get('measureCode')?.touched">
+          Code déjà utilisé pour ce poste
+        </small>
+      </div>
+
+      <!-- MeasureLabel -->
+      <div class="form-group">
+        <label for="measureLabel">Libellé *</label>
+        <p-inputText
+          id="measureLabel"
+          formControlName="measureLabel"
+          placeholder="Ex: Signal RSSI"
+        ></p-inputText>
+        <small class="p-error" *ngIf="form.get('measureLabel')?.hasError('required') && form.get('measureLabel')?.touched">
+          Le libellé est requis
+        </small>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label for="category">Catégorie *</label>
+        <p-dropdown
+          id="category"
+          formControlName="category"
+          [options]="categoryOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></p-dropdown>
+        <small class="p-error" *ngIf="form.get('category')?.hasError('required') && form.get('category')?.touched">
+          La catégorie est requise
+        </small>
+      </div>
+
+      <!-- Unit -->
+      <div class="form-group">
+        <label for="defaultUnit">Unité *</label>
+        <p-inputText
+          id="defaultUnit"
+          formControlName="defaultUnit"
+          placeholder="Ex: dBm"
+        ></p-inputText>
+        <small class="p-error" *ngIf="form.get('defaultUnit')?.hasError('required') && form.get('defaultUnit')?.touched">
+          L'unité est requise
+        </small>
+      </div>
+
+      <!-- Bounds -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="defaultLowerBound">Borne inférieure *</label>
+          <p-inputNumber
+            id="defaultLowerBound"
+            formControlName="defaultLowerBound"
+            [useGrouping]="false"
+          ></p-inputNumber>
+          <small class="p-error" *ngIf="form.get('defaultLowerBound')?.hasError('required') && form.get('defaultLowerBound')?.touched">
+            La borne inférieure est requise
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="defaultUpperBound">Borne supérieure *</label>
+          <p-inputNumber
+            id="defaultUpperBound"
+            formControlName="defaultUpperBound"
+            [useGrouping]="false"
+          ></p-inputNumber>
+          <small class="p-error" *ngIf="form.get('defaultUpperBound')?.hasError('required') && form.get('defaultUpperBound')?.touched">
+            La borne supérieure est requise
+          </small>
+        </div>
+      </div>
+
+      <!-- Bounds Order Error -->
+      <small class="p-error" *ngIf="form.hasError('boundsOrder') && form.touched">
+        La borne supérieure doit être strictement supérieure à la borne inférieure
+      </small>
+
+      <!-- Mandatory -->
+      <div class="form-group">
+        <p-checkbox
+          formControlName="mandatory"
+          label="Obligatoire"
+        ></p-checkbox>
+      </div>
+
+      <!-- DisplayOrder -->
+      <div class="form-group">
+        <label for="displayOrder">Ordre d'affichage *</label>
+        <p-inputNumber
+          id="displayOrder"
+          formControlName="displayOrder"
+          [min]="0"
+          [useGrouping]="false"
+        ></p-inputNumber>
+        <small class="p-error" *ngIf="form.get('displayOrder')?.hasError('required') && form.get('displayOrder')?.touched">
+          L'ordre d'affichage est requis
+        </small>
+      </div>
+
+      <!-- Optional fields -->
+      <div class="form-group">
+        <label for="antenna">Antenne (optionnel)</label>
+        <p-inputText
+          id="antenna"
+          formControlName="antenna"
+          placeholder="Ex: ANT3"
+        ></p-inputText>
+      </div>
+
+      <div class="form-group">
+        <label for="frequencyMhz">Fréquence (MHz) (optionnel)</label>
+        <p-inputNumber
+          id="frequencyMhz"
+          formControlName="frequencyMhz"
+          [min]="0"
+          [useGrouping]="false"
+        ></p-inputNumber>
+      </div>
+
+      <div class="form-group">
+        <label for="modulationScheme">Schéma de modulation (optionnel)</label>
+        <p-inputText
+          id="modulationScheme"
+          formControlName="modulationScheme"
+        ></p-inputText>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Annuler"
+        icon="pi pi-times"
+        (onClick)="onCancel()"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        label="Enregistrer"
+        icon="pi pi-check"
+        [disabled]="form.invalid || submitting"
+        (onClick)="onSubmit()"
+      ></p-button>
+    </ng-template>
+  </form>
+</p-dialog>

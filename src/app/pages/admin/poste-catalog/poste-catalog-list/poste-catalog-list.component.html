@@ -1,0 +1,132 @@
+<div class="poste-catalog-container">
+  <h2>Catalogue des postes</h2>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <p-dropdown
+      [(ngModel)]="selectedPosteType"
+      [options]="posteTypeOptions"
+      optionLabel="label"
+      optionValue="value"
+      (onChange)="onPosteTypeChange()"
+    ></p-dropdown>
+
+    <p-checkbox
+      [(ngModel)]="includeInactive"
+      label="Inclure inactifs"
+      (onChange)="onIncludeInactiveChange()"
+    ></p-checkbox>
+
+    <div class="toolbar-actions">
+      <p-button
+        *ngIf="canMutate"
+        label="Ajouter une mesure"
+        icon="pi pi-plus"
+        (onClick)="openCreate()"
+      ></p-button>
+      <p-button
+        *ngIf="canMutate"
+        label="Import groupé"
+        icon="pi pi-upload"
+        severity="secondary"
+        (onClick)="openBulk()"
+      ></p-button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <p-table
+    [value]="entries"
+    [paginator]="true"
+    [rows]="25"
+    [rowsPerPageOptions]="[25, 50, 100]"
+    responsiveLayout="scroll"
+    [loading]="loading"
+    sortField="displayOrder"
+    [sortOrder]="1"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="displayOrder">Ordre <p-sortIcon field="displayOrder"></p-sortIcon></th>
+        <th>Code</th>
+        <th>Catégorie</th>
+        <th>Unité</th>
+        <th>Borne inf.</th>
+        <th>Borne sup.</th>
+        <th>Obligatoire</th>
+        <th *ngIf="canMutate">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>{{ row.displayOrder }}</td>
+        <td>
+          <app-measure-badge
+            [category]="row.category"
+            [code]="row.measureCode"
+            [antenna]="row.antenna"
+            [frequencyMhz]="row.frequencyMhz"
+          ></app-measure-badge>
+          <p-tag
+            severity="secondary"
+            value="Inactif"
+            *ngIf="!row.active"
+          ></p-tag>
+        </td>
+        <td>
+          <p-tag
+            [severity]="categoryColor(row)"
+            [value]="categoryLabel(row)"
+          ></p-tag>
+        </td>
+        <td>{{ row.defaultUnit }}</td>
+        <td>{{ row.defaultLowerBound }}</td>
+        <td>{{ row.defaultUpperBound }}</td>
+        <td>
+          <p-tag
+            [value]="row.mandatory ? 'Oui' : 'Non'"
+            [severity]="row.mandatory ? 'success' : 'secondary'"
+          ></p-tag>
+        </td>
+        <td *ngIf="canMutate">
+          <p-button
+            icon="pi pi-pencil"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="openEdit(row)"
+          ></p-button>
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="confirmDelete(row)"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr *ngIf="!loading">
+        <td [attr.colspan]="canMutate ? 8 : 7" class="text-center">
+          Aucune mesure configurée pour ce poste. Utilisez « Ajouter une mesure » pour commencer.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Dialogs -->
+  <app-poste-catalog-form
+    [(visible)]="dialogVisible"
+    [initial]="selectedEntry"
+    [lockedPosteType]="selectedPosteType"
+    (saved)="loadEntries()"
+  ></app-poste-catalog-form>
+
+  <app-poste-catalog-bulk-import
+    [(visible)]="bulkVisible"
+    (imported)="loadEntries()"
+  ></app-poste-catalog-bulk-import>
+
+  <p-confirmDialog></p-confirmDialog>
+</div>

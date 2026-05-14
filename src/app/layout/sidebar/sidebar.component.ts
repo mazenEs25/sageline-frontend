@@ -22,6 +22,7 @@ export class SidebarComponent implements OnInit {
         { label: 'Plan zones', icon: 'pi pi-map-marker', route: '/admin/zones/map', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
         { label: 'Secteurs', icon: 'pi pi-building', route: '/admin/secteurs', roles: ['ADMIN_IT'] },
         { label: 'Phases', icon: 'pi pi-sitemap', route: '/admin/phases', roles: ['ADMIN_IT'] },
+        { label: 'Catalogue postes', icon: 'pi pi-list', route: '/admin/poste-catalog', roles: ['ADMIN_IT', 'CHEF_SECTEUR'] },
 
       ]
     },

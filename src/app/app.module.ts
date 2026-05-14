@@ -60,6 +60,10 @@ import { HandoverAcceptPanelComponent } from './pages/Handover/handover-accept-p
 import { HandoverQueuePanelComponent } from './pages/Handover/handover-queue-panel/handover-queue-panel.component';
 import { HandoverBannerComponent } from './pages/Handover/handover-banner/handover-banner.component';
 import { HandoverTimelineComponent } from './pages/Handover/handover-timeline/handover-timeline.component';
+import { MeasureBadgeComponent } from './shared/components/measure-badge/measure-badge.component';
+import { PosteCatalogListComponent } from './pages/admin/poste-catalog/poste-catalog-list/poste-catalog-list.component';
+import { PosteCatalogFormComponent } from './pages/admin/poste-catalog/poste-catalog-form/poste-catalog-form.component';
+import { PosteCatalogBulkImportComponent } from './pages/admin/poste-catalog/poste-catalog-bulk-import/poste-catalog-bulk-import.component';
 
 @NgModule({
   declarations: [
@@ -111,7 +115,11 @@ import { HandoverTimelineComponent } from './pages/Handover/handover-timeline/ha
     HandoverAcceptPanelComponent,
     HandoverQueuePanelComponent,
     HandoverBannerComponent,
-    HandoverTimelineComponent
+    HandoverTimelineComponent,
+    MeasureBadgeComponent,
+    PosteCatalogListComponent,
+    PosteCatalogFormComponent,
+    PosteCatalogBulkImportComponent
   ],
   imports: [
     BrowserModule,
