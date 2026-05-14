@@ -1,0 +1,7 @@
+:host { display: inline-block; min-width: 8rem; }
+.dev-bar { position: relative; height: 1.25rem; background: var(--surface-200, #e0e0e0); border-radius: 4px; overflow: hidden; }
+.dev-fill { position: absolute; left: 0; top: 0; bottom: 0; }
+.dev-bar[data-band="green"] .dev-fill { background: var(--green-500, #22c55e); }
+.dev-bar[data-band="amber"] .dev-fill { background: var(--orange-500, #f59e0b); }
+.dev-bar[data-band="red"]   .dev-fill { background: var(--red-500,   #ef4444); }
+.dev-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono, 'JetBrains Mono'); font-size: 0.75rem; color: var(--text-color, #fff); }

@@ -1,0 +1,30 @@
+<p-dialog header="Ajouter une mesure" [(visible)]="visible" [modal]="true" [style]="{ width: '32rem' }" (onHide)="close()">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label>Modèle de mesure</label>
+      <p-dropdown [options]="templates" optionLabel="measureCode" optionValue="id" placeholder="Sélectionner un modèle"
+        [filter]="true" filterBy="measureCode,measureLabel"
+        formControlName="templateId" (onChange)="onTemplateChange($event.value)"></p-dropdown>
+    </div>
+
+    <ng-container *ngIf="selectedTemplate as t">
+      <div class="readonly-grid">
+        <div><label>Catégorie</label><div>{{ t.category }}</div></div>
+        <div><label>Unité</label><div>{{ t.defaultUnit }}</div></div>
+        <div><label>Borne basse</label><div>{{ t.defaultLowerBound }}</div></div>
+        <div><label>Borne haute</label><div>{{ t.defaultUpperBound }}</div></div>
+        <div *ngIf="t.antenna"><label>Antenne</label><div>{{ t.antenna }}</div></div>
+        <div *ngIf="t.frequencyMhz"><label>Fréquence (MHz)</label><div>{{ t.frequencyMhz }}</div></div>
+      </div>
+      <div class="field">
+        <label>Valeur mesurée</label>
+        <p-inputNumber formControlName="measuredValue" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
+      </div>
+    </ng-container>
+
+    <div class="dialog-footer">
+      <button pButton type="button" label="Annuler" class="p-button-text" (click)="close()"></button>
+      <button pButton type="submit" label="Enregistrer" [disabled]="form.invalid || submitting" [loading]="submitting"></button>
+    </div>
+  </form>
+</p-dialog>

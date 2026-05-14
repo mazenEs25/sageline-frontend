@@ -1,0 +1,5 @@
+.field { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
+.field label { font-size: 0.75rem; opacity: 0.8; }
+.readonly-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1rem; margin: 0.5rem 0; padding: 0.5rem; background: var(--surface-100, rgba(255,255,255,0.04)); border-radius: 4px; }
+.readonly-grid label { font-size: 0.7rem; opacity: 0.7; }
+.dialog-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem; }

@@ -64,6 +64,12 @@ import { MeasureBadgeComponent } from './shared/components/measure-badge/measure
 import { PosteCatalogListComponent } from './pages/admin/poste-catalog/poste-catalog-list/poste-catalog-list.component';
 import { PosteCatalogFormComponent } from './pages/admin/poste-catalog/poste-catalog-form/poste-catalog-form.component';
 import { PosteCatalogBulkImportComponent } from './pages/admin/poste-catalog/poste-catalog-bulk-import/poste-catalog-bulk-import.component';
+import { MeasureStatusBadgeComponent } from './shared/components/measure-status-badge/measure-status-badge.component';
+import { DeviationProgressComponent } from './shared/components/deviation-progress/deviation-progress.component';
+import { MeasureUnitPipe } from './shared/pipes/measure-unit.pipe';
+import { MeasurePanelComponent } from './pages/Ticket/measure-panel/measure-panel.component';
+import { AddMeasureDialogComponent } from './pages/Ticket/add-measure-dialog/add-measure-dialog.component';
+import { AddAdhocMeasureDialogComponent } from './pages/Ticket/add-adhoc-measure-dialog/add-adhoc-measure-dialog.component';
 
 @NgModule({
   declarations: [
@@ -119,7 +125,13 @@ import { PosteCatalogBulkImportComponent } from './pages/admin/poste-catalog/pos
     MeasureBadgeComponent,
     PosteCatalogListComponent,
     PosteCatalogFormComponent,
-    PosteCatalogBulkImportComponent
+    PosteCatalogBulkImportComponent,
+    DeviationProgressComponent,
+    MeasureStatusBadgeComponent,
+    MeasureUnitPipe,
+    MeasurePanelComponent,
+    AddMeasureDialogComponent,
+    AddAdhocMeasureDialogComponent
   ],
   imports: [
     BrowserModule,

@@ -14,6 +14,7 @@ import { SecteurService } from '../../../services/secteur.service';
 import { TicketService } from '../../../services/ticket.service';
 import { UserService } from '../../../services/user.service';
 import { ValidationZoneService } from '../../../services/validation-zone.service';
+import { ValidationMeasureService } from '../../../services/validation-measure.service';
 import { Priority } from '../../../shared/enums/ticket.enum';
 
 
@@ -83,7 +84,8 @@ export class TicketCreateComponent implements OnInit {
     private ticketService: TicketService,
     private userService: UserService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private measureService: ValidationMeasureService
   ) {}
 
   ngOnInit() {
@@ -325,6 +327,10 @@ export class TicketCreateComponent implements OnInit {
           severity: 'success',
           summary: 'Ticket Créé',
           detail: `Ticket ${result.ticketCode} créé avec succès`
+        });
+        this.measureService.fromCatalog(result.id).subscribe({
+          next: () => { /* seeded */ },
+          error: () => { /* non-blocking; user can still seed manually */ }
         });
         setTimeout(() => this.router.navigate(['/validations', result.id]), 1500);
       },

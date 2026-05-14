@@ -32,12 +32,6 @@
       <button *ngIf="canStartPrep()" pButton label="Démarrer Prép." icon="pi pi-wrench" class="p-button-warning" (click)="startPrep()"></button>
       <button *ngIf="canValidatePrep()" pButton label="Valider Outillage" icon="pi pi-check" class="p-button-info" (click)="showPrepDialog = true"></button>
       <button *ngIf="canStartValidation()" pButton label="Lancer Validation" icon="pi pi-play" class="p-button-success" (click)="startValidation()"></button>
-      <!-- Add Result button: only for TECH_VAL / CHEF_SECTEUR when EN_COURS -->
-      <button *ngIf="canAddResult()" pButton label="Ajouter résultat" icon="pi pi-plus-circle"
-              class="p-button-outlined p-button-info result-btn"
-              (click)="openResultDialog()"
-              pTooltip="Saisir une mesure de validation">
-      </button>
       <button *ngIf="canInitiateHandover()" pButton label="Initier la passation" icon="pi pi-arrows-h"
               class="p-button-warning p-button-outlined"
               (click)="showInitiateHandoverDialog = true"
@@ -172,6 +166,13 @@
         </div>
       </div>
 
+      <!-- Measures panel -->
+      <div class="sage-card">
+        <div class="sage-card-body">
+          <app-measure-panel [validationId]="ticket.id" [posteType]="ticket.posteType || null"></app-measure-panel>
+        </div>
+      </div>
+
       <!-- Planification card -->
       <div class="sage-card">
         <div class="sage-card-header">
@@ -297,31 +298,6 @@
         </div>
       </div>
 
-      <!-- Results summary -->
-      <div *ngIf="ticket.resultsCount" class="sage-card">
-        <div class="sage-card-header">
-          <div class="sage-card-title">
-            <i class="pi pi-chart-bar"></i>
-            <span>Résultats</span>
-          </div>
-        </div>
-        <div class="sage-card-body">
-          <div class="sage-stats">
-            <div class="sage-stat">
-              <div class="sage-stat-val">{{ ticket.resultsCount }}</div>
-              <div class="sage-stat-lbl">Total</div>
-            </div>
-            <div class="sage-stat success">
-              <div class="sage-stat-val">{{ ticket.conformCount }}</div>
-              <div class="sage-stat-lbl">Conforme</div>
-            </div>
-            <div class="sage-stat danger">
-              <div class="sage-stat-val">{{ ticket.nonConformCount }}</div>
-              <div class="sage-stat-lbl">Non conf.</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -383,114 +359,6 @@
   <ng-template pTemplate="footer">
     <button pButton label="Non" class="p-button-text" (click)="showCancelDialog = false"></button>
     <button pButton label="Confirmer l'annulation" icon="pi pi-ban" class="p-button-danger" (click)="cancelTicket()"></button>
-  </ng-template>
-</p-dialog>
-
-<!-- ===== Add Result Dialog (per-poste, batch-capable) ===== -->
-<p-dialog
-  [header]="resultRows.length > 1 ? ('Ajouter ' + resultRows.length + ' résultats de mesure') : 'Ajouter un résultat de mesure'"
-  [(visible)]="showResultDialog"
-  [modal]="true"
-  [style]="{width: '720px'}"
-  [draggable]="false"
-  [resizable]="false">
-
-  <div class="result-dialog-body">
-
-    <!-- Empty state if no assignable poste exists -->
-    <div *ngIf="posteOptions.length === 0" class="rd-empty">
-      <i class="pi pi-info-circle"></i>
-      Aucun poste disponible — tous les postes de cette ligne sont déjà clôturés.
-    </div>
-
-    <!-- Batch rows -->
-    <div *ngIf="posteOptions.length > 0" class="rd-rows">
-      <div *ngFor="let row of resultRows; let i = index; trackBy: trackByIndex"
-           class="rd-row-card">
-
-        <div class="rd-row-head">
-          <span class="rd-row-idx">#{{ i + 1 }}</span>
-          <button *ngIf="resultRows.length > 1"
-                  pButton type="button"
-                  icon="pi pi-trash"
-                  class="p-button-text p-button-danger p-button-sm rd-row-remove"
-                  (click)="removeResultRow(i)"
-                  pTooltip="Retirer cette ligne">
-          </button>
-        </div>
-
-        <!-- Poste picker -->
-        <div class="rd-field">
-          <label>Poste de la ligne <span class="rd-req">*</span></label>
-          <p-dropdown
-            [options]="posteOptions"
-            [(ngModel)]="row.zoneId"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Choisir un poste…"
-            [style]="{width: '100%'}"
-            appendTo="body">
-          </p-dropdown>
-        </div>
-
-        <!-- Parameter -->
-        <div class="rd-field">
-          <label>Paramètre mesuré <span class="rd-req">*</span></label>
-          <input pInputText type="text" [(ngModel)]="row.parameter"
-                 placeholder="ex: Signal WiFi 2.4GHz" class="w-full" />
-        </div>
-
-        <!-- Values side by side -->
-        <div class="rd-row">
-          <div class="rd-field">
-            <label>Valeur mesurée <span class="rd-req">*</span></label>
-            <input pInputText type="number" step="0.1" [(ngModel)]="row.measuredValue"
-                   placeholder="ex: -43.0" class="w-full" />
-          </div>
-          <div class="rd-field">
-            <label>Valeur attendue (seuil) <span class="rd-req">*</span></label>
-            <input pInputText type="number" step="0.1" [(ngModel)]="row.expectedValue"
-                   placeholder="ex: -50.0" class="w-full" />
-          </div>
-        </div>
-
-        <!-- Live conformity preview -->
-        <div class="rd-preview" *ngIf="rowIsConform(row) !== null">
-          <div [class]="rowIsConform(row) ? 'rd-conform' : 'rd-nonconform'">
-            <i [class]="rowIsConform(row) ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-            <span>{{ rowIsConform(row) ? 'Conforme (≤ 5% d\'écart)' : 'Non conforme (> 5% d\'écart)' }}</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Add row -->
-      <button pButton type="button"
-              icon="pi pi-plus"
-              label="Ajouter une ligne"
-              class="p-button-outlined p-button-sm rd-add-row"
-              (click)="addResultRow()">
-      </button>
-    </div>
-
-    <p class="rd-hint" *ngIf="posteOptions.length > 0">
-      <i class="pi pi-info-circle"></i>
-      Chaque mesure est rattachée à un poste de la ligne. La conformité est
-      calculée par le serveur (tolérance 5%).
-    </p>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button pButton label="Annuler" icon="pi pi-times" class="p-button-text"
-            (click)="showResultDialog = false" [disabled]="savingResult">
-    </button>
-    <button pButton
-            [label]="resultRows.length > 1 ? 'Enregistrer (' + resultRows.length + ')' : 'Enregistrer'"
-            icon="pi pi-check"
-            [loading]="savingResult"
-            [disabled]="posteOptions.length === 0 || !allRowsValid"
-            (click)="saveResult()">
-    </button>
   </ng-template>
 </p-dialog>
 

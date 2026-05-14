@@ -1,0 +1,50 @@
+<p-dialog header="Ajouter une mesure ad-hoc" [(visible)]="visible" [modal]="true" [style]="{ width: '32rem' }" (onHide)="close()">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label>Code mesure *</label>
+      <input pInputText formControlName="measureCode" placeholder="ex: VOLT_LINE1" />
+    </div>
+    <div class="field">
+      <label>Libellé *</label>
+      <input pInputText formControlName="measureLabel" placeholder="ex: Tension ligne 1" />
+    </div>
+    <div class="field">
+      <label>Catégorie *</label>
+      <p-dropdown [options]="categoryOptions" optionLabel="label" optionValue="value" formControlName="category"></p-dropdown>
+    </div>
+    <div class="field">
+      <label>Unité *</label>
+      <input pInputText formControlName="unit" placeholder="ex: V, A, dBm" />
+    </div>
+    <div class="field">
+      <label>Borne basse *</label>
+      <p-inputNumber formControlName="lowerBound" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label>Borne haute *</label>
+      <p-inputNumber formControlName="upperBound" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
+      <small *ngIf="form.errors?.['bounds']" class="p-error">La borne basse doit être strictement inférieure à la borne haute.</small>
+    </div>
+    <div class="field">
+      <label>Antenne</label>
+      <input pInputText formControlName="antenna" placeholder="optionnel" />
+    </div>
+    <div class="field">
+      <label>Fréquence (MHz)</label>
+      <p-inputNumber formControlName="frequencyMhz" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label>Schéma modulation</label>
+      <input pInputText formControlName="modulationScheme" placeholder="optionnel" />
+    </div>
+    <div class="field">
+      <label>Valeur mesurée *</label>
+      <p-inputNumber formControlName="measuredValue" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
+    </div>
+
+    <div class="dialog-footer">
+      <button pButton type="button" label="Annuler" class="p-button-text" (click)="close()"></button>
+      <button pButton type="submit" label="Enregistrer" [disabled]="form.invalid || submitting" [loading]="submitting"></button>
+    </div>
+  </form>
+</p-dialog>

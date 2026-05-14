@@ -1,0 +1,50 @@
+<p-toast></p-toast>
+<div class="panel-header">
+  <h3>Mesures</h3>
+  <p-dropdown [options]="STATUS_OPTIONS" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Filtrer par statut"></p-dropdown>
+  <ng-container *ngIf="canMutate">
+    <button pButton *ngIf="!bulkEditMode" type="button" label="Édition groupée" icon="pi pi-pencil" (click)="enterBulkEdit()"></button>
+    <button pButton *ngIf="bulkEditMode" type="button" label="Enregistrer tout" icon="pi pi-check" [loading]="savingBatch" (click)="saveBulk()"></button>
+    <button pButton *ngIf="bulkEditMode" type="button" label="Annuler" class="p-button-text" (click)="cancelBulkEdit()"></button>
+  </ng-container>
+  <button pButton *ngIf="canInstantiate" type="button" label="Instancier toutes les mesures" icon="pi pi-list" [loading]="seeding" (click)="instantiateAll()"></button>
+  <button pButton *ngIf="canMutate && !bulkEditMode" type="button" label="Ajouter mesure" icon="pi pi-plus" (click)="openAddMeasure()"></button>
+  <button pButton *ngIf="canAddAdhoc" type="button" label="Ajouter mesure ad-hoc" icon="pi pi-plus-circle" class="p-button-secondary" (click)="openAddAdhoc()"></button>
+</div>
+
+<p-table [value]="filteredMeasures" [loading]="loading" [paginator]="false" styleClass="p-datatable-sm">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Code</th>
+      <th>Valeur</th>
+      <th>Tolérance</th>
+      <th>Statut</th>
+      <th>Déviation</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-m>
+    <tr>
+      <td>
+        <app-measure-badge [category]="m.category" [code]="m.measureCode" [antenna]="m.antenna" [frequencyMhz]="m.frequencyMhz"></app-measure-badge>
+        <span *ngIf="!m.catalogTemplateId" class="adhoc-tag" title="Mesure ad-hoc">ad-hoc</span>
+      </td>
+      <td>
+        <ng-container *ngIf="!bulkEditMode">{{ m.measuredValue | measureUnit:m.unit }}</ng-container>
+        <ng-container *ngIf="bulkEditMode">
+          <p-inputNumber [(ngModel)]="drafts[m.id]" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4" [size]="8"></p-inputNumber>
+          <div class="row-error" *ngIf="rowErrors[m.id]">{{ rowErrors[m.id] }}</div>
+        </ng-container>
+      </td>
+      <td>[{{ m.lowerBound | measureUnit:m.unit }} ; {{ m.upperBound | measureUnit:m.unit }}]</td>
+      <td><app-measure-status-badge [status]="m.status"></app-measure-status-badge></td>
+      <td><app-deviation-progress [deviationPct]="m.deviationPct"></app-deviation-progress></td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr><td colspan="5">Aucune mesure pour ce ticket.</td></tr>
+  </ng-template>
+</p-table>
+
+<app-add-measure-dialog [(visible)]="addMeasureVisible" [validationId]="validationId" [posteType]="posteType" (created)="onMeasureCreated()"></app-add-measure-dialog>
+
+<app-add-adhoc-measure-dialog [(visible)]="addAdhocVisible" [validationId]="validationId" (created)="onMeasureCreated()"></app-add-adhoc-measure-dialog>
