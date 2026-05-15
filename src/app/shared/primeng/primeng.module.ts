@@ -36,6 +36,7 @@ import { SortIcon } from 'primeng/table';
 import { MessageModule } from 'primeng/message';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { SidebarModule } from 'primeng/sidebar';
 
 const MODULES = [
   TableModule, ButtonModule, InputTextModule, DropdownModule,
@@ -46,7 +47,7 @@ const MODULES = [
   ProgressSpinnerModule, OverlayPanelModule, ScrollPanelModule,
   StepsModule, TimelineModule, RadioButtonModule, CalendarModule, ListboxModule,
   InputNumberModule, TabViewModule, MultiSelectModule, MessageModule,
-  CheckboxModule, ProgressBarModule,
+  CheckboxModule, ProgressBarModule, SidebarModule,
 ];
 
 @NgModule({

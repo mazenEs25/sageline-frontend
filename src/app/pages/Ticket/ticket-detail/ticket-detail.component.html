@@ -36,7 +36,7 @@
               class="p-button-warning p-button-outlined"
               (click)="showInitiateHandoverDialog = true"
               pTooltip="Transférer ce ticket à un autre technicien"></button>
-      <button *ngIf="canSubmitReview()" pButton label="Soumettre Revue" icon="pi pi-send" class="p-button-help" (click)="submitForReview()"></button>
+      <button *ngIf="canSubmitReview()" pButton [disabled]="isSubmitDisabled" [label]="submitLabel" icon="pi pi-send" class="p-button-help" (click)="submitForReview()"></button>
       <button *ngIf="canClose()" pButton label="Clôturer" icon="pi pi-lock" (click)="showCloseDialog = true"></button>
       <button *ngIf="canCancel()" pButton label="Annuler" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="showCancelDialog = true"></button>
     </div>
@@ -166,12 +166,36 @@
         </div>
       </div>
 
+      <!-- Readiness bar -->
+      <div class="sage-card">
+        <div class="sage-card-body">
+          <app-workflow-readiness-bar
+            [readiness]="readiness"
+            [wsConnected]="wsConnected"
+            (panelToggleRequested)="sidePanelOpen = !sidePanelOpen"
+            (refreshRequested)="onRefreshReadiness()"
+          ></app-workflow-readiness-bar>
+        </div>
+      </div>
+
       <!-- Measures panel -->
       <div class="sage-card">
         <div class="sage-card-body">
-          <app-measure-panel [validationId]="ticket.id" [posteType]="ticket.posteType || null"></app-measure-panel>
+          <app-measure-panel
+            [validationId]="ticket.id"
+            [posteType]="ticket.posteType || null"
+            (measuresChanged)="onMeasuresChanged()"
+          ></app-measure-panel>
         </div>
       </div>
+
+      <!-- Readiness side panel -->
+      <app-workflow-readiness-panel
+        [(visible)]="sidePanelOpen"
+        [readiness]="readiness"
+        (missingMeasureClicked)="onMissingMeasureClicked($event)"
+        (outOfRangeMeasureClicked)="onOutOfRangeMeasureClicked($event)"
+      ></app-workflow-readiness-panel>
 
       <!-- Planification card -->
       <div class="sage-card">

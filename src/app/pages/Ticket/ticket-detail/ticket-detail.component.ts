@@ -1,11 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, auditTime, Subject } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { AuthService } from '../../../auth/auth.service';
 import { PosteStatus, Validation } from '../../../models/validation.model';
-import { TicketService } from '../../../services/ticket.service';
+import { TicketService, WorkflowReadinessBlockedError } from '../../../services/ticket.service';
 import { WebSocketService } from '../../../services/websocket.service';
+import { WorkflowReadiness } from '../../../models/workflow-readiness.model';
+import { MeasurePanelComponent } from '../measure-panel/measure-panel.component';
+import { WorkflowReadinessMissingMeasure, WorkflowReadinessOutOfRangeMeasure } from '../../../models/workflow-readiness.model';
 
 
 @Component({
@@ -46,6 +49,17 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
   private wsTopic: string | null = null;
   private wsSubscription?: Subscription;
 
+  // Readiness bar and side panel (Phase 003)
+  readiness: WorkflowReadiness | null = null;
+  wsConnected = true;
+  sidePanelOpen = false;
+  private readinessSub: Subscription | null = null;
+  private connectedSub: Subscription | null = null;
+  private readinessUpdate$ = new Subject<WorkflowReadiness>();
+  private lastBlockedToastAt = 0;
+
+  @ViewChild(MeasurePanelComponent) measurePanel?: MeasurePanelComponent;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -66,6 +80,17 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
         this.loadTicket();
       }
     });
+
+    this.loadReadiness();
+    this.subscribeReadinessTopic();
+
+    this.connectedSub = this.wsService.isConnected$.subscribe(
+      (connected: boolean) => (this.wsConnected = connected)
+    );
+
+    this.readinessSub = this.readinessUpdate$
+      .pipe(auditTime(200))
+      .subscribe((r: WorkflowReadiness) => (this.readiness = r));
   }
 
   ngOnDestroy() {
@@ -74,6 +99,9 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
       this.wsTopic = null;
     }
     this.wsSubscription?.unsubscribe();
+    this.readinessSub?.unsubscribe();
+    this.connectedSub?.unsubscribe();
+    this.wsService.unsubscribe(`/topic/validation/${this.ticketId}/readiness`);
   }
 
   /**
@@ -92,6 +120,20 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
         this.loadTicket();
       }
     });
+  }
+
+  private loadReadiness(): void {
+    this.ticketService.getReadiness(this.ticketId).subscribe({
+      next: (r) => (this.readiness = r),
+      error: () => (this.readiness = null),
+    });
+  }
+
+  private subscribeReadinessTopic(): void {
+    this.wsService.subscribe(
+      `/topic/validation/${this.ticketId}/readiness`,
+      (payload: WorkflowReadiness) => this.readinessUpdate$.next(payload)
+    );
   }
 
   loadTicket() {
@@ -132,14 +174,44 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  onSubmitForReview(): void {
+    this.ticketService.submitForReview(this.ticketId).subscribe({
+      next: (updated) => {
+        // existing post-submit UX (status refresh, navigate, toast, etc.)
+        this.success('Soumis pour revue');
+        this.loadTicket();
+      },
+      error: (err) => this.handleSubmitError(err),
+    });
+  }
+
+  private handleSubmitError(err: unknown): void {
+    if (err instanceof WorkflowReadinessBlockedError) {
+      this.readiness = err.readiness;
+      this.sidePanelOpen = true;
+      const now = Date.now();
+      if (now - this.lastBlockedToastAt >= 3000) {
+        this.lastBlockedToastAt = now;
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Submission blocked',
+          detail: err.readiness.blockingReasons?.[0] ?? 'Mandatory measures missing.',
+        });
+      }
+      return;
+    }
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to submit ticket for review.',
+    });
+  }
+
   submitForReview() {
     this.confirmationService.confirm({
       message: 'Soumettre ce ticket pour revue ? Cette action est irréversible.',
       accept: () => {
-        this.ticketService.submitForReview(this.ticketId).subscribe({
-          next: () => { this.success('Soumis pour revue'); this.loadTicket(); },
-          error: (err) => this.error(err)
-        });
+        this.onSubmitForReview();
       }
     });
   }
@@ -192,6 +264,36 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     return (this.ticket?.assignments ?? []).some(
       a => a.userId === myId && a.status === 'EN_COURS'
     );
+  }
+
+  // ===== WORKFLOW READINESS (Phase 003) =====
+
+  get isSubmitDisabled(): boolean {
+    return !this.readiness || this.readiness.canTransition === false;
+  }
+
+  get submitLabel(): string {
+    if (!this.readiness) return 'Loading…';
+    if (this.readiness.canTransition) return 'Submit for review';
+    return `Submit for review (${this.readiness.mandatoryFilled}/${this.readiness.mandatoryTotal})`;
+  }
+
+  onRefreshReadiness(): void {
+    this.loadReadiness();
+  }
+
+  onMeasuresChanged(): void {
+    if (!this.wsConnected) {
+      this.loadReadiness();
+    }
+  }
+
+  onMissingMeasureClicked(m: WorkflowReadinessMissingMeasure): void {
+    this.measurePanel?.scrollToMeasureCode(m.measureCode);
+  }
+
+  onOutOfRangeMeasureClicked(m: WorkflowReadinessOutOfRangeMeasure): void {
+    this.measurePanel?.scrollToMeasureCode(m.measureCode);
   }
 
   // ===== POSTE SUB-STATUS MANAGEMENT (2026-04 line-ticket model) =====

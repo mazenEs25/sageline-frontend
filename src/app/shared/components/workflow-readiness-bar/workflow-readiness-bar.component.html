@@ -1,0 +1,43 @@
+<div class="readiness-bar" [class.is-clickable]="readiness">
+  <ng-container *ngIf="!readiness; else loadedTpl">
+    <p-skeleton height="2.5rem" width="100%"></p-skeleton>
+  </ng-container>
+
+  <ng-template #loadedTpl>
+    <div
+      class="bar-body"
+      [class.band-red]="colorBand === 'red'"
+      [class.band-amber]="colorBand === 'amber'"
+      [class.band-green]="colorBand === 'green'"
+      [class.band-gray]="colorBand === 'gray'"
+      [pTooltip]="tooltipText"
+      tooltipPosition="bottom"
+      (click)="onBarClick()"
+    >
+      <p-progressBar
+        [value]="fillRatio"
+        [showValue]="false"
+        class="readiness-progress"
+      ></p-progressBar>
+
+      <span class="readiness-label" aria-live="polite" aria-atomic="true">
+        <ng-container *ngIf="readiness!.mandatoryTotal === 0; else countTpl">
+          No mandatory measures defined for this zone
+        </ng-container>
+        <ng-template #countTpl>
+          {{ readiness!.mandatoryFilled }} / {{ readiness!.mandatoryTotal }}
+          ({{ percentage }}%) — {{ ariaText }}
+        </ng-template>
+      </span>
+
+      <span
+        *ngIf="pausedIndicatorVisible"
+        class="paused-chip"
+        aria-label="Live updates paused"
+      >
+        <i class="pi pi-bolt"></i> live updates paused
+        <a class="refresh-link" (click)="onRefreshClick($event)">Refresh</a>
+      </span>
+    </div>
+  </ng-template>
+</div>

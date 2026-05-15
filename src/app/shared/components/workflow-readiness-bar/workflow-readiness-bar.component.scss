@@ -1,0 +1,49 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.readiness-bar {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--sage-surface-2, #1f2937);
+
+  &.is-clickable .bar-body {
+    cursor: pointer;
+  }
+}
+
+.bar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.readiness-label {
+  font-family: var(--sage-font-ui, 'DM Sans'), sans-serif;
+  font-size: 0.875rem;
+  color: var(--sage-text-primary, #e5e7eb);
+}
+
+.paused-chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--sage-warning-bg, rgba(234, 179, 8, 0.15));
+  color: var(--sage-warning-fg, #facc15);
+  font-size: 0.75rem;
+
+  .refresh-link {
+    color: var(--sage-link, #60a5fa);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.band-red ::ng-deep .p-progressbar .p-progressbar-value { background: var(--sage-danger, #ef4444); }
+.band-amber ::ng-deep .p-progressbar .p-progressbar-value { background: var(--sage-warning, #f59e0b); }
+.band-green ::ng-deep .p-progressbar .p-progressbar-value { background: var(--sage-success, #10b981); }
+.band-gray ::ng-deep .p-progressbar .p-progressbar-value { background: var(--sage-muted, #6b7280); }

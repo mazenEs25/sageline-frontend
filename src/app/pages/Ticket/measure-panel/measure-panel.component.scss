@@ -2,3 +2,8 @@
 .panel-header h3 { margin: 0; font-family: var(--font-ui, 'DM Sans'); }
 .row-error { color: var(--red-500, #ef4444); font-size: 0.75rem; margin-top: 0.25rem; }
 .adhoc-tag { margin-left: 0.5rem; padding: 0.1rem 0.4rem; font-size: 0.65rem; background: var(--surface-300, #555); border-radius: 4px; }
+
+tr.is-highlighted {
+  background: var(--sage-highlight, rgba(255, 193, 7, 0.18)) !important;
+  transition: background 0.3s ease-out;
+}

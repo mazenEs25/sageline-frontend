@@ -23,7 +23,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-m>
-    <tr>
+    <tr [attr.data-measure-code]="m.measureCode">
       <td>
         <app-measure-badge [category]="m.category" [code]="m.measureCode" [antenna]="m.antenna" [frequencyMhz]="m.frequencyMhz"></app-measure-badge>
         <span *ngIf="!m.catalogTemplateId" class="adhoc-tag" title="Mesure ad-hoc">ad-hoc</span>

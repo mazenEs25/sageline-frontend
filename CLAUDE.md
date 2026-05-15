@@ -77,3 +77,13 @@ All services in `src/app/services/` use `HttpClient` with `environment.apiUrl` a
 
 ### Styling
 SCSS with global PrimeNG theme overrides in `src/styles.scss`. Uses `lara-dark-blue` PrimeNG theme. Custom CSS variables prefixed `--sage-*` on `:root`. Fonts: DM Sans (UI text), JetBrains Mono (monospace). Component prefix: `app`.
+
+<!-- SPECKIT START -->
+## Active SpecKit feature
+
+- **Phase 003 — Workflow Guard (Frontend)**: `spec-RealMesure/specs/003-workflow-guard-frontend/plan.md`
+  - Spec: `spec-RealMesure/specs/003-workflow-guard-frontend/spec.md`
+  - Contract: `spec-RealMesure/specs/003-workflow-guard-frontend/contracts/workflow-readiness-api.md`
+  - Data model: `spec-RealMesure/specs/003-workflow-guard-frontend/data-model.md`
+  - Quickstart: `spec-RealMesure/specs/003-workflow-guard-frontend/quickstart.md`
+<!-- SPECKIT END -->

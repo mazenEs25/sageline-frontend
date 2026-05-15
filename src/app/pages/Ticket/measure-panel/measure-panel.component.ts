@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ValidationMeasureService } from '../../../services/validation-measure.service';
 import { ValidationMeasure } from '../../../models/validation-measure.model';
@@ -17,6 +17,7 @@ import { BatchUpdateValidationMeasureItem, BatchValidationMeasureResponse } from
 export class MeasurePanelComponent implements OnChanges {
   @Input() validationId!: number;
   @Input() posteType: string | null = null;
+  @Output() measuresChanged = new EventEmitter<void>();
 
   measures: ValidationMeasure[] = [];
   loading = false;
@@ -50,12 +51,26 @@ export class MeasurePanelComponent implements OnChanges {
   refresh(): void {
     this.loading = true;
     this.measureService.list(this.validationId).subscribe({
-      next: (data) => { this.measures = data; this.loading = false; },
+      next: (data) => {
+        this.measures = data;
+        this.loading = false;
+        this.measuresChanged.emit();
+      },
       error: () => {
         this.loading = false;
         this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les mesures.' });
       }
     });
+  }
+
+  scrollToMeasureCode(code: string): void {
+    const row = document.querySelector<HTMLTableRowElement>(
+      `tr[data-measure-code="${code}"]`
+    );
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('is-highlighted');
+    setTimeout(() => row.classList.remove('is-highlighted'), 1500);
   }
 
   get filteredMeasures(): ValidationMeasure[] {

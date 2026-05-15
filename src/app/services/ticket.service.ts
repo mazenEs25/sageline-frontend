@@ -1,10 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Validation, PosteCompleteRequest } from '../models/validation.model';
 import { TicketCreateRequest, TicketWeekPlanRequest, PrepValidationRequest, TicketCloseRequest } from '../models/ticket.model';
 import { TicketStatus } from '../shared/enums/ticket.enum';
+import { WorkflowReadiness } from '../models/workflow-readiness.model';
+
+export class WorkflowReadinessBlockedError extends Error {
+  override readonly name = 'WorkflowReadinessBlockedError';
+  constructor(public readonly readiness: WorkflowReadiness) {
+    super(readiness.blockingReasons?.[0] ?? 'Workflow transition blocked');
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class TicketService {
@@ -45,6 +54,14 @@ export class TicketService {
     return this.http.get<Validation[]>(`${this.apiUrl}/week/${date}`);
   }
 
+  getReadiness(ticketId: number, targetStatus?: TicketStatus): Observable<WorkflowReadiness> {
+    let params = new HttpParams();
+    if (targetStatus) {
+      params = params.set('targetStatus', targetStatus);
+    }
+    return this.http.get<WorkflowReadiness>(`${this.apiUrl}/${ticketId}/readiness`, { params });
+  }
+
   // ===== CREATION =====
   create(dto: TicketCreateRequest): Observable<Validation> {
     return this.http.post<Validation>(this.apiUrl, dto);
@@ -68,7 +85,20 @@ export class TicketService {
   }
 
   submitForReview(id: number): Observable<Validation> {
-    return this.http.patch<Validation>(`${this.apiUrl}/${id}/submit-review`, {});
+    return this.http.patch<Validation>(`${this.apiUrl}/${id}/submit-review`, {}).pipe(
+      catchError((err: unknown) => {
+        if (
+          err instanceof HttpErrorResponse &&
+          err.status === 422 &&
+          err.error &&
+          typeof err.error === 'object' &&
+          err.error.canTransition === false
+        ) {
+          return throwError(() => new WorkflowReadinessBlockedError(err.error as WorkflowReadiness));
+        }
+        return throwError(() => err);
+      })
+    );
   }
 
   closeTicket(id: number, dto: TicketCloseRequest): Observable<Validation> {

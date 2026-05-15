@@ -18,7 +18,13 @@
       "Bash(Test-Path *)",
       "PowerShell(& \".\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
       "Bash(timeout 60 ng serve --poll 2000)",
-      "Bash(pkill -f \"ng serve\")"
+      "Bash(pkill -f \"ng serve\")",
+      "PowerShell(& \"C:/Users/mouaf/OneDrive/Bureau/stagePFE/PROJECT/Sageline/sageline-frontend/spec-RealMesure/.specify/extensions/git/scripts/powershell/create-new-feature.ps1\" -Json -ShortName \"workflow-guard-frontend\" \"Phase 003 Workflow Guard frontend deliverables\")",
+      "PowerShell(& \"C:/Users/mouaf/OneDrive/Bureau/stagePFE/PROJECT/Sageline/sageline-frontend/spec-RealMesure/.specify/scripts/powershell/setup-plan.ps1\" -Json)",
+      "PowerShell(& \"C:/Users/mouaf/OneDrive/Bureau/stagePFE/PROJECT/Sageline/sageline-frontend/spec-RealMesure/.specify/scripts/powershell/setup-tasks.ps1\" -Json)",
+      "Bash(powershell -File .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
+      "Bash(npm run *)",
+      "PowerShell(Set-Content *)"
     ]
   }
 }

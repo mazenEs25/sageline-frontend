@@ -70,6 +70,8 @@ import { MeasureUnitPipe } from './shared/pipes/measure-unit.pipe';
 import { MeasurePanelComponent } from './pages/Ticket/measure-panel/measure-panel.component';
 import { AddMeasureDialogComponent } from './pages/Ticket/add-measure-dialog/add-measure-dialog.component';
 import { AddAdhocMeasureDialogComponent } from './pages/Ticket/add-adhoc-measure-dialog/add-adhoc-measure-dialog.component';
+import { WorkflowReadinessBarComponent } from './shared/components/workflow-readiness-bar/workflow-readiness-bar.component';
+import { WorkflowReadinessPanelComponent } from './shared/components/workflow-readiness-panel/workflow-readiness-panel.component';
 
 @NgModule({
   declarations: [
@@ -131,7 +133,9 @@ import { AddAdhocMeasureDialogComponent } from './pages/Ticket/add-adhoc-measure
     MeasureUnitPipe,
     MeasurePanelComponent,
     AddMeasureDialogComponent,
-    AddAdhocMeasureDialogComponent
+    AddAdhocMeasureDialogComponent,
+    WorkflowReadinessBarComponent,
+    WorkflowReadinessPanelComponent
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,51 @@
+<p-sidebar
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  position="right"
+  [modal]="false"
+  [style]="{ width: '28rem' }"
+  styleClass="readiness-side-panel"
+>
+  <ng-template pTemplate="header">
+    <h3>Workflow blockers</h3>
+  </ng-template>
+
+  <div *ngIf="isEmpty" class="empty-state">
+    <i class="pi pi-check-circle"></i>
+    All mandatory measures complete.
+  </div>
+
+  <ng-container *ngIf="!isEmpty && readiness">
+    <section *ngIf="readiness.missingMeasures.length > 0">
+      <h4>Missing mandatory measures ({{ readiness.missingMeasures.length }})</h4>
+      <ul class="row-list">
+        <li
+          *ngFor="let m of readiness.missingMeasures"
+          class="row missing"
+          (click)="onMissingClick(m)"
+        >
+          <span class="code">{{ m.measureCode }}</span>
+          <span class="label">{{ m.label }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section *ngIf="readiness.outOfRangeMeasures.length > 0">
+      <h4>Out-of-range measures ({{ readiness.outOfRangeMeasures.length }})</h4>
+      <ul class="row-list">
+        <li
+          *ngFor="let m of readiness.outOfRangeMeasures"
+          class="row out-of-range"
+          (click)="onOutOfRangeClick(m)"
+        >
+          <span class="code">{{ m.measureCode }}</span>
+          <span class="value">
+            {{ m.measuredValue }} {{ m.unit }}
+            <small>[{{ m.lowerBound }} … {{ m.upperBound }}]</small>
+            <small>({{ m.deviationPct | number:'1.0-1' }}%)</small>
+          </span>
+        </li>
+      </ul>
+    </section>
+  </ng-container>
+</p-sidebar>
