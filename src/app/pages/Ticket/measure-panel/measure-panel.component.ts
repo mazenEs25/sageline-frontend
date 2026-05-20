@@ -17,6 +17,14 @@ import { BatchUpdateValidationMeasureItem, BatchValidationMeasureResponse } from
 export class MeasurePanelComponent implements OnChanges {
   @Input() validationId!: number;
   @Input() posteType: string | null = null;
+  /**
+   * When set, the panel scopes its list to a single poste of the line — calling
+   * {@code GET /api/validations/{id}/postes/{zoneId}/measures} instead of the
+   * ticket-level list. Writes still go through the ticket-level POST (backend
+   * resolves the right posteStatus from the catalog template's posteType).
+   * Added with the Phase D per-poste UI rewrite.
+   */
+  @Input() zoneId: number | null = null;
   @Output() measuresChanged = new EventEmitter<void>();
 
   measures: ValidationMeasure[] = [];
@@ -29,6 +37,12 @@ export class MeasurePanelComponent implements OnChanges {
   drafts: Record<number, number | null> = {};
   rowErrors: Record<number, string> = {};
   savingBatch = false;
+  snippetVisible = false;
+  snippetMeasureId: number | null = null;
+
+  // Edit-measure dialog state
+  editMeasureVisible = false;
+  editingMeasure: ValidationMeasure | null = null;
 
   readonly STATUS_LABELS = MEASURE_STATUS_LABELS;
   readonly STATUS_OPTIONS: { label: string; value: 'ALL' | MeasureStatus }[] = [
@@ -45,16 +59,36 @@ export class MeasurePanelComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['validationId'] && this.validationId) this.refresh();
+    // Refresh on either validationId OR zoneId change so a per-poste panel
+    // reloads when the user expands a different poste's drawer.
+    // NOTE: initial load must NOT emit measuresChanged — otherwise the parent
+    // calls silentReloadTicket(), which replaces this.ticket, which re-creates
+    // the panel, which fires ngOnChanges again → infinite flicker loop.
+    if ((changes['validationId'] || changes['zoneId']) && this.validationId) {
+      this.refresh(false);
+    }
   }
 
-  refresh(): void {
+  /**
+   * Reload measures from the API.
+   * @param emitChange  When true, emits {@link measuresChanged} after load.
+   *                    Pass true after mutations (add/edit/delete/seed) so the
+   *                    parent can refresh readiness and poste counts.
+   *                    Pass false for the initial load triggered by ngOnChanges
+   *                    to avoid a parent → child → parent infinite loop.
+   */
+  refresh(emitChange = true): void {
     this.loading = true;
-    this.measureService.list(this.validationId).subscribe({
+    const source$ = this.zoneId
+      ? this.measureService.listByPoste(this.validationId, this.zoneId)
+      : this.measureService.list(this.validationId);
+    source$.subscribe({
       next: (data) => {
         this.measures = data;
         this.loading = false;
-        this.measuresChanged.emit();
+        if (emitChange) {
+          this.measuresChanged.emit();
+        }
       },
       error: () => {
         this.loading = false;
@@ -64,18 +98,27 @@ export class MeasurePanelComponent implements OnChanges {
   }
 
   scrollToMeasureCode(code: string): void {
-    const row = document.querySelector<HTMLTableRowElement>(
-      `tr[data-measure-code="${code}"]`
+    const target = document.querySelector<HTMLElement>(
+      `[data-measure-code="${code}"]`
     );
-    if (!row) return;
-    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    row.classList.add('is-highlighted');
-    setTimeout(() => row.classList.remove('is-highlighted'), 1500);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.add('is-highlighted');
+    setTimeout(() => target.classList.remove('is-highlighted'), 1500);
   }
 
   get filteredMeasures(): ValidationMeasure[] {
     if (this.statusFilter === 'ALL') return this.measures;
     return this.measures.filter(m => m.status === this.statusFilter);
+  }
+
+  /** Header stats — small badges shown above the table. */
+  get stats(): { total: number; ok: number; outOfRange: number; notExecuted: number; mandatory: number; } {
+    const ok = this.measures.filter(m => m.status === 'OK').length;
+    const oor = this.measures.filter(m => m.status === 'OUT_OF_RANGE').length;
+    const ne = this.measures.filter(m => m.status === 'NOT_EXECUTED').length;
+    const mand = this.measures.filter(m => (m as any).mandatoryAtCreation).length;
+    return { total: this.measures.length, ok, outOfRange: oor, notExecuted: ne, mandatory: mand };
   }
 
   get canMutate(): boolean {
@@ -155,5 +198,42 @@ export class MeasurePanelComponent implements OnChanges {
         this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Le lot a été rejeté.' });
       }
     });
+  }
+
+  public reload(): void {
+    this.refresh();
+  }
+
+  openSnippet(measureId: number): void {
+    this.snippetMeasureId = measureId;
+    this.snippetVisible = true;
+  }
+
+  /** Row action: open the edit-measure dialog pre-filled with the row data. */
+  openEditMeasure(m: ValidationMeasure): void {
+    if (!this.canMutate || this.bulkEditMode) return;
+    this.editingMeasure = m;
+    this.editMeasureVisible = true;
+  }
+
+  onMeasureEdited(): void { this.refresh(); }
+
+  /** trackBy for the measure-card grid — keeps DOM stable on refresh. */
+  trackMeasure = (_: number, m: ValidationMeasure): number => m.id;
+
+  /**
+   * Position (in %) of the measured value inside the tolerance band, used to
+   * render the marker on the tolerance gauge. Returns null when bounds are
+   * missing or the value is not yet recorded. Values outside [lower; upper]
+   * are clamped to 0/100 so the marker stays visible at the rail edge.
+   */
+  markerPct(m: ValidationMeasure): number | null {
+    if (m.measuredValue === null || m.measuredValue === undefined) return null;
+    if (m.lowerBound === null || m.lowerBound === undefined) return null;
+    if (m.upperBound === null || m.upperBound === undefined) return null;
+    const span = m.upperBound - m.lowerBound;
+    if (span <= 0) return null;
+    const raw = ((m.measuredValue - m.lowerBound) / span) * 100;
+    return Math.max(0, Math.min(100, raw));
   }
 }

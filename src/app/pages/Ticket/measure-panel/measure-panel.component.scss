@@ -1,9 +1,616 @@
-.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-.panel-header h3 { margin: 0; font-family: var(--font-ui, 'DM Sans'); }
-.row-error { color: var(--red-500, #ef4444); font-size: 0.75rem; margin-top: 0.25rem; }
-.adhoc-tag { margin-left: 0.5rem; padding: 0.1rem 0.4rem; font-size: 0.65rem; background: var(--surface-300, #555); border-radius: 4px; }
+/* ============================================================
+   MeasurePanel — instrument-readout grid (2026-05 redesign)
+   ============================================================ */
 
-tr.is-highlighted {
-  background: var(--sage-highlight, rgba(255, 193, 7, 0.18)) !important;
-  transition: background 0.3s ease-out;
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: measure-panel;
+  --mp-ok: #10b981;
+  --mp-bad: #ef4444;
+  --mp-pending: #f59e0b;
+  --mp-primary: #60a5fa;
+  --mp-card: rgba(15, 23, 42, 0.55);
+  --mp-card-border: rgba(148, 163, 184, 0.14);
+  --mp-card-border-strong: rgba(148, 163, 184, 0.28);
+  --mp-text: #e2e8f0;
+  --mp-text-muted: #94a3b8;
+  --mp-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
+
+/* ===== Header ============================================== */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.9rem;
+}
+.panel-header-left { display: flex; align-items: center; }
+.panel-header-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-left: auto;
+}
+
+.panel-header h3 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-ui, 'DM Sans');
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--mp-text);
+}
+.panel-h3-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.30);
+  color: var(--mp-primary);
+  font-size: 0.78rem;
+}
+.panel-h3-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 0.4rem;
+  font-family: var(--mp-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--mp-text-muted);
+}
+
+/* PrimeNG dropdown sizing override */
+:host ::ng-deep .panel-filter-dd {
+  min-width: 180px;
+  .p-dropdown { font-size: 0.82rem; }
+}
+
+/* ===== Stats strip ========================================== */
+.measure-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.stat-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem 0.4rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid var(--mp-card-border);
+  background: var(--mp-card);
+  color: var(--mp-text-muted);
+  transition: opacity 150ms ease, transform 150ms ease;
+
+  i {
+    font-size: 0.78rem;
+    transform: translateY(1px);
+  }
+  .stat-num {
+    font-family: var(--mp-mono);
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--mp-text);
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    letter-spacing: 0.01em;
+  }
+  &.muted { opacity: 0.4; }
+
+  &.stat-total {
+    background: rgba(59, 130, 246, 0.10);
+    border-color: rgba(59, 130, 246, 0.32);
+    color: var(--mp-primary);
+    .stat-num { color: var(--mp-primary); }
+  }
+  &.stat-ok {
+    background: rgba(16, 185, 129, 0.10);
+    border-color: rgba(16, 185, 129, 0.32);
+    color: var(--mp-ok);
+    .stat-num { color: var(--mp-ok); }
+  }
+  &.stat-bad {
+    background: rgba(239, 68, 68, 0.10);
+    border-color: rgba(239, 68, 68, 0.32);
+    color: var(--mp-bad);
+    .stat-num { color: var(--mp-bad); }
+  }
+  &.stat-pending {
+    background: rgba(245, 158, 11, 0.10);
+    border-color: rgba(245, 158, 11, 0.32);
+    color: var(--mp-pending);
+    .stat-num { color: var(--mp-pending); }
+  }
+}
+
+/* ===== Loading / Empty states ============================== */
+.measure-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  color: var(--mp-text-muted);
+  font-size: 0.85rem;
+  background: var(--mp-card);
+  border: 1px dashed var(--mp-card-border);
+  border-radius: 10px;
+  i { color: var(--mp-primary); }
+}
+
+.measure-empty-wrap {
+  background: var(--mp-card);
+  border: 1px dashed var(--mp-card-border-strong);
+  border-radius: 10px;
+}
+.measure-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.95rem;
+  padding: 1.1rem 1.25rem;
+}
+.measure-empty-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.10);
+  border: 1px solid rgba(59, 130, 246, 0.30);
+  border-radius: 10px;
+  color: var(--mp-primary);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+
+  &.muted {
+    background: rgba(148, 163, 184, 0.10);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: var(--mp-text-muted);
+  }
+}
+.measure-empty-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  strong {
+    color: var(--mp-text);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  small {
+    color: var(--mp-text-muted);
+    font-size: 0.83rem;
+    line-height: 1.55;
+
+    code {
+      font-family: var(--mp-mono);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--mp-text);
+      padding: 0.05rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+    em {
+      color: var(--mp-primary);
+      font-style: normal;
+      font-weight: 500;
+    }
+  }
+}
+
+/* ===== Card grid =========================================== */
+/* Uses container queries so the grid adapts to the DRAWER width,
+   not the viewport width. The drawer can be narrower than the viewport
+   when the postes card sits in a 2-column page grid. */
+.measure-grid {
+  display: grid;
+  /* Default: single column, safe for any drawer width */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.7rem;
+  width: 100%;
+  min-width: 0;
+}
+
+@container measure-panel (min-width: 640px) {
+  .measure-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container measure-panel (min-width: 980px) {
+  .measure-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container measure-panel (min-width: 1320px) {
+  .measure-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Fallback for browsers without container queries */
+@supports not (container-type: inline-size) {
+  .measure-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  }
+}
+
+.measure-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  gap: 0.7rem;
+  padding: 0.85rem 0.95rem 0.8rem 1.05rem;
+  min-width: 0;
+  max-width: 100%;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%),
+    var(--mp-card);
+  border: 1px solid var(--mp-card-border);
+  border-radius: 10px;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+  overflow: hidden;
+
+  &:hover {
+    border-color: var(--mp-card-border-strong);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Status accent rail (left edge) */
+  .measure-card-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 10px 0 0 10px;
+  }
+
+  &.is-ok .measure-card-rail { background: var(--mp-ok); }
+  &.is-bad .measure-card-rail {
+    background: var(--mp-bad);
+    box-shadow: 0 0 12px -2px rgba(239, 68, 68, 0.55);
+  }
+  &.is-pending .measure-card-rail { background: var(--mp-pending); }
+
+  &.is-bad {
+    background:
+      linear-gradient(180deg, rgba(239,68,68,0.05) 0%, rgba(239,68,68,0) 60%),
+      var(--mp-card);
+  }
+}
+
+/* ----- Card head ----- */
+.measure-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.measure-card-code {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.measure-card-status {
+  flex-shrink: 0;
+}
+
+.adhoc-tag {
+  padding: 0.1rem 0.45rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--sage-orange, #f97316);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ----- Hero readout ----- */
+.measure-card-readout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 0.6rem 1rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+.readout-value-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.readout-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mp-text-muted);
+  font-weight: 500;
+}
+.readout-value {
+  font-family: var(--mp-mono);
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--mp-text);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+.is-ok .readout-value { color: var(--mp-ok); }
+.is-bad .readout-value { color: var(--mp-bad); }
+.readout-value-empty {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--mp-text-muted);
+  font-family: var(--font-ui, 'DM Sans');
+  letter-spacing: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  i { font-size: 0.75rem; }
+}
+.readout-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+:host ::ng-deep .readout-input .p-inputnumber-input {
+  width: 110px;
+  font-family: var(--mp-mono);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: right;
+}
+.readout-edit-unit {
+  font-family: var(--mp-mono);
+  font-size: 0.8rem;
+  color: var(--mp-text-muted);
+  font-weight: 500;
+}
+.readout-deviation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  min-width: 110px;
+}
+
+.row-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--mp-bad);
+  font-size: 0.73rem;
+  margin-top: 0.3rem;
+  i { font-size: 0.72rem; }
+}
+
+/* ----- Tolerance gauge ----- */
+.measure-card-tolerance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.tolerance-axis {
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
+  align-items: center;
+  gap: 0.6rem;
+}
+.tolerance-bound {
+  font-family: var(--mp-mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--mp-text-muted);
+  white-space: nowrap;
+}
+.tolerance-bound-min { text-align: right; }
+.tolerance-bound-max { text-align: left; }
+.tolerance-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.10) 0 2px,
+      transparent 2px 6px
+    ),
+    rgba(148, 163, 184, 0.08);
+  overflow: visible;
+}
+.tolerance-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.18) 0%,
+    rgba(16, 185, 129, 0.42) 50%,
+    rgba(16, 185, 129, 0.18) 100%
+  );
+}
+.is-bad .tolerance-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.15) 0%,
+    rgba(239, 68, 68, 0.35) 50%,
+    rgba(239, 68, 68, 0.15) 100%
+  );
+}
+.is-pending .tolerance-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.10) 0%,
+    rgba(148, 163, 184, 0.20) 50%,
+    rgba(148, 163, 184, 0.10) 100%
+  );
+}
+.tolerance-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tolerance-marker-pin {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mp-ok);
+  border: 2px solid #0b1220;
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.55),
+    0 0 8px rgba(16, 185, 129, 0.45);
+}
+.tolerance-marker.out .tolerance-marker-pin {
+  background: var(--mp-bad);
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.55),
+    0 0 10px rgba(239, 68, 68, 0.55);
+  animation: mp-pulse 1.6s ease-in-out infinite;
+}
+@keyframes mp-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+.tolerance-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--mp-text-muted);
+  letter-spacing: 0.02em;
+  i { font-size: 0.72rem; }
+}
+
+/* ----- Card foot ----- */
+.measure-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+}
+.measure-card-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  color: var(--mp-text-muted);
+}
+.meta-time,
+.meta-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--mp-mono);
+  font-size: 0.72rem;
+  i { font-size: 0.7rem; opacity: 0.75; }
+}
+:host ::ng-deep .meta-link.p-button {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  .p-button-icon { font-size: 0.72rem; }
+}
+
+.measure-card-actions {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+/* ===== Highlight scroll-to ================================ */
+.measure-card.is-highlighted,
+[data-measure-code].is-highlighted {
+  background: rgba(255, 193, 7, 0.10) !important;
+  border-color: rgba(255, 193, 7, 0.45) !important;
+  transition: background 0.3s ease-out, border-color 0.3s ease-out;
+}
+
+/* ===== Responsive (container-query based) =================== */
+/* All breakpoints below react to the PANEL'S OWN width — so the layout
+   collapses gracefully inside a narrow poste drawer even when the
+   viewport is wide. */
+
+@container measure-panel (max-width: 560px) {
+  .panel-header { align-items: stretch; }
+  .panel-header-right {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  :host ::ng-deep .panel-filter-dd {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .measure-card-readout {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  .readout-deviation {
+    align-items: flex-start;
+    width: 100%;
+  }
+  .readout-value { font-size: 1.2rem; }
+  .stat-chip { font-size: 0.74rem; }
+}
+
+@container measure-panel (max-width: 380px) {
+  .measure-card {
+    padding: 0.7rem 0.75rem 0.65rem 0.85rem;
+  }
+  .tolerance-bound { font-size: 0.64rem; }
+  .readout-value { font-size: 1.05rem; }
+  .panel-header h3 { font-size: 0.9rem; }
+  .stat-chip {
+    padding: 0.32rem 0.55rem 0.32rem 0.5rem;
+    .stat-label { display: none; }
+  }
+}
+
+/* Long code/value safety */
+.measure-card-code,
+.readout-value,
+.meta-time,
+.meta-user {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+:host ::ng-deep app-measure-badge { min-width: 0; max-width: 100%; }

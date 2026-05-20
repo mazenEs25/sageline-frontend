@@ -13,6 +13,8 @@
 
     <p-checkbox
       [(ngModel)]="includeInactive"
+      [binary]="true"
+      name="includeInactive"
       label="Inclure inactifs"
       (onChange)="onIncludeInactiveChange()"
     ></p-checkbox>

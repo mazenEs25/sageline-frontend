@@ -1,30 +1,228 @@
-<p-dialog header="Ajouter une mesure" [(visible)]="visible" [modal]="true" [style]="{ width: '32rem' }" (onHide)="close()">
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label>Modèle de mesure</label>
-      <p-dropdown [options]="templates" optionLabel="measureCode" optionValue="id" placeholder="Sélectionner un modèle"
-        [filter]="true" filterBy="measureCode,measureLabel"
-        formControlName="templateId" (onChange)="onTemplateChange($event.value)"></p-dropdown>
-    </div>
-
-    <ng-container *ngIf="selectedTemplate as t">
-      <div class="readonly-grid">
-        <div><label>Catégorie</label><div>{{ t.category }}</div></div>
-        <div><label>Unité</label><div>{{ t.defaultUnit }}</div></div>
-        <div><label>Borne basse</label><div>{{ t.defaultLowerBound }}</div></div>
-        <div><label>Borne haute</label><div>{{ t.defaultUpperBound }}</div></div>
-        <div *ngIf="t.antenna"><label>Antenne</label><div>{{ t.antenna }}</div></div>
-        <div *ngIf="t.frequencyMhz"><label>Fréquence (MHz)</label><div>{{ t.frequencyMhz }}</div></div>
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  [breakpoints]="{ '960px': '92vw', '640px': '96vw' }"
+  [style]="{ width: '720px' }"
+  (onHide)="close()"
+  styleClass="sage-dialog add-measure-dialog"
+>
+  <ng-template pTemplate="header">
+    <div class="sage-dialog-header">
+      <div class="sage-dialog-title">
+        <span class="sage-dialog-icon">
+          <i class="pi pi-plus-circle"></i>
+        </span>
+        <div class="sage-dialog-titles">
+          <h3>Ajouter une mesure depuis le catalogue</h3>
+          <p class="sage-dialog-subtitle">
+            <ng-container *ngIf="posteType; else noPoste">
+              Templates disponibles pour le poste <strong>{{ posteType }}</strong>
+            </ng-container>
+            <ng-template #noPoste>
+              Choisir un template du catalogue puis saisir la valeur mesurée.
+            </ng-template>
+          </p>
+        </div>
       </div>
-      <div class="field">
-        <label>Valeur mesurée</label>
-        <p-inputNumber formControlName="measuredValue" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
-      </div>
-    </ng-container>
-
-    <div class="dialog-footer">
-      <button pButton type="button" label="Annuler" class="p-button-text" (click)="close()"></button>
-      <button pButton type="submit" label="Enregistrer" [disabled]="form.invalid || submitting" [loading]="submitting"></button>
     </div>
+  </ng-template>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="sage-form">
+
+    <!-- Section 1 — Template selection -->
+    <section class="sage-section">
+      <header class="sage-section-header">
+        <i class="pi pi-list"></i>
+        <h4>Template de mesure</h4>
+        <span class="sage-section-aside" *ngIf="!loadingTemplates && templates.length > 0">
+          {{ templates.length }} disponible{{ templates.length > 1 ? 's' : '' }}
+        </span>
+      </header>
+
+      <!-- Loading -->
+      <div class="sage-loading-state" *ngIf="loadingTemplates">
+        <p-skeleton width="100%" height="2.5rem" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="60%" height="1rem"></p-skeleton>
+      </div>
+
+      <!-- Empty -->
+      <div class="sage-empty-state" *ngIf="!loadingTemplates && templates.length === 0">
+        <div class="sage-empty-icon"><i class="pi pi-database"></i></div>
+        <div class="sage-empty-body">
+          <strong>Aucun template défini pour ce poste</strong>
+          <small>
+            Le catalogue ne contient encore aucune mesure pour
+            <code>{{ posteType || 'ce posteType' }}</code>.
+            Demandez à un <strong>ADMIN_IT</strong> ou un <strong>CHEF_SECTEUR</strong> de créer
+            les templates nécessaires depuis <code>/admin/poste-catalog</code>, ou utilisez
+            l'option <em>« Ajouter une mesure ad-hoc »</em>.
+          </small>
+        </div>
+      </div>
+
+      <!-- Dropdown -->
+      <div class="sage-field" *ngIf="!loadingTemplates && templates.length > 0">
+        <label for="templateId">
+          Choisir un template <span class="sage-required">*</span>
+        </label>
+        <p-dropdown
+          id="templateId"
+          [options]="templates"
+          optionValue="id"
+          placeholder="Rechercher un code mesure…"
+          [filter]="true"
+          filterBy="measureCode,measureLabel"
+          formControlName="templateId"
+          (onChange)="onTemplateChange($event.value)"
+          appendTo="body"
+          styleClass="sage-dropdown"
+        >
+          <ng-template let-t pTemplate="selectedItem">
+            <div class="sage-template-selected" *ngIf="t">
+              <span class="sage-mono">{{ t.measureCode }}</span>
+              <span class="sage-template-label">— {{ t.measureLabel }}</span>
+            </div>
+          </ng-template>
+          <ng-template let-t pTemplate="item">
+            <div class="sage-template-item">
+              <div class="sage-template-row1">
+                <span class="sage-mono">{{ t.measureCode }}</span>
+                <span class="sage-template-mandatory" *ngIf="t.mandatory">obligatoire</span>
+              </div>
+              <div class="sage-template-row2">
+                <span>{{ t.measureLabel }}</span>
+                <span class="sage-template-bounds">
+                  [{{ t.defaultLowerBound }} → {{ t.defaultUpperBound }}] {{ t.defaultUnit }}
+                </span>
+              </div>
+            </div>
+          </ng-template>
+        </p-dropdown>
+        <small class="sage-error"
+          *ngIf="form.get('templateId')?.hasError('required') && form.get('templateId')?.touched">
+          <i class="pi pi-exclamation-circle"></i> Sélectionnez un template.
+        </small>
+      </div>
+    </section>
+
+    <!-- Section 2 — Auto-filled context (read-only) -->
+    <section class="sage-section sage-section-readonly" *ngIf="selectedTemplate as t">
+      <header class="sage-section-header">
+        <i class="pi pi-info-circle"></i>
+        <h4>Paramètres du template <small>(non modifiables)</small></h4>
+      </header>
+
+      <div class="sage-readonly-grid">
+        <div class="sage-readonly-cell">
+          <small>Catégorie</small>
+          <strong>{{ t.category }}</strong>
+        </div>
+        <div class="sage-readonly-cell">
+          <small>Unité</small>
+          <strong class="sage-mono">{{ t.defaultUnit }}</strong>
+        </div>
+        <div class="sage-readonly-cell">
+          <small>Tolérance</small>
+          <strong class="sage-mono">[{{ t.defaultLowerBound }} → {{ t.defaultUpperBound }}]</strong>
+        </div>
+        <div class="sage-readonly-cell" *ngIf="t.antenna">
+          <small>Antenne</small>
+          <strong>{{ t.antenna }}</strong>
+        </div>
+        <div class="sage-readonly-cell" *ngIf="t.frequencyMhz">
+          <small>Fréquence</small>
+          <strong>{{ t.frequencyMhz }} MHz</strong>
+        </div>
+        <div class="sage-readonly-cell" *ngIf="t.modulationScheme">
+          <small>Modulation</small>
+          <strong>{{ t.modulationScheme }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 — Measured value -->
+    <section class="sage-section" *ngIf="selectedTemplate as t">
+      <header class="sage-section-header">
+        <i class="pi pi-pencil"></i>
+        <h4>Valeur mesurée</h4>
+      </header>
+
+      <div class="sage-grid sage-grid-2">
+        <div class="sage-field">
+          <label for="measuredValue">
+            Valeur <span class="sage-required">*</span>
+          </label>
+          <p-inputNumber
+            id="measuredValue"
+            formControlName="measuredValue"
+            mode="decimal"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="4"
+            [useGrouping]="false"
+            placeholder="Ex : 15.52"
+            styleClass="sage-number"
+          ></p-inputNumber>
+          <small class="sage-error"
+            *ngIf="form.get('measuredValue')?.hasError('required') && form.get('measuredValue')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Saisissez une valeur ou laissez vide pour
+            créer la mesure en <strong>NOT_EXECUTED</strong>.
+          </small>
+          <small class="sage-hint">
+            Entre <span class="sage-mono">{{ t.defaultLowerBound }}</span> et
+            <span class="sage-mono">{{ t.defaultUpperBound }}</span> {{ t.defaultUnit }} pour un
+            statut <strong>OK</strong>.
+          </small>
+        </div>
+
+        <!-- Live verdict preview -->
+        <div class="sage-field sage-field-preview">
+          <label>Aperçu du verdict</label>
+          <div class="sage-verdict" [ngClass]="'sage-verdict-' + previewStatus">
+            <i [class]="previewIcon"></i>
+            <div>
+              <strong>{{ previewLabel }}</strong>
+              <small *ngIf="previewDeviation !== null">
+                Déviation : {{ previewDeviation | number:'1.1-2' }} %
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </form>
+
+  <ng-template pTemplate="footer">
+    <div class="sage-dialog-footer">
+      <span class="sage-form-status" *ngIf="form.invalid && (form.touched || selectedTemplate)">
+        <i class="pi pi-info-circle"></i>
+        Sélectionnez un template et saisissez une valeur.
+      </span>
+      <span class="sage-form-status sage-form-status-ok" *ngIf="form.valid && !submitting">
+        <i class="pi pi-check-circle"></i>
+        Prêt à enregistrer.
+      </span>
+
+      <div class="sage-dialog-actions">
+        <p-button
+          label="Annuler"
+          icon="pi pi-times"
+          (onClick)="close()"
+          [text]="true"
+          severity="secondary"
+          [disabled]="submitting"
+        ></p-button>
+        <p-button
+          label="Enregistrer la mesure"
+          icon="pi pi-check"
+          [disabled]="form.invalid || submitting"
+          [loading]="submitting"
+          (onClick)="submit()"
+        ></p-button>
+      </div>
+    </div>
+  </ng-template>
 </p-dialog>

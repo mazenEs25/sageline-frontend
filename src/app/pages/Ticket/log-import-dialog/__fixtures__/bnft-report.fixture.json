@@ -1,0 +1,15 @@
+{
+  "detectedFormat": "BNFT",
+  "totalParsed": 6,
+  "matched": [
+    { "id": null, "measureCode": "PWR_2G_ANT0", "label": "2G power antenna 0", "value": 18.1, "unit": "dBm", "status": "OK", "lower": 17, "upper": 19, "templateId": 10 },
+    { "id": null, "measureCode": "PWR_2G_ANT1", "label": "2G power antenna 1", "value": 18.2, "unit": "dBm", "status": "OK", "lower": 17, "upper": 19, "templateId": 11 },
+    { "id": null, "measureCode": "PWR_2G_ANT2", "label": "2G power antenna 2", "value": 18.0, "unit": "dBm", "status": "OK", "lower": 17, "upper": 19, "templateId": 12 },
+    { "id": null, "measureCode": "PWR_2G_ANT3", "label": "2G power antenna 3", "value": 17.9, "unit": "dBm", "status": "OK", "lower": 17, "upper": 19, "templateId": 13 },
+    { "id": null, "measureCode": "PWR_2G_ANT4", "label": "2G power antenna 4", "value": 18.4, "unit": "dBm", "status": "OK", "lower": 17, "upper": 19, "templateId": 14 },
+    { "id": null, "measureCode": "PWR_2G_ANT5", "label": "2G power antenna 5", "value": 18.3, "unit": "dBm", "status": "OK", "lower": 17, "upper": 19, "templateId": 15 }
+  ],
+  "skipped": [],
+  "unmatched": [],
+  "warnings": []
+}

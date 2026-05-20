@@ -11,6 +11,7 @@
       <label for="targetPosteType">Type de poste *</label>
       <p-dropdown
         id="targetPosteType"
+        name="targetPosteType"
         [(ngModel)]="targetPosteType"
         [options]="posteTypeOptions"
         optionLabel="label"
@@ -21,8 +22,10 @@
     <!-- JSON Input -->
     <div class="form-group">
       <label for="jsonInput">Données JSON *</label>
-      <p-inputTextarea
+      <textarea
+        pInputTextarea
         id="jsonInput"
+        name="jsonInput"
         [(ngModel)]="jsonInput"
         rows="14"
         [style]="{ 'font-family': 'var(--font-mono, monospace)' }"
@@ -30,7 +33,7 @@
   { &quot;measureCode&quot;: &quot;CODE1&quot;, &quot;measureLabel&quot;: &quot;Label 1&quot;, ... },
   { &quot;measureCode&quot;: &quot;CODE2&quot;, &quot;measureLabel&quot;: &quot;Label 2&quot;, ... }
 ]"
-      ></p-inputTextarea>
+      ></textarea>
     </div>
 
     <!-- Submit Button -->

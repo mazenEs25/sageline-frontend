@@ -9,6 +9,7 @@ import { WebSocketService } from '../../../services/websocket.service';
 import { WorkflowReadiness } from '../../../models/workflow-readiness.model';
 import { MeasurePanelComponent } from '../measure-panel/measure-panel.component';
 import { WorkflowReadinessMissingMeasure, WorkflowReadinessOutOfRangeMeasure } from '../../../models/workflow-readiness.model';
+import { Role } from '../../../shared/enums/role.enum';
 
 
 @Component({
@@ -43,8 +44,16 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
   showPosteDialog = false;
   savingPoste = false;
   activePoste: PosteStatus | null = null;
-  posteFinalStatus: 'CONFORME' | 'NON_CONFORME' = 'CONFORME';
+  posteFinalStatus: 'CONFORME' | 'NON_CONFORME' | 'AUTO' = 'AUTO';
   posteNotes = '';
+
+  // ── Phase D — per-poste drawer state ────────────────────────────────────
+  /** zoneIds of postes whose drawer (measures + Clôturer) is currently expanded. */
+  expandedPosteZoneIds = new Set<number>();
+  /** Per-poste readiness snapshots, keyed by zoneId. Lazy-loaded on expand. */
+  posteReadinessByZoneId = new Map<number, WorkflowReadiness>();
+  /** Per-poste readiness loading flags, keyed by zoneId. */
+  posteReadinessLoadingByZoneId = new Set<number>();
 
   private wsTopic: string | null = null;
   private wsSubscription?: Subscription;
@@ -58,7 +67,23 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
   private readinessUpdate$ = new Subject<WorkflowReadiness>();
   private lastBlockedToastAt = 0;
 
+  // Phase 004: Log import dialog
+  logImportVisible = false;
+
+  /**
+   * The ticket-level {@link MeasurePanelComponent} was removed in Phase E.
+   * The ViewChild + {@code measures} getter are kept for compatibility with
+   * the existing side-panel scroll-to-measure helpers ({@code onMissingMeasureClicked},
+   * {@code onOutOfRangeMeasureClicked}), which now silently no-op (the per-poste
+   * drawers handle their own measures via per-poste MeasurePanel instances).
+   * If you re-add a global panel later, this ViewChild will pick it up again.
+   */
   @ViewChild(MeasurePanelComponent) measurePanel?: MeasurePanelComponent;
+
+  /** Pulled from the ViewChild when present; undefined now that the global panel is gone. */
+  get measures() {
+    return this.measurePanel?.measures;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -141,6 +166,18 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     this.ticketService.getById(this.ticketId).subscribe({
       next: (data) => { this.ticket = data; this.loading = false; },
       error: () => { this.loading = false; this.router.navigate(['/validations']); }
+    });
+  }
+
+  /**
+   * Lightweight ticket refresh that updates the DTO without showing the
+   * full-page loading spinner. Used after measure CRUD to update per-poste
+   * counters (resultsCount, nonConformCount) without collapsing expanded drawers.
+   */
+  private silentReloadTicket(): void {
+    this.ticketService.getById(this.ticketId).subscribe({
+      next: (data) => { this.ticket = data; },
+      error: () => { /* swallow — the user still has a usable view */ }
     });
   }
 
@@ -311,6 +348,13 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     return ['CONFORME', 'NON_CONFORME', 'ANNULE'].includes(poste.status);
   }
 
+  /** trackBy function for the poste *ngFor — prevents Angular from
+   *  destroying and recreating poste rows (and their child MeasurePanel
+   *  components) when silentReloadTicket() replaces this.ticket. */
+  trackPoste(_index: number, poste: PosteStatus): number {
+    return poste.zoneId;
+  }
+
   /** Badge severity for a poste status (PrimeNG). */
   posteSeverity(status: string): 'success' | 'danger' | 'warning' | 'info' | 'secondary' {
     switch (status) {
@@ -340,9 +384,70 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
 
   openPosteDialog(poste: PosteStatus): void {
     this.activePoste = poste;
-    this.posteFinalStatus = 'CONFORME';
+    this.posteFinalStatus = 'AUTO';  // Phase D default — derive from measure statuses
     this.posteNotes = '';
     this.showPosteDialog = true;
+  }
+
+  // ── Phase D — per-poste drawer + readiness ──────────────────────────────
+
+  /** Toggle the inline drawer of a poste row. Lazy-loads readiness on first open. */
+  togglePoste(poste: PosteStatus): void {
+    const zid = poste.zoneId;
+    if (this.expandedPosteZoneIds.has(zid)) {
+      this.expandedPosteZoneIds.delete(zid);
+    } else {
+      this.expandedPosteZoneIds.add(zid);
+      if (!this.posteReadinessByZoneId.has(zid)) {
+        this.loadPosteReadiness(zid);
+      }
+    }
+  }
+
+  isPosteExpanded(poste: PosteStatus): boolean {
+    return this.expandedPosteZoneIds.has(poste.zoneId);
+  }
+
+  getPosteReadiness(poste: PosteStatus): WorkflowReadiness | null {
+    return this.posteReadinessByZoneId.get(poste.zoneId) ?? null;
+  }
+
+  isPosteReadinessLoading(poste: PosteStatus): boolean {
+    return this.posteReadinessLoadingByZoneId.has(poste.zoneId);
+  }
+
+  /**
+   * Can the Clôturer button on a given poste row be enabled?
+   * False if the poste is terminal, or readiness says canTransition=false.
+   */
+  canClosePoste(poste: PosteStatus): boolean {
+    if (!this.canMarkPoste(poste)) return false;
+    const r = this.getPosteReadiness(poste);
+    return r ? r.canTransition : false;
+  }
+
+  /** Re-fetch per-poste measures handler — also refreshes per-poste readiness
+   *  AND silently reloads the ticket so that the poste.resultsCount / nonConformCount
+   *  badges and the "Aucune mesure" empty state update correctly without collapsing drawers. */
+  onPosteMeasuresChanged(poste: PosteStatus): void {
+    this.loadPosteReadiness(poste.zoneId);
+    // Silently reload the ticket DTO so poste badges refresh without a loading spinner.
+    this.silentReloadTicket();
+    // also refresh ticket-wide readiness because mandatoryFilled aggregates
+    this.onMeasuresChanged();
+  }
+
+  private loadPosteReadiness(zoneId: number): void {
+    this.posteReadinessLoadingByZoneId.add(zoneId);
+    this.ticketService.getPosteReadiness(this.ticketId, zoneId).subscribe({
+      next: (r) => {
+        this.posteReadinessByZoneId.set(zoneId, r);
+        this.posteReadinessLoadingByZoneId.delete(zoneId);
+      },
+      error: () => {
+        this.posteReadinessLoadingByZoneId.delete(zoneId);
+      }
+    });
   }
 
   submitPosteDone(): void {
@@ -354,10 +459,19 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
       notes: this.posteNotes?.trim() || undefined
     }).subscribe({
       next: (updated) => {
+        const closedZoneId = this.activePoste?.zoneId;
         this.ticket = updated;
-        const label = this.posteFinalStatus === 'CONFORME' ? '✓ Conforme' : '✗ Non conforme';
+        // Phase D: the closed poste's chip/drawer are now stale. Drop the cached
+        // readiness so the next expand (or visible chip) re-fetches from the server.
+        if (closedZoneId !== undefined) {
+          this.posteReadinessByZoneId.delete(closedZoneId);
+          this.expandedPosteZoneIds.delete(closedZoneId);
+        }
+        const label = this.posteFinalStatus === 'CONFORME' ? '✓ Conforme'
+                    : this.posteFinalStatus === 'NON_CONFORME' ? '✗ Non conforme'
+                    : '🤖 Auto (verdict dérivé)';
         this.messageService.add({
-          severity: this.posteFinalStatus === 'CONFORME' ? 'success' : 'warn',
+          severity: this.posteFinalStatus === 'NON_CONFORME' ? 'warn' : 'success',
           summary: 'Poste mis à jour',
           detail: `${this.activePoste?.zoneName} — ${label}`
         });
@@ -382,6 +496,37 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     const done = this.ticket?.posteDone || 0;
     if (total <= 0) return 0;
     return Math.round((done / total) * 100);
+  }
+
+  get canImportLog(): boolean {
+    const allowed = [Role.ADMIN_IT, Role.TECH_VAL, Role.CHEF_SECTEUR];
+    const roles = this.authService.getRoles();
+    return allowed.some(r => roles.includes(r));
+  }
+
+  get canEditMeasures(): boolean {
+    const s = this.ticket?.status;
+    return s !== 'CONFORME' && s !== 'NON_CONFORME' && s !== 'ANNULE';
+  }
+
+  /**
+   * Post-import refresh — Phase E.
+   * After the importer succeeds, all per-poste readiness chips become stale
+   * (new measures might have been attributed to multiple postes). We invalidate
+   * every cached chip and re-fetch them so the UI shows the new counts without
+   * the user having to manually expand each drawer.
+   */
+  onImportSucceeded(_ids: number[]): void {
+    this.measurePanel?.reload();      // no-op when the global panel is gone
+    this.onMeasuresChanged();         // refreshes ticket-wide readiness bar
+    // Drop every cached per-poste readiness; the chip getter will trigger a re-fetch
+    // for any visible row, and expanded drawers reload via onPosteMeasuresChanged.
+    this.posteReadinessByZoneId.clear();
+    if (this.ticket?.posteStatuses) {
+      for (const ps of this.ticket.posteStatuses) {
+        this.loadPosteReadiness(ps.zoneId);
+      }
+    }
   }
 
   private success(msg: string) {

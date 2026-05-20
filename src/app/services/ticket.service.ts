@@ -62,6 +62,18 @@ export class TicketService {
     return this.http.get<WorkflowReadiness>(`${this.apiUrl}/${ticketId}/readiness`, { params });
   }
 
+  /**
+   * Per-poste readiness — drives the Clôturer button on each poste row (Phase D).
+   * Returns the same {@link WorkflowReadiness} shape as the ticket-level call but
+   * scoped to ONE poste of the line. {@code canTransition === true} means the poste
+   * can be Clôturé (all mandatory measures filled).
+   */
+  getPosteReadiness(ticketId: number, zoneId: number): Observable<WorkflowReadiness> {
+    return this.http.get<WorkflowReadiness>(
+      `${this.apiUrl}/${ticketId}/postes/${zoneId}/readiness`
+    );
+  }
+
   // ===== CREATION =====
   create(dto: TicketCreateRequest): Observable<Validation> {
     return this.http.post<Validation>(this.apiUrl, dto);

@@ -3,47 +3,139 @@
   (visibleChange)="visibleChange.emit($event)"
   position="right"
   [modal]="false"
-  [style]="{ width: '28rem' }"
+  [style]="{ width: '30rem', maxWidth: '95vw' }"
   styleClass="readiness-side-panel"
 >
   <ng-template pTemplate="header">
-    <h3>Workflow blockers</h3>
+    <div class="rd-head">
+      <div class="rd-head-icon" [class.clean]="isEmpty">
+        <i [class]="isEmpty ? 'pi pi-check-circle' : 'pi pi-flag-fill'"></i>
+      </div>
+      <div class="rd-head-text">
+        <h3>Workflow blockers</h3>
+        <span class="rd-head-sub" *ngIf="!isEmpty">
+          {{ totalCount }} action{{ totalCount > 1 ? 's' : '' }} requise{{ totalCount > 1 ? 's' : '' }} avant clôture
+        </span>
+        <span class="rd-head-sub clean" *ngIf="isEmpty">
+          Aucun blocage — prêt pour clôture
+        </span>
+      </div>
+    </div>
   </ng-template>
 
-  <div *ngIf="isEmpty" class="empty-state">
-    <i class="pi pi-check-circle"></i>
-    All mandatory measures complete.
+  <!-- ===== Empty state ===== -->
+  <div *ngIf="isEmpty" class="rd-empty">
+    <div class="rd-empty-rings" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <i class="pi pi-shield"></i>
+    <strong>Toutes les mesures obligatoires sont saisies</strong>
+    <p>Le ticket peut être soumis en revue.</p>
   </div>
 
+  <!-- ===== Blockers ===== -->
   <ng-container *ngIf="!isEmpty && readiness">
-    <section *ngIf="readiness.missingMeasures.length > 0">
-      <h4>Missing mandatory measures ({{ readiness.missingMeasures.length }})</h4>
-      <ul class="row-list">
+    <!-- Summary strip -->
+    <div class="rd-summary">
+      <div class="rd-summary-chip danger" *ngIf="readiness.missingMeasures.length > 0">
+        <i class="pi pi-exclamation-circle"></i>
+        <span class="rd-summary-num">{{ readiness.missingMeasures.length }}</span>
+        <span class="rd-summary-lbl">manquantes</span>
+      </div>
+      <div class="rd-summary-chip warn" *ngIf="readiness.outOfRangeMeasures.length > 0">
+        <i class="pi pi-bolt"></i>
+        <span class="rd-summary-num">{{ readiness.outOfRangeMeasures.length }}</span>
+        <span class="rd-summary-lbl">hors tolérance</span>
+      </div>
+    </div>
+
+    <!-- Missing -->
+    <section class="rd-section" *ngIf="readiness.missingMeasures.length > 0">
+      <header class="rd-section-head">
+        <span class="rd-section-bar danger"></span>
+        <h4>Mesures obligatoires manquantes</h4>
+        <span class="rd-section-count">{{ readiness.missingMeasures.length }}</span>
+      </header>
+
+      <ul class="rd-list">
         <li
-          *ngFor="let m of readiness.missingMeasures"
-          class="row missing"
+          *ngFor="let m of readiness.missingMeasures; let i = index"
+          class="rd-row rd-row-missing"
+          [style.animation-delay.ms]="i * 35"
           (click)="onMissingClick(m)"
+          (keyup.enter)="onMissingClick(m)"
+          tabindex="0"
+          role="button"
         >
-          <span class="code">{{ m.measureCode }}</span>
-          <span class="label">{{ m.label }}</span>
+          <div class="rd-row-rail" aria-hidden="true"></div>
+          <div class="rd-row-icon">
+            <i class="pi pi-minus-circle"></i>
+          </div>
+          <div class="rd-row-body">
+            <span class="rd-code">{{ m.measureCode }}</span>
+            <span class="rd-label">{{ m.label }}</span>
+          </div>
+          <div class="rd-row-cta">
+            <span class="rd-row-cta-text">Saisir</span>
+            <i class="pi pi-arrow-right"></i>
+          </div>
         </li>
       </ul>
     </section>
 
-    <section *ngIf="readiness.outOfRangeMeasures.length > 0">
-      <h4>Out-of-range measures ({{ readiness.outOfRangeMeasures.length }})</h4>
-      <ul class="row-list">
+    <!-- Out of range -->
+    <section class="rd-section" *ngIf="readiness.outOfRangeMeasures.length > 0">
+      <header class="rd-section-head">
+        <span class="rd-section-bar warn"></span>
+        <h4>Mesures hors tolérance</h4>
+        <span class="rd-section-count">{{ readiness.outOfRangeMeasures.length }}</span>
+      </header>
+
+      <ul class="rd-list">
         <li
-          *ngFor="let m of readiness.outOfRangeMeasures"
-          class="row out-of-range"
+          *ngFor="let m of readiness.outOfRangeMeasures; let i = index"
+          class="rd-row rd-row-oor"
+          [style.animation-delay.ms]="(readiness.missingMeasures.length + i) * 35"
           (click)="onOutOfRangeClick(m)"
+          (keyup.enter)="onOutOfRangeClick(m)"
+          tabindex="0"
+          role="button"
         >
-          <span class="code">{{ m.measureCode }}</span>
-          <span class="value">
-            {{ m.measuredValue }} {{ m.unit }}
-            <small>[{{ m.lowerBound }} … {{ m.upperBound }}]</small>
-            <small>({{ m.deviationPct | number:'1.0-1' }}%)</small>
-          </span>
+          <div class="rd-row-rail" aria-hidden="true"></div>
+          <div class="rd-row-icon">
+            <i class="pi pi-bolt"></i>
+          </div>
+          <div class="rd-row-body">
+            <div class="rd-row-top">
+              <span class="rd-code">{{ m.measureCode }}</span>
+              <span class="rd-dev" *ngIf="m.deviationPct !== null && m.deviationPct !== undefined">
+                <i class="pi pi-arrow-up-right"></i>
+                {{ m.deviationPct | number:'1.0-1' }}%
+              </span>
+            </div>
+
+            <div class="rd-readout">
+              <span class="rd-readout-val">{{ m.measuredValue }}</span>
+              <span class="rd-readout-unit" *ngIf="m.unit">{{ m.unit }}</span>
+              <span class="rd-readout-sep">·</span>
+              <span class="rd-readout-range">
+                attendu [{{ m.lowerBound }} ; {{ m.upperBound }}]
+              </span>
+            </div>
+
+            <!-- Mini gauge -->
+            <div class="rd-gauge">
+              <div class="rd-gauge-track">
+                <div class="rd-gauge-band"></div>
+                <div class="rd-gauge-pin"
+                     [style.left.%]="oorMarker(m)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="rd-row-cta">
+            <span class="rd-row-cta-text">Corriger</span>
+            <i class="pi pi-arrow-right"></i>
+          </div>
         </li>
       </ul>
     </section>

@@ -81,9 +81,9 @@ SCSS with global PrimeNG theme overrides in `src/styles.scss`. Uses `lara-dark-b
 <!-- SPECKIT START -->
 ## Active SpecKit feature
 
-- **Phase 003 — Workflow Guard (Frontend)**: `spec-RealMesure/specs/003-workflow-guard-frontend/plan.md`
-  - Spec: `spec-RealMesure/specs/003-workflow-guard-frontend/spec.md`
-  - Contract: `spec-RealMesure/specs/003-workflow-guard-frontend/contracts/workflow-readiness-api.md`
-  - Data model: `spec-RealMesure/specs/003-workflow-guard-frontend/data-model.md`
-  - Quickstart: `spec-RealMesure/specs/003-workflow-guard-frontend/quickstart.md`
+- **Phase 004 — Sagemcom Log Importer (Frontend)**: `spec-RealMesure/specs/004-sagemcom-log-importer/plan.md`
+  - Spec: `spec-RealMesure/specs/004-sagemcom-log-importer/spec.md`
+  - Contract: `spec-RealMesure/specs/004-sagemcom-log-importer/contracts/log-importer-api.md`
+  - Data model: `spec-RealMesure/specs/004-sagemcom-log-importer/data-model.md`
+  - Quickstart: `spec-RealMesure/specs/004-sagemcom-log-importer/quickstart.md`
 <!-- SPECKIT END -->

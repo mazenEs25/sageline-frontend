@@ -1,0 +1,10 @@
+{
+  "detectedFormat": "BTF",
+  "totalParsed": 10,
+  "matched": [
+    { "id": null, "measureCode": "BTF_FREQ_OFFSET", "label": "Frequency offset", "value": 0.04, "unit": "ppm", "status": "OK", "lower": -0.1, "upper": 0.1, "templateId": 21 }
+  ],
+  "skipped": [],
+  "unmatched": [],
+  "warnings": []
+}

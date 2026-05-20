@@ -1,0 +1,285 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [style]="{ width: 'min(820px, 95vw)' }"
+  styleClass="log-import-dlg"
+  (onHide)="close()">
+
+  <ng-template pTemplate="header">
+    <div class="lid-header">
+      <div class="lid-header-icon"><i class="pi pi-database"></i></div>
+      <div class="lid-header-text">
+        <h2>Import Sagemcom log</h2>
+        <p>Analyse hors-ligne du fichier .log/.txt et fusion dans les mesures du ticket.</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- ===== Drop region ===== -->
+  <div class="lid-drop" *ngIf="!report && !loading">
+    <p-fileUpload
+      chooseLabel="Sélectionner un fichier"
+      accept=".log,.txt"
+      [auto]="true"
+      [customUpload]="true"
+      [showUploadButton]="false"
+      [showCancelButton]="false"
+      (uploadHandler)="onFileSelected($event)">
+      <ng-template pTemplate="content">
+        <div class="lid-dropzone">
+          <div class="lid-dropzone-scan" aria-hidden="true"></div>
+          <div class="lid-dropzone-icon">
+            <i class="pi pi-cloud-upload"></i>
+          </div>
+          <div class="lid-dropzone-text">
+            <strong>Déposer un fichier <code>.log</code> ou <code>.txt</code></strong>
+            <span>ou utiliser le bouton ci-dessus · taille max 10 MB</span>
+          </div>
+          <div class="lid-dropzone-formats">
+            <span>BTF</span><span>BNFT</span><span>BWC</span>
+          </div>
+        </div>
+      </ng-template>
+    </p-fileUpload>
+    <p-message *ngIf="fileError" severity="error" [text]="fileError" styleClass="lid-error"></p-message>
+  </div>
+
+  <!-- ===== Loading ===== -->
+  <div class="lid-loading" *ngIf="loading">
+    <div class="lid-loading-scope">
+      <div class="lid-loading-ring"></div>
+      <i class="pi pi-bolt"></i>
+    </div>
+    <strong>Analyse du log en cours…</strong>
+    <span>Extraction des mesures et corrélation avec le catalogue.</span>
+  </div>
+
+  <!-- ===== Preview ===== -->
+  <div class="lid-preview" *ngIf="report && !loading">
+
+    <!-- Hero summary -->
+    <div class="lid-summary">
+      <div class="lid-summary-format">
+        <span class="lid-format-label">Format détecté</span>
+        <span class="lid-format-value">
+          <i class="pi pi-file"></i> {{ report.detectedFormat }}
+        </span>
+      </div>
+      <div class="lid-summary-stats">
+        <div class="lid-stat">
+          <span class="lid-stat-num">{{ report.totalParsed }}</span>
+          <span class="lid-stat-lbl">parsées</span>
+        </div>
+        <div class="lid-stat ok">
+          <span class="lid-stat-num">{{ totalMatched }}</span>
+          <span class="lid-stat-lbl">reconnues</span>
+        </div>
+        <div class="lid-stat warn" *ngIf="hasOverwrite">
+          <span class="lid-stat-num">{{ totalOverwrite }}</span>
+          <span class="lid-stat-lbl">existantes</span>
+        </div>
+        <div class="lid-stat muted" *ngIf="totalUnmatched > 0">
+          <span class="lid-stat-num">{{ totalUnmatched }}</span>
+          <span class="lid-stat-lbl">inconnues</span>
+        </div>
+        <div class="lid-stat danger" *ngIf="totalWarnings > 0">
+          <span class="lid-stat-num">{{ totalWarnings }}</span>
+          <span class="lid-stat-lbl">alertes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overwrite toggle -->
+    <div class="lid-overwrite" *ngIf="hasOverwrite" [class.active]="overwriteExisting">
+      <div class="lid-overwrite-icon">
+        <i [class]="overwriteExisting ? 'pi pi-refresh' : 'pi pi-lock'"></i>
+      </div>
+      <div class="lid-overwrite-text">
+        <strong>Écraser les mesures déjà saisies</strong>
+        <small>
+          {{ totalOverwrite }} mesure{{ totalOverwrite > 1 ? 's' : '' }} déjà présente{{ totalOverwrite > 1 ? 's' : '' }} sur ce ticket —
+          activez pour les remplacer par les valeurs du log, sinon elles seront conservées.
+        </small>
+      </div>
+      <p-inputSwitch
+        [(ngModel)]="overwriteExisting"
+        [ngModelOptions]="{ standalone: true }"
+        (onChange)="onOverwriteToggle()"
+        [disabled]="loading || submitting"></p-inputSwitch>
+    </div>
+
+    <!-- ===== Sections ===== -->
+    <p-accordion [multiple]="true" [activeIndex]="[0]" styleClass="lid-accordion">
+
+      <!-- Matched -->
+      <p-accordionTab>
+        <ng-template pTemplate="header">
+          <div class="lid-tab-head ok">
+            <span class="lid-tab-dot"></span>
+            <span class="lid-tab-title">Mesures reconnues</span>
+            <span class="lid-tab-count">{{ totalMatched }}</span>
+          </div>
+        </ng-template>
+
+        <div class="lid-cards" *ngIf="totalMatched > 0">
+          <article *ngFor="let row of report.matched" class="lid-card lid-card-matched"
+                   [class.is-bad]="row.status === 'OUT_OF_RANGE'"
+                   [class.is-ok]="row.status === 'OK'"
+                   [class.is-pending]="row.status === 'NOT_EXECUTED'">
+            <div class="lid-card-rail" aria-hidden="true"></div>
+            <header class="lid-card-head">
+              <span class="lid-code">{{ row.measureCode }}</span>
+              <span class="lid-status-pill" [attr.data-status]="row.status">
+                <i [class]="row.status === 'OK'
+                  ? 'pi pi-check-circle'
+                  : row.status === 'OUT_OF_RANGE'
+                    ? 'pi pi-times-circle'
+                    : 'pi pi-clock'"></i>
+                {{ row.status }}
+              </span>
+            </header>
+            <div class="lid-card-label" *ngIf="row.label">{{ row.label }}</div>
+            <div class="lid-card-readout">
+              <span class="lid-readout-val">{{ row.value }}</span>
+              <span class="lid-readout-unit" *ngIf="row.unit">{{ row.unit }}</span>
+            </div>
+            <div class="lid-card-range" *ngIf="row.lower !== null && row.upper !== null">
+              <i class="pi pi-sliders-h"></i>
+              <span>[{{ row.lower }} ; {{ row.upper }}]</span>
+            </div>
+          </article>
+        </div>
+        <div class="lid-empty" *ngIf="totalMatched === 0">
+          <i class="pi pi-inbox"></i>
+          Aucune mesure exploitable dans ce log.
+        </div>
+      </p-accordionTab>
+
+      <!-- WouldOverwrite — diff view -->
+      <p-accordionTab *ngIf="hasOverwrite">
+        <ng-template pTemplate="header">
+          <div class="lid-tab-head" [class.warn]="overwriteExisting" [class.muted]="!overwriteExisting">
+            <span class="lid-tab-dot"></span>
+            <span class="lid-tab-title">
+              {{ overwriteExisting ? 'À écraser' : 'Déjà présentes (conservées)' }}
+            </span>
+            <span class="lid-tab-count">{{ totalOverwrite }}</span>
+          </div>
+        </ng-template>
+
+        <div class="lid-diff-list">
+          <article *ngFor="let row of report.wouldOverwrite" class="lid-diff"
+                   [class.is-applying]="overwriteExisting">
+            <div class="lid-diff-head">
+              <span class="lid-code">{{ row.measureCode }}</span>
+              <span class="lid-diff-source">
+                <i class="pi pi-user" *ngIf="row.currentEnteredManually"></i>
+                <i class="pi pi-file-import" *ngIf="!row.currentEnteredManually"></i>
+                {{ row.currentEnteredManually ? 'saisie manuelle' : 'log précédent' }}
+              </span>
+            </div>
+
+            <div class="lid-diff-row">
+              <!-- Before -->
+              <div class="lid-diff-side before">
+                <span class="lid-diff-label">Actuelle</span>
+                <span class="lid-diff-val">{{ row.currentValue ?? '—' }}</span>
+                <span class="lid-diff-status" [attr.data-status]="row.currentStatus">
+                  {{ row.currentStatus }}
+                </span>
+              </div>
+
+              <div class="lid-diff-arrow" aria-hidden="true">
+                <i class="pi pi-arrow-right"></i>
+              </div>
+
+              <!-- After -->
+              <div class="lid-diff-side after">
+                <span class="lid-diff-label">Du log</span>
+                <span class="lid-diff-val">{{ row.newValue ?? '—' }}</span>
+                <span class="lid-diff-status" [attr.data-status]="row.newComputedStatus">
+                  {{ row.newComputedStatus }}
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </p-accordionTab>
+
+      <!-- Unmatched -->
+      <p-accordionTab>
+        <ng-template pTemplate="header">
+          <div class="lid-tab-head warn">
+            <span class="lid-tab-dot"></span>
+            <span class="lid-tab-title">Non reconnues</span>
+            <span class="lid-tab-count">{{ totalUnmatched }}</span>
+          </div>
+        </ng-template>
+
+        <ul class="lid-unmatched" *ngIf="hasUnmatched">
+          <li *ngFor="let row of report.unmatched">
+            <div class="lid-unmatched-left">
+              <i class="pi pi-question-circle"></i>
+              <span class="lid-code">{{ row.measureCode }}</span>
+              <span class="lid-unmatched-reason">{{ row.reason }}</span>
+            </div>
+            <button *ngIf="canAddToCatalog" pButton type="button"
+                    class="p-button-text p-button-sm"
+                    icon="pi pi-external-link" label="Ajouter au catalogue"
+                    (click)="openCatalogTab(row.measureCode)"></button>
+          </li>
+        </ul>
+        <div class="lid-empty" *ngIf="!hasUnmatched">
+          <i class="pi pi-check-circle"></i>
+          Toutes les mesures du log sont reconnues.
+        </div>
+      </p-accordionTab>
+
+      <!-- Warnings -->
+      <p-accordionTab>
+        <ng-template pTemplate="header">
+          <div class="lid-tab-head danger">
+            <span class="lid-tab-dot"></span>
+            <span class="lid-tab-title">Alertes du parseur</span>
+            <span class="lid-tab-count">{{ totalWarnings }}</span>
+          </div>
+        </ng-template>
+        <ul class="lid-warnings" *ngIf="totalWarnings > 0">
+          <li *ngFor="let w of report.warnings">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ w }}</span>
+          </li>
+        </ul>
+        <div class="lid-empty" *ngIf="totalWarnings === 0">
+          <i class="pi pi-shield"></i>
+          Aucune alerte.
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="lid-footer">
+      <button *ngIf="report && hasUnmatched" pButton type="button"
+              class="p-button-text p-button-sm" icon="pi pi-refresh"
+              label="Re-prévisualiser" [disabled]="loading || submitting"
+              (click)="rePreview()"></button>
+      <span class="lid-footer-spacer"></span>
+      <button pButton type="button" class="p-button-text" label="Annuler" (click)="close()"></button>
+      <button pButton type="button" class="p-button-primary lid-confirm-btn"
+              icon="pi pi-check"
+              [label]="overwriteExisting && hasOverwrite
+                ? ('Confirmer (' + totalMatched + ' nouvelles + ' + totalOverwrite + ' écrasées)')
+                : 'Confirmer l\'import'"
+              [disabled]="confirmDisabled || !report"
+              [pTooltip]="totalMatched === 0 && !(overwriteExisting && hasOverwrite)
+                ? 'Aucune mesure à importer'
+                : ''"
+              (click)="confirmImport()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

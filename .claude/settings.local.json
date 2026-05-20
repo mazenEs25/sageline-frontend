@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
-      "Bash(npx ng *)"
+      "Bash(npx ng *)",
+      "Skill(update-config)"
     ]
   }
 }

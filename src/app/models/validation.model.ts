@@ -119,9 +119,14 @@ export interface ValidationRequest {
 }
 
 /**
- * Payload for PATCH /api/validations/{id}/postes/{zoneId}/complete
+ * Payload for {@code PATCH /api/validations/{id}/postes/{zoneId}/complete}.
+ *
+ * <p>{@code "AUTO"} (added Phase B/D) tells the server to derive the verdict from
+ * the poste's measure statuses: all OK → CONFORME, any OUT_OF_RANGE → NON_CONFORME.
+ * Explicit {@code "CONFORME"} / {@code "NON_CONFORME"} stays available for manual
+ * overrides via the dialog's "Forcer …" radios.</p>
  */
 export interface PosteCompleteRequest {
-  finalStatus: 'CONFORME' | 'NON_CONFORME';
+  finalStatus: 'CONFORME' | 'NON_CONFORME' | 'AUTO';
   notes?: string;
 }

@@ -111,12 +111,20 @@
 
           <!-- Poste list -->
           <div class="sage-poste-list">
-            <div *ngFor="let poste of ticket.posteStatuses"
-                 class="sage-poste-row"
+            <div *ngFor="let poste of ticket.posteStatuses; trackBy: trackPoste"
+                 class="sage-poste-row sage-poste-row-with-drawer"
+                 [class.expanded]="isPosteExpanded(poste)"
                  [class.done]="isPosteTerminal(poste)"
                  [class.non-conforme]="poste.status === 'NON_CONFORME'"
                  [class.conforme]="poste.status === 'CONFORME'">
-              <div class="sage-poste-row-left">
+              <div class="sage-poste-row-left"
+                   role="button"
+                   (click)="togglePoste(poste)"
+                   pTooltip="Cliquer pour afficher / masquer les mesures de ce poste">
+                <button pButton type="button"
+                        class="p-button-text p-button-sm sage-poste-expand-btn"
+                        [icon]="isPosteExpanded(poste) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        (click)="$event.stopPropagation(); togglePoste(poste)"></button>
                 <div class="sage-poste-order">{{ poste.orderInLine ?? '—' }}</div>
                 <div class="sage-poste-info">
                   <div class="sage-poste-name">{{ poste.zoneName }}</div>
@@ -151,15 +159,54 @@
                 </div>
               </div>
               <div class="sage-poste-row-right">
+                <!-- Per-poste readiness chip — loaded on first expand. -->
+                <span class="sage-poste-readiness-chip"
+                      *ngIf="getPosteReadiness(poste) as r"
+                      [class.ready]="r.canTransition"
+                      [class.partial]="!r.canTransition && r.mandatoryFilled > 0"
+                      [pTooltip]="r.canTransition ? 'Prêt à clôturer'
+                                  : (r.mandatoryMissing + ' mesure(s) obligatoire(s) manquante(s)')">
+                  <i class="pi" [class.pi-check-circle]="r.canTransition"
+                                [class.pi-clock]="!r.canTransition"></i>
+                  {{ r.mandatoryFilled }} / {{ r.mandatoryTotal }}
+                </span>
                 <p-tag [value]="posteStatusLabel(poste.status)"
                        [severity]="posteSeverity(poste.status)"></p-tag>
                 <button *ngIf="canMarkPoste(poste)"
                         pButton icon="pi pi-check"
                         label="Clôturer"
                         class="p-button-sm p-button-outlined"
-                        (click)="openPosteDialog(poste)"
-                        pTooltip="Marquer ce poste comme terminé">
+                        [disabled]="getPosteReadiness(poste) && !canClosePoste(poste)"
+                        (click)="$event.stopPropagation(); openPosteDialog(poste)"
+                        [pTooltip]="(getPosteReadiness(poste) && !canClosePoste(poste))
+                                      ? 'Saisissez toutes les mesures obligatoires avant de clôturer'
+                                      : 'Marquer ce poste comme terminé'">
                 </button>
+              </div>
+
+              <!-- Phase D — expandable drawer with per-poste measure panel -->
+              <div class="sage-poste-drawer" *ngIf="isPosteExpanded(poste)">
+                <div class="sage-poste-drawer-header" *ngIf="getPosteReadiness(poste) as r">
+                  <i class="pi pi-info-circle"></i>
+                  <span *ngIf="r.canTransition">
+                    Toutes les mesures obligatoires sont saisies — la clôture est possible.
+                  </span>
+                  <span *ngIf="!r.canTransition">
+                    {{ r.mandatoryMissing }} mesure(s) obligatoire(s) restante(s)
+                    avant de pouvoir clôturer ce poste.
+                  </span>
+                </div>
+                <div class="sage-poste-drawer-header" *ngIf="isPosteReadinessLoading(poste)">
+                  <i class="pi pi-spin pi-spinner"></i>
+                  <span>Chargement de la readiness du poste…</span>
+                </div>
+
+                <app-measure-panel
+                  [validationId]="ticket.id"
+                  [zoneId]="poste.zoneId"
+                  [posteType]="poste.posteType ?? null"
+                  (measuresChanged)="onPosteMeasuresChanged(poste)">
+                </app-measure-panel>
               </div>
             </div>
           </div>
@@ -178,16 +225,57 @@
         </div>
       </div>
 
-      <!-- Measures panel -->
-      <div class="sage-card">
-        <div class="sage-card-body">
-          <app-measure-panel
-            [validationId]="ticket.id"
-            [posteType]="ticket.posteType || null"
-            (measuresChanged)="onMeasuresChanged()"
-          ></app-measure-panel>
+      <!-- Phase 004 — Sagemcom log import (kept at ticket level; the server
+           auto-routes each parsed measure to the right poste via its catalog
+           template's posteType). The legacy ticket-wide measure panel that used
+           to live here was removed in Phase E — measures are now edited inside
+           each poste's drawer in the "Postes de la ligne" section above. -->
+      <div class="sage-card sage-import-card"
+           *ngIf="canImportLog"
+           [class.is-disabled]="!canEditMeasures">
+        <div class="sage-import-card-glow" aria-hidden="true"></div>
+        <div class="sage-card-body sage-import-card-body">
+          <div class="sage-import-left">
+            <div class="sage-import-icon">
+              <i class="pi pi-cloud-upload"></i>
+            </div>
+            <div class="sage-import-copy">
+              <div class="sage-import-title">
+                <strong>Import Sagemcom</strong>
+                <span class="sage-import-state-pill"
+                      [class.ready]="canEditMeasures"
+                      [class.locked]="!canEditMeasures">
+                  <i [class]="canEditMeasures ? 'pi pi-check-circle' : 'pi pi-lock'"></i>
+                  {{ canEditMeasures ? 'Prêt — statut ' + ticket.status
+                                     : 'Verrouillé — statut ' + ticket.status }}
+                </span>
+              </div>
+              <span class="sage-import-sub">
+                <i class="pi pi-info-circle"></i>
+                Déposez un fichier <code>.log</code>/<code>.txt</code> — chaque
+                mesure sera automatiquement attribuée au poste correspondant.
+              </span>
+            </div>
+          </div>
+
+          <button pButton type="button"
+                  class="p-button-primary sage-import-btn"
+                  icon="pi pi-upload"
+                  label="Importer un log"
+                  [disabled]="!canEditMeasures"
+                  [pTooltip]="!canEditMeasures
+                    ? ('Import indisponible — le ticket est en statut ' + ticket.status)
+                    : 'Ouvrir l\'importateur de log Sagemcom'"
+                  (click)="logImportVisible = true"></button>
         </div>
       </div>
+
+      <app-log-import-dialog
+        [ticketId]="ticket.id"
+        [posteType]="ticket.posteType ?? ''"
+        [(visible)]="logImportVisible"
+        (importSucceeded)="onImportSucceeded($event)">
+      </app-log-import-dialog>
 
       <!-- Readiness side panel -->
       <app-workflow-readiness-panel
@@ -396,45 +484,126 @@
 
 <!-- ===== Mark Poste Done Dialog (2026-04 line-ticket model) ===== -->
 <p-dialog
-  [header]="activePoste ? 'Clôturer le poste — ' + activePoste.zoneName : 'Clôturer le poste'"
   [(visible)]="showPosteDialog"
   [modal]="true"
-  [style]="{width: '500px'}"
+  [style]="{width: 'min(560px, 95vw)'}"
   [draggable]="false"
-  [resizable]="false">
+  [resizable]="false"
+  styleClass="poste-dlg"
+  [showHeader]="true">
+
+  <ng-template pTemplate="header">
+    <div class="pd-header" *ngIf="activePoste">
+      <div class="pd-header-icon"><i class="pi pi-flag-fill"></i></div>
+      <div class="pd-header-text">
+        <h2>Clôturer le poste</h2>
+        <span class="pd-header-zone">{{ activePoste.zoneName }}</span>
+      </div>
+    </div>
+    <div class="pd-header" *ngIf="!activePoste">
+      <div class="pd-header-icon"><i class="pi pi-flag-fill"></i></div>
+      <div class="pd-header-text"><h2>Clôturer le poste</h2></div>
+    </div>
+  </ng-template>
 
   <div class="poste-dialog-body" *ngIf="activePoste">
     <div class="pd-hint">
-      <i class="pi pi-info-circle"></i>
-      Chaque poste de la ligne doit être clôturé individuellement. Le ticket
-      passera en revue une fois tous les postes terminés.
-    </div>
-
-    <div class="pd-field">
-      <label class="font-bold">Décision finale <span class="rd-req">*</span></label>
-      <div class="flex gap-3 mt-2">
-        <p-radioButton name="posteFinal" value="CONFORME"
-                       [(ngModel)]="posteFinalStatus" label="Conforme"></p-radioButton>
-        <p-radioButton name="posteFinal" value="NON_CONFORME"
-                       [(ngModel)]="posteFinalStatus" label="Non Conforme"></p-radioButton>
+      <div class="pd-hint-icon"><i class="pi pi-info-circle"></i></div>
+      <div class="pd-hint-text">
+        Chaque poste de la ligne doit être clôturé individuellement.
+        Le ticket passera en revue une fois tous les postes terminés.
       </div>
     </div>
 
     <div class="pd-field">
-      <label class="font-bold">Notes (optionnel)</label>
+      <label class="pd-field-label">
+        <span class="pd-field-num">1</span>
+        Décision finale
+        <span class="pd-req">*</span>
+      </label>
+
+      <div class="pd-tiles">
+        <label class="pd-tile pd-tile-auto"
+               [class.selected]="posteFinalStatus === 'AUTO'">
+          <input type="radio" name="posteFinal" value="AUTO"
+                 [(ngModel)]="posteFinalStatus">
+          <div class="pd-tile-rail"></div>
+          <div class="pd-tile-head">
+            <i class="pi pi-bolt"></i>
+            <span class="pd-tile-title">Auto</span>
+            <span class="pd-tile-badge">recommandé</span>
+          </div>
+          <span class="pd-tile-desc">
+            Déduit du résultat des mesures : <strong>CONFORME</strong> si toutes
+            sont OK, <strong>NON&nbsp;CONFORME</strong> sinon.
+          </span>
+          <span class="pd-tile-check"><i class="pi pi-check"></i></span>
+        </label>
+
+        <label class="pd-tile pd-tile-conforme"
+               [class.selected]="posteFinalStatus === 'CONFORME'">
+          <input type="radio" name="posteFinal" value="CONFORME"
+                 [(ngModel)]="posteFinalStatus">
+          <div class="pd-tile-rail"></div>
+          <div class="pd-tile-head">
+            <i class="pi pi-check-circle"></i>
+            <span class="pd-tile-title">Forcer Conforme</span>
+          </div>
+          <span class="pd-tile-desc">
+            Marquer le poste comme conforme malgré le verdict automatique.
+          </span>
+          <span class="pd-tile-check"><i class="pi pi-check"></i></span>
+        </label>
+
+        <label class="pd-tile pd-tile-nc"
+               [class.selected]="posteFinalStatus === 'NON_CONFORME'">
+          <input type="radio" name="posteFinal" value="NON_CONFORME"
+                 [(ngModel)]="posteFinalStatus">
+          <div class="pd-tile-rail"></div>
+          <div class="pd-tile-head">
+            <i class="pi pi-times-circle"></i>
+            <span class="pd-tile-title">Forcer Non Conforme</span>
+          </div>
+          <span class="pd-tile-desc">
+            Bloquer ce poste — un correctif sera requis avant clôture du ticket.
+          </span>
+          <span class="pd-tile-check"><i class="pi pi-check"></i></span>
+        </label>
+      </div>
+
+      <div class="pd-warn">
+        <i class="pi pi-shield"></i>
+        Les mesures obligatoires doivent être saisies — sinon la clôture sera
+        refusée par le serveur.
+      </div>
+    </div>
+
+    <div class="pd-field">
+      <label class="pd-field-label">
+        <span class="pd-field-num">2</span>
+        Notes
+        <span class="pd-optional">optionnel</span>
+      </label>
       <textarea pInputTextarea [(ngModel)]="posteNotes" rows="3"
-                class="w-full"
-                placeholder="Observations, anomalies…"></textarea>
+                class="pd-textarea"
+                placeholder="Observations, anomalies, action corrective…"></textarea>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Annuler" icon="pi pi-times" class="p-button-text"
-            (click)="showPosteDialog = false" [disabled]="savingPoste">
-    </button>
-    <button pButton label="Clôturer le poste" icon="pi pi-check"
-            [class]="posteFinalStatus === 'CONFORME' ? 'p-button-success' : 'p-button-danger'"
-            [loading]="savingPoste" (click)="submitPosteDone()">
-    </button>
+    <div class="pd-footer">
+      <button pButton label="Annuler" icon="pi pi-times" class="p-button-text"
+              (click)="showPosteDialog = false" [disabled]="savingPoste"></button>
+      <span class="pd-footer-spacer"></span>
+      <button pButton icon="pi pi-check"
+              [label]="posteFinalStatus === 'NON_CONFORME' ? 'Clôturer en Non Conforme'
+                       : posteFinalStatus === 'CONFORME' ? 'Clôturer en Conforme'
+                       : 'Clôturer (auto)'"
+              [class]="(posteFinalStatus === 'NON_CONFORME' ? 'p-button-danger'
+                       : posteFinalStatus === 'CONFORME' ? 'p-button-success'
+                       : 'p-button-primary') + ' pd-confirm-btn'"
+              [loading]="savingPoste" (click)="submitPosteDone()">
+      </button>
+    </div>
   </ng-template>
 </p-dialog>

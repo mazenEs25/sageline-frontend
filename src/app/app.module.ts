@@ -70,8 +70,11 @@ import { MeasureUnitPipe } from './shared/pipes/measure-unit.pipe';
 import { MeasurePanelComponent } from './pages/Ticket/measure-panel/measure-panel.component';
 import { AddMeasureDialogComponent } from './pages/Ticket/add-measure-dialog/add-measure-dialog.component';
 import { AddAdhocMeasureDialogComponent } from './pages/Ticket/add-adhoc-measure-dialog/add-adhoc-measure-dialog.component';
+import { EditMeasureDialogComponent } from './pages/Ticket/edit-measure-dialog/edit-measure-dialog.component';
 import { WorkflowReadinessBarComponent } from './shared/components/workflow-readiness-bar/workflow-readiness-bar.component';
 import { WorkflowReadinessPanelComponent } from './shared/components/workflow-readiness-panel/workflow-readiness-panel.component';
+import { LogImportDialogComponent } from './pages/Ticket/log-import-dialog/log-import-dialog.component';
+import { LogSourceDialogComponent } from './pages/Ticket/log-source-dialog/log-source-dialog.component';
 
 @NgModule({
   declarations: [
@@ -134,8 +137,11 @@ import { WorkflowReadinessPanelComponent } from './shared/components/workflow-re
     MeasurePanelComponent,
     AddMeasureDialogComponent,
     AddAdhocMeasureDialogComponent,
+    EditMeasureDialogComponent,
     WorkflowReadinessBarComponent,
-    WorkflowReadinessPanelComponent
+    WorkflowReadinessPanelComponent,
+    LogImportDialogComponent,
+    LogSourceDialogComponent
   ],
   imports: [
     BrowserModule,

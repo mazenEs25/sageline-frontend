@@ -37,6 +37,8 @@ import { MessageModule } from 'primeng/message';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { SidebarModule } from 'primeng/sidebar';
+import { FileUploadModule } from 'primeng/fileupload';
+import { AccordionModule } from 'primeng/accordion';
 
 const MODULES = [
   TableModule, ButtonModule, InputTextModule, DropdownModule,
@@ -47,7 +49,7 @@ const MODULES = [
   ProgressSpinnerModule, OverlayPanelModule, ScrollPanelModule,
   StepsModule, TimelineModule, RadioButtonModule, CalendarModule, ListboxModule,
   InputNumberModule, TabViewModule, MultiSelectModule, MessageModule,
-  CheckboxModule, ProgressBarModule, SidebarModule,
+  CheckboxModule, ProgressBarModule, SidebarModule, FileUploadModule, AccordionModule,
 ];
 
 @NgModule({

@@ -1,0 +1,20 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [style]="{ width: 'min(720px, 92vw)' }"
+  [header]="snippet?.filename ?? 'Source snippet'"
+  (onHide)="close()">
+
+  <div *ngIf="snippet?.lineRange" class="log-source-subtitle">
+    lines {{ snippet?.lineRange }}
+  </div>
+
+  <p-progressSpinner *ngIf="loading"></p-progressSpinner>
+  <p-message *ngIf="error" severity="error" [text]="error"></p-message>
+
+  <pre class="log-snippet" *ngIf="snippet && !error">{{ snippet.snippet }}</pre>
+</p-dialog>

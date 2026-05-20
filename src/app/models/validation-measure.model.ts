@@ -4,6 +4,12 @@ import { MeasureStatus } from '../shared/enums/measure-status.enum';
 export interface ValidationMeasure {
   id: number;
   validationId: number;
+  /**
+   * Specific poste of the line this measure belongs to.
+   * Added with the V5.0 backend schema migration. Null for legacy ad-hoc rows
+   * whose backfill couldn't resolve a poste.
+   */
+  posteStatusId: number | null;
   catalogTemplateId: number | null;
   measureCode: string;
   measureLabel: string;

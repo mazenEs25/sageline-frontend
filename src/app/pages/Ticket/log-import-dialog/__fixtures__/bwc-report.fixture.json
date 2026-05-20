@@ -1,0 +1,10 @@
+{
+  "detectedFormat": "BWC",
+  "totalParsed": 16,
+  "matched": [
+    { "id": null, "measureCode": "POWER_RMS_AVG_VSA1", "label": "RMS power VSA1", "value": 15.52, "unit": "dBm", "status": "OK", "lower": 14.0, "upper": 17.0, "templateId": 1 }
+  ],
+  "skipped": [],
+  "unmatched": [],
+  "warnings": []
+}

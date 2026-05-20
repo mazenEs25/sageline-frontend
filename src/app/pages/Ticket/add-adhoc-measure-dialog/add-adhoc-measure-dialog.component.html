@@ -1,50 +1,232 @@
-<p-dialog header="Ajouter une mesure ad-hoc" [(visible)]="visible" [modal]="true" [style]="{ width: '32rem' }" (onHide)="close()">
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label>Code mesure *</label>
-      <input pInputText formControlName="measureCode" placeholder="ex: VOLT_LINE1" />
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  [breakpoints]="{ '960px': '92vw', '640px': '96vw' }"
+  [style]="{ width: '780px' }"
+  (onHide)="close()"
+  styleClass="sage-dialog adhoc-measure-dialog"
+>
+  <ng-template pTemplate="header">
+    <div class="sage-dialog-header">
+      <div class="sage-dialog-title">
+        <span class="sage-dialog-icon adhoc">
+          <i class="pi pi-plus-circle"></i>
+        </span>
+        <div class="sage-dialog-titles">
+          <h3>Mesure ad-hoc</h3>
+          <p class="sage-dialog-subtitle">
+            Créer une mesure hors-catalogue. Utilisez cette voie uniquement si aucun template
+            ne correspond — sinon, préférez « Ajouter mesure ».
+          </p>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label>Libellé *</label>
-      <input pInputText formControlName="measureLabel" placeholder="ex: Tension ligne 1" />
-    </div>
-    <div class="field">
-      <label>Catégorie *</label>
-      <p-dropdown [options]="categoryOptions" optionLabel="label" optionValue="value" formControlName="category"></p-dropdown>
-    </div>
-    <div class="field">
-      <label>Unité *</label>
-      <input pInputText formControlName="unit" placeholder="ex: V, A, dBm" />
-    </div>
-    <div class="field">
-      <label>Borne basse *</label>
-      <p-inputNumber formControlName="lowerBound" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
-    </div>
-    <div class="field">
-      <label>Borne haute *</label>
-      <p-inputNumber formControlName="upperBound" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
-      <small *ngIf="form.errors?.['bounds']" class="p-error">La borne basse doit être strictement inférieure à la borne haute.</small>
-    </div>
-    <div class="field">
-      <label>Antenne</label>
-      <input pInputText formControlName="antenna" placeholder="optionnel" />
-    </div>
-    <div class="field">
-      <label>Fréquence (MHz)</label>
-      <p-inputNumber formControlName="frequencyMhz" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2"></p-inputNumber>
-    </div>
-    <div class="field">
-      <label>Schéma modulation</label>
-      <input pInputText formControlName="modulationScheme" placeholder="optionnel" />
-    </div>
-    <div class="field">
-      <label>Valeur mesurée *</label>
-      <p-inputNumber formControlName="measuredValue" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
-    </div>
+  </ng-template>
 
-    <div class="dialog-footer">
-      <button pButton type="button" label="Annuler" class="p-button-text" (click)="close()"></button>
-      <button pButton type="submit" label="Enregistrer" [disabled]="form.invalid || submitting" [loading]="submitting"></button>
-    </div>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="sage-form" autocomplete="off">
+
+    <!-- Section 1 — Identification -->
+    <section class="sage-section">
+      <header class="sage-section-header">
+        <i class="pi pi-id-card"></i>
+        <h4>Identification</h4>
+      </header>
+
+      <div class="sage-grid sage-grid-2">
+        <div class="sage-field">
+          <label for="measureCode">Code mesure <span class="sage-required">*</span></label>
+          <input
+            id="measureCode" pInputText
+            formControlName="measureCode"
+            placeholder="Ex : VOLT_LINE1"
+            class="sage-mono"
+          />
+          <small class="sage-error"
+            *ngIf="form.get('measureCode')?.hasError('required') && form.get('measureCode')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Le code est requis.
+          </small>
+          <small class="sage-hint">Majuscules, chiffres, "_" — sans espace.</small>
+        </div>
+
+        <div class="sage-field">
+          <label for="measureLabel">Libellé <span class="sage-required">*</span></label>
+          <input
+            id="measureLabel" pInputText
+            formControlName="measureLabel"
+            placeholder="Ex : Tension ligne 1"
+          />
+          <small class="sage-error"
+            *ngIf="form.get('measureLabel')?.hasError('required') && form.get('measureLabel')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Le libellé est requis.
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2 — Catégorie & unité -->
+    <section class="sage-section">
+      <header class="sage-section-header">
+        <i class="pi pi-th-large"></i>
+        <h4>Catégorie &amp; unité</h4>
+      </header>
+
+      <div class="sage-grid sage-grid-2">
+        <div class="sage-field">
+          <label for="category">Catégorie <span class="sage-required">*</span></label>
+          <p-dropdown
+            id="category"
+            [options]="categoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            formControlName="category"
+            [filter]="true"
+            filterBy="label"
+            appendTo="body"
+            placeholder="Choisir une catégorie"
+          ></p-dropdown>
+          <small class="sage-error"
+            *ngIf="form.get('category')?.hasError('required') && form.get('category')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Catégorie requise.
+          </small>
+        </div>
+
+        <div class="sage-field">
+          <label for="unit">Unité <span class="sage-required">*</span></label>
+          <input
+            id="unit" pInputText
+            formControlName="unit"
+            placeholder="Ex : V, A, dBm, MHz"
+            class="sage-mono"
+          />
+          <small class="sage-error"
+            *ngIf="form.get('unit')?.hasError('required') && form.get('unit')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Unité requise.
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 — Tolérance & valeur -->
+    <section class="sage-section">
+      <header class="sage-section-header">
+        <i class="pi pi-arrows-h"></i>
+        <h4>Tolérance &amp; valeur mesurée</h4>
+        <span class="sage-section-aside" *ngIf="tolerancePreview as p">
+          <i class="pi pi-eye"></i> {{ p }}
+        </span>
+      </header>
+
+      <div class="sage-grid sage-grid-3">
+        <div class="sage-field">
+          <label for="lowerBound">Borne basse <span class="sage-required">*</span></label>
+          <p-inputNumber
+            id="lowerBound" formControlName="lowerBound"
+            mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"
+            [useGrouping]="false"
+          ></p-inputNumber>
+          <small class="sage-error"
+            *ngIf="form.get('lowerBound')?.hasError('required') && form.get('lowerBound')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Requise.
+          </small>
+        </div>
+
+        <div class="sage-field">
+          <label for="upperBound">Borne haute <span class="sage-required">*</span></label>
+          <p-inputNumber
+            id="upperBound" formControlName="upperBound"
+            mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"
+            [useGrouping]="false"
+          ></p-inputNumber>
+          <small class="sage-error"
+            *ngIf="form.get('upperBound')?.hasError('required') && form.get('upperBound')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Requise.
+          </small>
+        </div>
+
+        <div class="sage-field">
+          <label for="measuredValue">Valeur mesurée <span class="sage-required">*</span></label>
+          <p-inputNumber
+            id="measuredValue" formControlName="measuredValue"
+            mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"
+            [useGrouping]="false"
+          ></p-inputNumber>
+          <small class="sage-error"
+            *ngIf="form.get('measuredValue')?.hasError('required') && form.get('measuredValue')?.touched">
+            <i class="pi pi-exclamation-circle"></i> Valeur requise.
+          </small>
+        </div>
+      </div>
+
+      <div class="sage-error-banner" *ngIf="form.errors?.['bounds']">
+        <i class="pi pi-times-circle"></i>
+        <span>La borne basse doit être strictement inférieure à la borne haute.</span>
+      </div>
+
+      <!-- Verdict preview -->
+      <div class="sage-verdict-row" *ngIf="previewStatus !== null">
+        <div class="sage-verdict" [ngClass]="'sage-verdict-' + previewStatus">
+          <i [class]="previewIcon"></i>
+          <div>
+            <strong>{{ previewLabel }}</strong>
+            <small *ngIf="previewDeviation !== null">Déviation : {{ previewDeviation | number:'1.1-2' }} %</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4 — Contexte RF (optionnel, collapsible) -->
+    <section class="sage-section sage-section-collapsible">
+      <header class="sage-section-header" (click)="toggleRfContext()" role="button">
+        <i class="pi pi-wifi"></i>
+        <h4>Contexte RF <small>(optionnel)</small></h4>
+        <span class="sage-section-toggle">
+          <i [class]="rfContextOpen ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+        </span>
+      </header>
+
+      <div class="sage-section-body" *ngIf="rfContextOpen">
+        <div class="sage-grid sage-grid-3">
+          <div class="sage-field">
+            <label for="antenna">Antenne</label>
+            <input id="antenna" pInputText formControlName="antenna" placeholder="ANT0–ANT3" class="sage-mono" />
+          </div>
+          <div class="sage-field">
+            <label for="frequencyMhz">Fréquence (MHz)</label>
+            <p-inputNumber id="frequencyMhz" formControlName="frequencyMhz"
+              mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2"
+              [useGrouping]="false"></p-inputNumber>
+          </div>
+          <div class="sage-field">
+            <label for="modulationScheme">Modulation</label>
+            <input id="modulationScheme" pInputText formControlName="modulationScheme" class="sage-mono" />
+          </div>
+        </div>
+      </div>
+    </section>
+
   </form>
+
+  <ng-template pTemplate="footer">
+    <div class="sage-dialog-footer">
+      <span class="sage-form-status" *ngIf="form.invalid && form.touched">
+        <i class="pi pi-info-circle"></i>
+        Le formulaire contient des champs invalides.
+      </span>
+      <span class="sage-form-status sage-form-status-ok" *ngIf="form.valid && !submitting">
+        <i class="pi pi-check-circle"></i>
+        Prêt à enregistrer.
+      </span>
+
+      <div class="sage-dialog-actions">
+        <p-button label="Annuler" icon="pi pi-times" (onClick)="close()"
+                  [text]="true" severity="secondary" [disabled]="submitting"></p-button>
+        <p-button label="Créer la mesure" icon="pi pi-check"
+                  [disabled]="form.invalid || submitting" [loading]="submitting"
+                  (onClick)="submit()"></p-button>
+      </div>
+    </div>
+  </ng-template>
 </p-dialog>

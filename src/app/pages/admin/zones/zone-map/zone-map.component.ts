@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { ProductionLineService } from '../../../../services/production-line.service';
 import { ValidationZoneService } from '../../../../services/validation-zone.service';
 import { ValidationService } from '../../../../services/validation.service';
-import { ValidationResultService } from '../../../../services/validation-result.service';
+// (Phase E cleanup) — ValidationResultService import removed; no code in this file referenced it.
 import { ProductionLine } from '../../../../models/production-line.model';
 import { ValidationZone } from '../../../../models/validation-zone.model';
 import { Validation } from '../../../../models/validation.model';

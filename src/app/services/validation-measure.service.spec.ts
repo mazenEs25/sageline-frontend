@@ -91,4 +91,31 @@ describe('ValidationMeasureService', () => {
     expect(req.request.method).toBe('POST');
     req.flush({ created: 0, skipped: 0, measures: [] });
   });
+
+  it('previewLog: POSTs multipart to /{id}/preview-log with a part named "file"', () => {
+    const file = new File(['hello log'], 'a.log', { type: 'text/plain' });
+    service.previewLog(7, file).subscribe();
+    const req = httpMock.expectOne({ url: `${apiUrl}/7/preview-log`, method: 'POST' });
+    expect(req.request.body instanceof FormData).toBeTrue();
+    const fd = req.request.body as FormData;
+    expect(fd.get('file') instanceof File).toBeTrue();
+    expect((fd.get('file') as File).name).toBe('a.log');
+    req.flush({ detectedFormat: 'BWC', totalParsed: 0, matched: [], skipped: [], unmatched: [], warnings: [] });
+  });
+
+  it('importLog: POSTs multipart to /{id}/import-log with a part named "file"', () => {
+    const file = new File(['hello log'], 'b.log', { type: 'text/plain' });
+    service.importLog(9, file).subscribe();
+    const req = httpMock.expectOne({ url: `${apiUrl}/9/import-log`, method: 'POST' });
+    expect(req.request.body instanceof FormData).toBeTrue();
+    req.flush({ detectedFormat: 'BNFT', totalParsed: 0, matched: [], skipped: [], unmatched: [], warnings: [] });
+  });
+
+  it('getSourceSnippet: GETs /{id}/measures/{measureId}/source-snippet', () => {
+    service.getSourceSnippet(11, 33).subscribe(snip => {
+      expect(snip.filename).toBe('a.log');
+    });
+    const req = httpMock.expectOne({ url: `${apiUrl}/11/measures/33/source-snippet`, method: 'GET' });
+    req.flush({ filename: 'a.log', snippet: 'Mesure <X>...', lineRange: '1-2' });
+  });
 });

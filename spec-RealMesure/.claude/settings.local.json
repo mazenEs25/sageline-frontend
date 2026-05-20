@@ -24,7 +24,12 @@
       "PowerShell(& \"C:/Users/mouaf/OneDrive/Bureau/stagePFE/PROJECT/Sageline/sageline-frontend/spec-RealMesure/.specify/scripts/powershell/setup-tasks.ps1\" -Json)",
       "Bash(powershell -File .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
       "Bash(npm run *)",
-      "PowerShell(Set-Content *)"
+      "PowerShell(Set-Content *)",
+      "Bash(powershell -Command \". .\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks\")",
+      "Bash(ls src/app/pages/Ticket/log-import-dialog/__fixtures__/)",
+      "Bash(ls src/app/pages/Ticket/log-import-dialog/*.spec.ts)",
+      "Bash(ls src/app/pages/Ticket/log-source-dialog/)",
+      "Bash(npx tsc *)"
     ]
   }
 }
